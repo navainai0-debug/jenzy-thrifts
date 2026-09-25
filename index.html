@@ -2,11 +2,15 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JENZY THRIFTS - Premium Thrifted Shoes</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Poppins:wght@300;400;500;600;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
     
+    <!-- Firebase (Google sign-in) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+
     <!-- Supabase JS Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
@@ -68,7 +72,6 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 12px;
             color: var(--text-muted);
             border-bottom: 1px solid var(--border-color);
         }
@@ -79,11 +82,6 @@
         .header {
             background: rgba(10, 10, 10, 0.95);
             backdrop-filter: blur(20px);
-            padding: 15px 40px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
             top: 0;
             z-index: 1000;
             border-bottom: 1px solid var(--border-color);
@@ -110,7 +108,6 @@
         .nav-menu a {
             font-family: 'Rajdhani', sans-serif;
             font-size: 15px;
-            font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 2px;
             color: var(--text-secondary);
@@ -138,13 +135,6 @@
             position: absolute;
             top: -5px;
             right: -5px;
-            background: var(--neon-pink);
-            color: #fff;
-            font-size: 10px;
-            font-weight: 700;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -410,14 +400,413 @@
             z-index: 999;
         }
 
-        @media (max-width: 1024px) { .products-grid { grid-template-columns: repeat(3, 1fr); } }
+        /* ===== Account (Google sign-in) ===== */
+        .signin-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: #fff;
+            color: #222;
+            border: none;
+            border-radius: 30px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: box-shadow 0.3s, transform 0.3s;
+        }
+        .signin-btn:hover { box-shadow: 0 0 15px rgba(255,255,255,0.35); transform: translateY(-1px); }
+        .signin-btn img { width: 18px; height: 18px; }
+        .user-menu { position: relative; display: none; }
+        .user-menu.show { display: block; }
+        .user-avatar-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid var(--neon-green);
+            background: var(--gradient-neon);
+            color: #000;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            cursor: pointer;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+        .user-avatar-btn img { width: 100%; height: 100%; object-fit: cover; }
+        .user-dropdown {
+            position: absolute;
+            right: 0;
+            top: 50px;
+            width: 240px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 16px;
+            display: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+        }
+        .user-dropdown.show { display: block; }
+        .user-dropdown .u-name { font-weight: 600; font-size: 14px; }
+        .user-dropdown .u-email { font-size: 12px; color: var(--text-muted); word-break: break-all; margin-bottom: 14px; }
+        .user-dropdown button {
+            width: 100%;
+            padding: 9px;
+            background: transparent;
+            border: 1px solid var(--neon-pink);
+            color: var(--neon-pink);
+            border-radius: 8px;
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            cursor: pointer;
+        }
+        .user-dropdown button:hover { background: var(--neon-pink); color: #fff; }
+
+        /* ===== Login Modal ===== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(6px);
+            z-index: 20000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal-box {
+            position: relative;
+            width: 400px;
+            max-width: 100%;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 35px 30px;
+            text-align: center;
+        }
+        .modal-close {
+            position: absolute;
+            top: 14px;
+            right: 16px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 20px;
+            cursor: pointer;
+        }
+        .modal-close:hover { color: #fff; }
+        .modal-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 18px;
+            border-radius: 50%;
+            background: rgba(57,255,20,0.1);
+            border: 1px solid var(--neon-green);
+            color: var(--neon-green);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+        }
+        .modal-box h3 { font-family: 'Orbitron', sans-serif; font-size: 20px; margin-bottom: 8px; }
+        .modal-box p { color: var(--text-secondary); font-size: 14px; margin-bottom: 22px; }
+        .google-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 13px;
+            background: #fff;
+            color: #222;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: box-shadow 0.3s;
+        }
+        .google-btn:hover { box-shadow: 0 0 20px rgba(255,255,255,0.3); }
+        .google-btn:disabled { opacity: 0.6; cursor: wait; }
+        .google-btn img { width: 20px; height: 20px; }
+        .modal-note { font-size: 11px !important; color: var(--text-muted) !important; margin: 16px 0 0 !important; }
+        .modal-error {
+            display: none;
+            margin-top: 14px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: rgba(255,20,147,0.1);
+            border: 1px solid rgba(255,20,147,0.4);
+            color: #ff7ab8;
+            font-size: 13px;
+            text-align: left;
+        }
+        .modal-error.show { display: block; }
+
+        /* ===== Shop by Category ===== */
+        .category-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 25px; }
+        .category-card {
+            position: relative;
+            height: 280px;
+            border-radius: 20px;
+            overflow: hidden;
+            cursor: pointer;
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: flex-end;
+            padding: 30px;
+            transition: all 0.4s;
+        }
+        .category-card .cat-bg {
+            position: absolute;
+            inset: 0;
+            background-size: cover;
+            background-position: center;
+            transition: transform 0.6s;
+        }
+        .category-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+        }
+        .category-card.men::after { background: linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,240,255,0.15)); }
+        .category-card.women::after { background: linear-gradient(to top, rgba(0,0,0,0.9), rgba(255,20,147,0.2)); }
+        .category-card:hover .cat-bg { transform: scale(1.08); }
+        .category-card.men:hover { border-color: var(--neon-blue); box-shadow: 0 0 30px rgba(0,240,255,0.2); }
+        .category-card.women:hover { border-color: var(--neon-pink); box-shadow: 0 0 30px rgba(255,20,147,0.2); }
+        .cat-content { position: relative; z-index: 2; }
+        .cat-content small { font-family: 'Rajdhani'; letter-spacing: 4px; text-transform: uppercase; font-weight: 700; font-size: 13px; }
+        .category-card.men small { color: var(--neon-blue); }
+        .category-card.women small { color: var(--neon-pink); }
+        .cat-content h3 { font-family: 'Orbitron'; font-size: 30px; font-weight: 900; text-transform: uppercase; margin: 4px 0 10px; }
+        .cat-content span { font-family: 'Rajdhani'; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; font-size: 14px; }
+        .cat-content span i { margin-left: 6px; transition: margin 0.3s; }
+        .category-card:hover .cat-content span i { margin-left: 12px; }
+
+        .filter-label {
+            text-align: center;
+            font-family: 'Rajdhani';
+            font-size: 12px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+        .gender-tabs .tab-btn { padding: 10px 28px; font-size: 15px; }
+        .results-count { text-align: center; color: var(--text-muted); font-size: 13px; margin: -15px 0 25px; }
+
+        /* ===== Why Us ===== */
+        .alt-bg { background: var(--darker-bg); border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); }
+        .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; }
+        .feature-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 18px;
+            padding: 30px 25px;
+            transition: all 0.3s;
+        }
+        .feature-card:hover { border-color: var(--neon-green); transform: translateY(-5px); box-shadow: 0 10px 30px rgba(57,255,20,0.08); }
+        .feature-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            margin-bottom: 18px;
+        }
+        .fi-green { background: rgba(57,255,20,0.1); color: var(--neon-green); }
+        .fi-blue { background: rgba(0,240,255,0.1); color: var(--neon-blue); }
+        .fi-pink { background: rgba(255,20,147,0.1); color: var(--neon-pink); }
+        .fi-purple { background: rgba(191,0,255,0.12); color: #d466ff; }
+        .fi-yellow { background: rgba(255,255,0,0.1); color: var(--neon-yellow); }
+        .feature-card h4 { font-family: 'Rajdhani'; font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+        .feature-card p { color: var(--text-secondary); font-size: 14px; line-height: 1.7; }
+
+        /* ===== How To Order ===== */
+        .steps-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; counter-reset: step; }
+        .step-card {
+            text-align: center;
+            padding: 25px 18px;
+            border: 1px dashed var(--border-color);
+            border-radius: 18px;
+            position: relative;
+        }
+        .step-num {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 15px;
+            border-radius: 50%;
+            background: var(--gradient-neon);
+            color: #000;
+            font-family: 'Orbitron';
+            font-weight: 900;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .step-card h4 { font-family: 'Rajdhani'; font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+        .step-card p { color: var(--text-secondary); font-size: 13px; line-height: 1.6; }
+
+        /* ===== About ===== */
+        .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 50px; align-items: center; }
+        .about-img { border-radius: 20px; overflow: hidden; border: 1px solid var(--border-color); height: 380px; }
+        .about-img img { width: 100%; height: 100%; object-fit: cover; }
+        .about-text .section-tag, .about-text .section-title { text-align: left; }
+        .about-text p { color: var(--text-secondary); line-height: 1.8; margin: 18px 0; font-size: 15px; }
+        .about-stats { display: flex; gap: 35px; margin-top: 25px; flex-wrap: wrap; }
+        .about-stats div strong { display: block; font-family: 'Orbitron'; font-size: 26px; color: var(--neon-green); }
+        .about-stats div span { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px; }
+
+        /* ===== Contact ===== */
+        .contact-grid { display: grid; grid-template-columns: 1fr 1.3fr; gap: 35px; }
+        .contact-info { display: flex; flex-direction: column; gap: 15px; }
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 18px 20px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            transition: border-color 0.3s;
+        }
+        a.contact-item:hover { border-color: var(--neon-green); }
+        .contact-item .ci-icon {
+            width: 46px;
+            height: 46px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+        .contact-item h5 { font-family: 'Rajdhani'; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); }
+        .contact-item p { font-size: 15px; font-weight: 500; word-break: break-word; }
+        .contact-form {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 30px;
+        }
+        .contact-form h3 { font-family: 'Orbitron'; font-size: 20px; margin-bottom: 6px; }
+        .contact-form > p { color: var(--text-secondary); font-size: 14px; margin-bottom: 22px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .field { margin-bottom: 15px; }
+        .field label {
+            display: block;
+            font-family: 'Rajdhani';
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+        .field input, .field textarea, .field select {
+            width: 100%;
+            padding: 13px 15px;
+            background: var(--darker-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            color: #fff;
+            font-family: 'Poppins', sans-serif;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .field textarea { resize: vertical; min-height: 120px; }
+        .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--neon-green); box-shadow: 0 0 12px rgba(57,255,20,0.1); }
+        .hp-field { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+        .form-status { font-size: 13px; margin-top: 12px; display: none; }
+        .form-status.show { display: block; }
+        .form-status.ok { color: var(--neon-green); }
+        .form-status.err { color: #ff7ab8; }
+
+        /* ===== Footer ===== */
+        .footer { background: var(--darker-bg); border-top: 1px solid var(--border-color); padding: 55px 40px 25px; }
+        .footer-grid { max-width: 1350px; margin: 0 auto; display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 40px; }
+        .footer p { color: var(--text-muted); font-size: 14px; line-height: 1.8; margin-top: 12px; }
+        .footer h5 { font-family: 'Rajdhani'; font-size: 15px; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 15px; color: var(--neon-green); }
+        .footer ul li { margin-bottom: 10px; }
+        .footer ul a { color: var(--text-secondary); font-size: 14px; transition: color 0.3s; cursor: pointer; }
+        .footer ul a:hover { color: var(--neon-green); }
+        .footer-social { display: flex; gap: 10px; margin-top: 18px; }
+        .footer-social a {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.3s;
+        }
+        .footer-social a:hover { border-color: var(--neon-green); color: var(--neon-green); }
+        .footer-bottom { max-width: 1350px; margin: 35px auto 0; padding-top: 20px; border-top: 1px solid var(--border-color); text-align: center; color: var(--text-muted); font-size: 13px; }
+
+        /* ===== Mobile Menu ===== */
+        .menu-toggle { display: none; }
+        .mobile-menu {
+            display: none;
+            position: sticky;
+            top: 71px;
+            z-index: 999;
+            background: rgba(5,5,5,0.98);
+            border-bottom: 1px solid var(--border-color);
+            padding: 10px 20px 18px;
+        }
+        .mobile-menu.show { display: block; }
+        .mobile-menu a {
+            display: block;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-color);
+            font-family: 'Rajdhani';
+            font-weight: 600;
+            font-size: 16px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+        }
+        .mobile-menu a:hover { color: var(--neon-green); }
+
+        @media (max-width: 1024px) {
+            .products-grid { grid-template-columns: repeat(3, 1fr); }
+            .features-grid { grid-template-columns: repeat(2, 1fr); }
+            .steps-grid { grid-template-columns: repeat(2, 1fr); }
+        }
         @media (max-width: 768px) {
             .header, .top-bar { padding: 12px 20px; }
             .nav-menu, .top-bar { display: none; }
+            .menu-toggle { display: flex; }
+            .signin-btn .signin-text { display: none; }
+            .signin-btn { padding: 10px; border-radius: 50%; }
             .hero { padding: 0 20px; height: 60vh; }
             .hero-title { font-size: 32px; }
             .products-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
             .section { padding: 50px 15px; }
+            .category-grid, .features-grid, .about-grid, .contact-grid, .footer-grid { grid-template-columns: 1fr; }
+            .category-card { height: 200px; }
+            .about-img { height: 240px; }
+            .form-row { grid-template-columns: 1fr; gap: 0; }
+            .footer { padding: 45px 20px 25px; }
+            .product-image { height: 180px; }
+            .card-actions { grid-template-columns: 1fr auto; }
+        }
+        @media (max-width: 420px) {
+            .steps-grid { grid-template-columns: 1fr; }
+            .logo { font-size: 20px; }
         }
     </style>
 </head>
@@ -431,28 +820,55 @@
     <!-- Top Bar -->
     <div class="top-bar">
         <div class="top-bar-left">
-            <span><i class="fas fa-envelope"></i> info@jenzythrifts.com</span>
-            <span><i class="fas fa-phone"></i> +92 300 1234567</span>
+            <a data-site="email-link"><i class="fas fa-envelope"></i> <span data-site="email"></span></a>
+            <a data-site="phone-link"><i class="fas fa-phone"></i> <span data-site="phone"></span></a>
         </div>
         <div class="top-bar-right">
-            <a href="admin.html" target="_blank"><i class="fas fa-lock"></i> Admin Portal</a>
+            <a href="#why-us">Why Jenzy?</a>
+            <a href="#contact">Contact</a>
         </div>
     </div>
 
     <!-- Header -->
-    <header class="header">
-        <div class="logo">JENZY<span>THRIFTS</span></div>
-        <nav class="nav-menu">
-            <a href="#store" class="active">Store</a>
-            <a href="#store" onclick="filterByBrand('Nike')">Nike</a>
-            <a href="#store" onclick="filterByBrand('Adidas')">Adidas</a>
-            <a href="#store" onclick="filterByBrand('New Balance')">New Balance</a>
-            <a href="admin.html">Admin</a>
+    <header class="header" id="siteHeader">
+        <a href="#" class="logo">JENZY<span>THRIFTS</span></a>
+        <nav class="nav-menu" id="navMenu">
+            <a href="#store" data-nav="ALL" class="active">Store</a>
+            <a href="#store" data-nav="Men">Men</a>
+            <a href="#store" data-nav="Women">Women</a>
+            <a href="#why-us">Why Us</a>
+            <a href="#about">About</a>
+            <a href="#contact">Contact</a>
         </nav>
         <div class="header-icons">
-            <button class="icon-btn" onclick="toggleCart()"><i class="fas fa-shopping-bag"></i><span class="badge" id="cartBadge">0</span></button>
+            <!-- Signed out -->
+            <button class="signin-btn" id="signinBtn" onclick="openLogin()" style="display:none">
+                <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+                <span class="signin-text">Sign in</span>
+            </button>
+            <!-- Signed in -->
+            <div class="user-menu" id="userMenu">
+                <button class="user-avatar-btn" id="userAvatarBtn" title="My account"></button>
+                <div class="user-dropdown" id="userDropdown">
+                    <div class="u-name" id="userName"></div>
+                    <div class="u-email" id="userEmail"></div>
+                    <button onclick="signOutUser()"><i class="fas fa-sign-out-alt"></i> Sign out</button>
+                </div>
+            </div>
+            <button class="icon-btn" onclick="toggleCart()" title="Your bag"><i class="fas fa-shopping-bag"></i><span class="badge" id="cartBadge">0</span></button>
+            <button class="icon-btn menu-toggle" id="menuToggle" title="Menu"><i class="fas fa-bars"></i></button>
         </div>
     </header>
+
+    <!-- Mobile Menu -->
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="#store" data-nav="ALL">Store</a>
+        <a href="#store" data-nav="Men">Men</a>
+        <a href="#store" data-nav="Women">Women</a>
+        <a href="#why-us">Why Us</a>
+        <a href="#about">About</a>
+        <a href="#contact">Contact</a>
+    </div>
 
     <!-- Hero Section -->
     <section class="hero">
@@ -460,50 +876,266 @@
             <span class="hero-tag">Originals Only</span>
             <h1 class="hero-title">Hand-Picked <span>Thrifted</span> Kicks</h1>
             <p class="hero-desc">Authentic Nike, Adidas, Jordan, and New Balance shoes verified and cleaned. High quality for the lowest prices.</p>
-            <a href="#store" class="btn-neon btn-neon-green"><i class="fas fa-fire"></i> Shop Collection</a>
+            <a href="#categories" class="btn-neon btn-neon-green"><i class="fas fa-fire"></i> Shop Collection</a>
+        </div>
+    </section>
+
+    <!-- Shop by Category -->
+    <section class="section" id="categories">
+        <div class="section-header">
+            <div class="section-tag">Find Your Fit</div>
+            <h2 class="section-title">Shop By <span>Category</span></h2>
+        </div>
+        <div class="category-grid">
+            <div class="category-card men" onclick="shopCategory('Men')">
+                <div class="cat-bg" style="background-image:url('https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=900')"></div>
+                <div class="cat-content">
+                    <small>For Him</small>
+                    <h3>Men's Shoes</h3>
+                    <span>Shop Men <i class="fas fa-arrow-right"></i></span>
+                </div>
+            </div>
+            <div class="category-card women" onclick="shopCategory('Women')">
+                <div class="cat-bg" style="background-image:url('https://images.unsplash.com/photo-1556906781-9a412961c28c?w=900')"></div>
+                <div class="cat-content">
+                    <small>For Her</small>
+                    <h3>Women's Shoes</h3>
+                    <span>Shop Women <i class="fas fa-arrow-right"></i></span>
+                </div>
+            </div>
         </div>
     </section>
 
     <!-- Store Section (Live from Supabase) -->
-    <section class="section" id="store">
+    <section class="section" id="store" style="padding-top:20px">
         <div class="section-header">
             <div class="section-tag">Direct From Inventory</div>
             <h2 class="section-title">Latest <span>Drops</span></h2>
         </div>
 
-        <!-- Brand Tabs -->
-        <div class="product-tabs" id="brandTabs">
-            <button class="tab-btn active" onclick="filterByBrand('ALL')">All Brands</button>
-            <button class="tab-btn" onclick="filterByBrand('Nike')">Nike</button>
-            <button class="tab-btn" onclick="filterByBrand('Adidas')">Adidas</button>
-            <button class="tab-btn" onclick="filterByBrand('New Balance')">New Balance</button>
-            <button class="tab-btn" onclick="filterByBrand('Puma')">Puma</button>
-            <button class="tab-btn" onclick="filterByBrand('Jordan')">Jordan</button>
-            <button class="tab-btn" onclick="filterByBrand('Vans')">Vans</button>
+        <!-- Category (Gender) Tabs -->
+        <div class="product-tabs gender-tabs" id="genderTabs">
+            <button class="tab-btn active" data-gender="ALL">All</button>
+            <button class="tab-btn" data-gender="Men"><i class="fas fa-mars"></i> Men</button>
+            <button class="tab-btn" data-gender="Women"><i class="fas fa-venus"></i> Women</button>
         </div>
 
-        <!-- Size Filter -->
-        <div class="size-filter" id="sizeFilters">
-            <button class="size-btn active" onclick="filterBySize('ALL')">All</button>
-            <button class="size-btn" onclick="filterBySize('7')">7</button>
-            <button class="size-btn" onclick="filterBySize('8')">8</button>
-            <button class="size-btn" onclick="filterBySize('8.5')">8.5</button>
-            <button class="size-btn" onclick="filterBySize('9')">9</button>
-            <button class="size-btn" onclick="filterBySize('9.5')">9.5</button>
-            <button class="size-btn" onclick="filterBySize('10')">10</button>
-            <button class="size-btn" onclick="filterBySize('10.5')">10.5</button>
-            <button class="size-btn" onclick="filterBySize('11')">11</button>
-            <button class="size-btn" onclick="filterBySize('12')">12</button>
-        </div>
+        <!-- Brand Tabs (built from your products) -->
+        <div class="filter-label">Brand</div>
+        <div class="product-tabs" id="brandTabs"></div>
+
+        <!-- Size Filter (built from your products) -->
+        <div class="filter-label">Size (US)</div>
+        <div class="size-filter" id="sizeFilters"></div>
+
+        <p class="results-count" id="resultsCount"></p>
 
         <!-- Products Container -->
         <div class="products-grid" id="productsGrid">
             <div class="loading-state">
                 <i class="fas fa-spinner fa-spin"></i>
-                <p>Fetching inventory from Supabase...</p>
+                <p>Fetching inventory...</p>
             </div>
         </div>
     </section>
+
+    <!-- Why Us -->
+    <section class="alt-bg" id="why-us">
+        <div class="section">
+            <div class="section-header">
+                <div class="section-tag">Why Jenzy Thrifts</div>
+                <h2 class="section-title">Why Shop <span>With Us</span></h2>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon fi-green"><i class="fas fa-certificate"></i></div>
+                    <h4>100% Original</h4>
+                    <p>Every pair is checked for authenticity before it is listed. No first-copies, no replicas — only genuine branded shoes.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon fi-blue"><i class="fas fa-soap"></i></div>
+                    <h4>Cleaned &amp; Sanitised</h4>
+                    <p>Each pair is deep-cleaned and sanitised, so it arrives fresh and ready to wear.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon fi-pink"><i class="fas fa-tags"></i></div>
+                    <h4>Fraction of Retail</h4>
+                    <p>Premium brands like Nike, Adidas, Jordan and New Balance at thrift prices — big savings compared to buying new.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon fi-yellow"><i class="fas fa-clipboard-check"></i></div>
+                    <h4>Honest Condition</h4>
+                    <p>Every listing is graded Excellent, Good or Fair with real photos, so you know exactly what you are getting.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon fi-purple"><i class="fas fa-truck-fast"></i></div>
+                    <h4>Delivery Nationwide</h4>
+                    <p>We deliver across Pakistan, with free delivery on orders above PKR 5,000.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon fi-green"><i class="fab fa-whatsapp"></i></div>
+                    <h4>Real Human Support</h4>
+                    <p>Order and ask questions directly on WhatsApp. Talk to a real person, get real answers — fast.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How to Order -->
+    <section class="section" id="how-to-order">
+        <div class="section-header">
+            <div class="section-tag">Simple &amp; Fast</div>
+            <h2 class="section-title">How To <span>Order</span></h2>
+        </div>
+        <div class="steps-grid">
+            <div class="step-card">
+                <div class="step-num">1</div>
+                <h4>Sign In With Google</h4>
+                <p>One tap sign-in — no passwords, no long forms.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-num">2</div>
+                <h4>Pick Your Pair</h4>
+                <p>Browse by category, brand and size, then add to your bag.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-num">3</div>
+                <h4>Order on WhatsApp</h4>
+                <p>Send your order in one click. We confirm availability right away.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-num">4</div>
+                <h4>Get It Delivered</h4>
+                <p>Your cleaned, verified pair ships straight to your door.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- About -->
+    <section class="alt-bg" id="about">
+        <div class="section">
+            <div class="about-grid">
+                <div class="about-img">
+                    <img src="https://images.unsplash.com/photo-1556906781-9a412961c28c?w=900" alt="Thrifted sneakers" loading="lazy">
+                </div>
+                <div class="about-text">
+                    <div class="section-tag">Our Story</div>
+                    <h2 class="section-title">About <span>Jenzy Thrifts</span></h2>
+                    <p>JENZY THRIFTS started with one simple idea: everyone deserves to wear authentic branded sneakers without paying crazy retail prices.</p>
+                    <p>We hand-pick pre-loved shoes from the world's top brands, check every pair for authenticity, clean them properly and grade their condition honestly. Thrifting is also better for the planet — every pair we sell is one less pair in a landfill.</p>
+                    <div class="about-stats">
+                        <div><strong>100%</strong><span>Authentic</span></div>
+                        <div><strong>10+</strong><span>Top Brands</span></div>
+                        <div><strong>PK</strong><span>Nationwide</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact -->
+    <section class="section" id="contact">
+        <div class="section-header">
+            <div class="section-tag">Get In Touch</div>
+            <h2 class="section-title">Contact <span>Us</span></h2>
+        </div>
+        <div class="contact-grid">
+            <div class="contact-info">
+                <a class="contact-item" data-site="whatsapp-link" target="_blank" rel="noopener">
+                    <div class="ci-icon fi-green"><i class="fab fa-whatsapp"></i></div>
+                    <div><h5>WhatsApp</h5><p data-site="phone"></p></div>
+                </a>
+                <a class="contact-item" data-site="phone-link">
+                    <div class="ci-icon fi-blue"><i class="fas fa-phone"></i></div>
+                    <div><h5>Call Us</h5><p data-site="phone"></p></div>
+                </a>
+                <a class="contact-item" data-site="email-link">
+                    <div class="ci-icon fi-pink"><i class="fas fa-envelope"></i></div>
+                    <div><h5>Email</h5><p data-site="email"></p></div>
+                </a>
+                <a class="contact-item" data-site="instagram-link" target="_blank" rel="noopener">
+                    <div class="ci-icon fi-purple"><i class="fab fa-instagram"></i></div>
+                    <div><h5>Instagram</h5><p data-site="instagram-handle"></p></div>
+                </a>
+            </div>
+
+            <form class="contact-form" id="contactForm" novalidate>
+                <h3>Send Us a Message</h3>
+                <p>Looking for a specific pair or size? Have a question? Drop us a message and we'll reply by email.</p>
+                <div class="form-row">
+                    <div class="field">
+                        <label for="cfName">Your Name</label>
+                        <input type="text" id="cfName" maxlength="100" required placeholder="Ali Khan">
+                    </div>
+                    <div class="field">
+                        <label for="cfEmail">Email</label>
+                        <input type="email" id="cfEmail" maxlength="150" required placeholder="you@example.com">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="field">
+                        <label for="cfPhone">Phone (optional)</label>
+                        <input type="tel" id="cfPhone" maxlength="30" placeholder="03XX XXXXXXX">
+                    </div>
+                    <div class="field">
+                        <label for="cfSubject">Subject</label>
+                        <select id="cfSubject">
+                            <option>General Question</option>
+                            <option>Looking For a Pair</option>
+                            <option>Order Help</option>
+                            <option>Sell Us Your Shoes</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="field">
+                    <label for="cfMessage">Message</label>
+                    <textarea id="cfMessage" maxlength="2000" required placeholder="Hi! I'm looking for Nike Air Force 1 in size 9..."></textarea>
+                </div>
+                <!-- Spam trap: real people never fill this -->
+                <div class="hp-field" aria-hidden="true">
+                    <label for="cfWebsite">Website</label>
+                    <input type="text" id="cfWebsite" tabindex="-1" autocomplete="off">
+                </div>
+                <button type="submit" class="btn-neon btn-neon-green" id="cfSubmit" style="width:100%; justify-content:center;">
+                    <i class="fas fa-paper-plane"></i> Send Message
+                </button>
+                <div class="form-status" id="cfStatus"></div>
+            </form>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-grid">
+            <div>
+                <div class="logo">JENZY<span>THRIFTS</span></div>
+                <p>Authentic, hand-picked thrifted sneakers from the world's top brands — verified, cleaned and priced for everyone.</p>
+                <div class="footer-social">
+                    <a data-site="whatsapp-link" target="_blank" rel="noopener" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+                    <a data-site="instagram-link" target="_blank" rel="noopener" title="Instagram"><i class="fab fa-instagram"></i></a>
+                    <a data-site="email-link" title="Email"><i class="fas fa-envelope"></i></a>
+                </div>
+            </div>
+            <div>
+                <h5>Shop</h5>
+                <ul>
+                    <li><a href="#store" data-nav="ALL">All Shoes</a></li>
+                    <li><a href="#store" data-nav="Men">Men</a></li>
+                    <li><a href="#store" data-nav="Women">Women</a></li>
+                </ul>
+            </div>
+            <div>
+                <h5>Info</h5>
+                <ul>
+                    <li><a href="#why-us">Why Us</a></li>
+                    <li><a href="#how-to-order">How To Order</a></li>
+                    <li><a href="#about">About Us</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">© <span id="year"></span> JENZY THRIFTS. All rights reserved.</div>
+    </footer>
 
     <!-- Cart Drawer -->
     <div class="cart-sidebar" id="cartSidebar">
@@ -525,8 +1157,38 @@
         </div>
     </div>
 
+    <!-- Login Modal (Google) -->
+    <div class="modal-overlay" id="loginModal">
+        <div class="modal-box">
+            <button class="modal-close" onclick="closeLogin()" title="Close"><i class="fas fa-times"></i></button>
+
+            <!-- Step 1: sign in -->
+            <div id="loginStep">
+                <div class="modal-icon"><i class="fas fa-user-lock"></i></div>
+                <h3>Sign In To Order</h3>
+                <p id="loginReason">Please sign in with your Google account to add shoes to your bag and place orders.</p>
+                <button class="google-btn" id="googleBtn" onclick="signInWithGoogle()">
+                    <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+                    <span>Continue with Google</span>
+                </button>
+                <div class="modal-error" id="loginError"></div>
+                <p class="modal-note">We only use your name and email to confirm your order.</p>
+            </div>
+
+            <!-- Step 2: signed in, continue (needed so WhatsApp can open from a real tap) -->
+            <div id="continueStep" style="display:none">
+                <div class="modal-icon"><i class="fas fa-check"></i></div>
+                <h3>You're Signed In!</h3>
+                <p id="continueText">Welcome! Tap below to continue with your order.</p>
+                <button class="btn-neon btn-neon-green" id="continueBtn" style="width:100%; justify-content:center;">
+                    <i class="fab fa-whatsapp"></i> Continue to WhatsApp
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Floating WhatsApp -->
-    <a href="https://wa.me/923001234567?text=Hi%20JENZY%20THRIFTS,%20I%20have%20an%20inquiry%20about%20shoes" class="wa-float" target="_blank">
+    <a data-site="whatsapp-link" class="wa-float" target="_blank" rel="noopener" title="Chat on WhatsApp">
         <i class="fab fa-whatsapp"></i>
     </a>
 
@@ -534,22 +1196,213 @@
     <div class="toast" id="toast">Added to Cart! 🛒</div>
 
     <!-- ============================================== -->
-    <!-- SUPABASE CONFIG & LOGIC -->
+    <!-- CONFIG & LOGIC -->
     <!-- ============================================== -->
     <script>
-        // 🔥 PASTE YOUR SUPABASE CREDENTIALS HERE
+        // =============================================
+        // ✏️ YOUR SHOP DETAILS — edit these
+        // =============================================
+        const SITE = {
+            whatsapp: "923001234567",          // WhatsApp number: 92 + number without the first 0
+            phone: "+92 300 1234567",          // shown on the page
+            email: "info@jenzythrifts.com",
+            instagram: ""                      // e.g. "https://instagram.com/jenzythrifts" (leave empty to hide)
+        };
+
+        // 🔥 FIREBASE — used for Google sign-in
+        const firebaseConfig = {
+            apiKey: "AIzaSyBcPi4kwtQmZjPpU9v4jmK-ggC2CsoJD38",
+            authDomain: "jenzythrifts-c7f90.firebaseapp.com",
+            projectId: "jenzythrifts-c7f90",
+            storageBucket: "jenzythrifts-c7f90.firebasestorage.app",
+            messagingSenderId: "698531856654",
+            appId: "1:698531856654:web:e3edf1169b3a50b5ac575f"
+        };
+
+        // 🟢 SUPABASE — products + contact messages
         const SUPABASE_URL = "https://zurvhjraxenbnvmwdurz.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1cnZoanJheGVuYm52bXdkdXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAzNTI2NzAsImV4cCI6MjEwNTkyODY3MH0.mdmGZCNYds6wPHY8hE3_Eq1BaZ-x4LvPd-AIEsoJrTM";
 
+        // =============================================
+        // INIT
+        // =============================================
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
         const { createClient } = supabase;
         const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let products = [];
+        let activeGender = 'ALL';
         let activeBrand = 'ALL';
         let activeSize = 'ALL';
-        let cart = JSON.parse(localStorage.getItem('jenzyCart')) || [];
+        let currentUser = null;
+        let pendingAction = null;   // what to do after the customer signs in
+        let cart = loadCart();
 
-        // Load Products On Page Load
+        // =============================================
+        // HELPERS
+        // =============================================
+        function esc(value) {
+            return String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+        function formatPKR(n) { return 'PKR ' + Number(n || 0).toLocaleString(); }
+        function waLink(text) {
+            return `https://wa.me/${SITE.whatsapp}` + (text ? `?text=${encodeURIComponent(text)}` : '');
+        }
+        function loadCart() {
+            try { return JSON.parse(localStorage.getItem('jenzyCart')) || []; } catch { return []; }
+        }
+        function saveCart() { localStorage.setItem('jenzyCart', JSON.stringify(cart)); }
+
+        // Fill contact details everywhere on the page from SITE
+        function applySiteInfo() {
+            const telHref = 'tel:' + SITE.phone.replace(/[^\d+]/g, '');
+            const handle = SITE.instagram ? '@' + SITE.instagram.replace(/\/+$/, '').split('/').pop() : '';
+            document.querySelectorAll('[data-site]').forEach(el => {
+                switch (el.dataset.site) {
+                    case 'email': el.textContent = SITE.email; break;
+                    case 'phone': el.textContent = SITE.phone; break;
+                    case 'instagram-handle': el.textContent = handle; break;
+                    case 'email-link': el.href = 'mailto:' + SITE.email; break;
+                    case 'phone-link': el.href = telHref; break;
+                    case 'whatsapp-link': el.href = waLink('Hi JENZY THRIFTS, I have an inquiry about shoes'); break;
+                    case 'instagram-link':
+                        if (SITE.instagram) el.href = SITE.instagram; else el.style.display = 'none';
+                        break;
+                }
+            });
+            document.getElementById('year').textContent = new Date().getFullYear();
+        }
+
+        // =============================================
+        // GOOGLE SIGN-IN (Firebase)
+        // =============================================
+        auth.onAuthStateChanged(user => {
+            currentUser = user;
+            renderUserUI();
+            prefillContactForm();
+            if (user && pendingAction) {
+                const action = pendingAction;
+                pendingAction = null;
+                if (action.needsTap) {
+                    // WhatsApp must be opened from a real tap, otherwise browsers block it
+                    showContinueStep(action);
+                } else {
+                    closeLogin();
+                    action.run();
+                }
+            }
+        });
+
+        auth.getRedirectResult().catch(err => console.warn('Redirect sign-in error:', err));
+
+        function renderUserUI() {
+            const signinBtn = document.getElementById('signinBtn');
+            const userMenu = document.getElementById('userMenu');
+            if (currentUser) {
+                signinBtn.style.display = 'none';
+                userMenu.classList.add('show');
+                const name = currentUser.displayName || currentUser.email || 'Customer';
+                document.getElementById('userName').textContent = name;
+                document.getElementById('userEmail').textContent = currentUser.email || '';
+                const avatarBtn = document.getElementById('userAvatarBtn');
+                if (currentUser.photoURL) {
+                    avatarBtn.innerHTML = `<img src="${esc(currentUser.photoURL)}" alt="" referrerpolicy="no-referrer">`;
+                } else {
+                    avatarBtn.textContent = name.charAt(0).toUpperCase();
+                }
+            } else {
+                signinBtn.style.display = 'inline-flex';
+                userMenu.classList.remove('show');
+                document.getElementById('userDropdown').classList.remove('show');
+            }
+        }
+
+        // Run an action only if signed in; otherwise ask to sign in first
+        function requireLogin(action) {
+            if (currentUser) return action.run();
+            pendingAction = action;
+            openLogin(action.reason);
+        }
+
+        function openLogin(reason) {
+            document.getElementById('loginReason').textContent = reason ||
+                'Sign in with your Google account to add shoes to your bag and place orders.';
+            document.getElementById('loginStep').style.display = 'block';
+            document.getElementById('continueStep').style.display = 'none';
+            document.getElementById('loginError').classList.remove('show');
+            document.getElementById('loginModal').classList.add('show');
+        }
+
+        function closeLogin() {
+            document.getElementById('loginModal').classList.remove('show');
+            pendingAction = null;
+        }
+
+        function showContinueStep(action) {
+            const first = (currentUser.displayName || '').split(' ')[0];
+            document.getElementById('continueText').textContent =
+                `Welcome${first ? ', ' + first : ''}! Tap below to send your order on WhatsApp.`;
+            document.getElementById('loginStep').style.display = 'none';
+            document.getElementById('continueStep').style.display = 'block';
+            document.getElementById('continueBtn').onclick = () => { closeLogin(); action.run(); };
+        }
+
+        async function signInWithGoogle() {
+            const btn = document.getElementById('googleBtn');
+            const errBox = document.getElementById('loginError');
+            errBox.classList.remove('show');
+            btn.disabled = true;
+            const hadPendingAction = !!pendingAction;   // e.g. "add to bag" waiting for sign-in
+            const provider = new firebase.auth.GoogleAuthProvider();
+            provider.setCustomParameters({ prompt: 'select_account' });
+            try {
+                await auth.signInWithPopup(provider);
+                // If an order action was waiting, onAuthStateChanged already handled it
+                if (!hadPendingAction) {
+                    closeLogin();
+                    showToast('Signed in successfully ✅');
+                }
+            } catch (err) {
+                console.error('Google sign-in error:', err);
+                if (err.code === 'auth/popup-blocked' || err.code === 'auth/operation-not-supported-in-this-environment') {
+                    return auth.signInWithRedirect(provider);
+                }
+                const messages = {
+                    'auth/popup-closed-by-user': null,
+                    'auth/cancelled-popup-request': null,
+                    'auth/unauthorized-domain': 'This website domain is not authorised in Firebase (Authentication → Settings → Authorized domains).',
+                    'auth/operation-not-allowed': 'Google sign-in is not enabled in Firebase (Authentication → Sign-in method → Google).',
+                    'auth/network-request-failed': 'Network error. Please check your internet connection and try again.',
+                    'auth/web-storage-unsupported': 'Your browser is blocking sign-in. Please open this site in Chrome or Safari.'
+                };
+                const msg = err.code in messages ? messages[err.code]
+                    : 'Sign-in failed. If you opened this link inside Instagram/Facebook/TikTok, tap ⋮ and choose "Open in browser", then try again.';
+                if (msg) { errBox.textContent = msg; errBox.classList.add('show'); }
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function signOutUser() {
+            await auth.signOut();
+            showToast('Signed out');
+        }
+
+        document.getElementById('userAvatarBtn').addEventListener('click', e => {
+            e.stopPropagation();
+            document.getElementById('userDropdown').classList.toggle('show');
+        });
+        document.addEventListener('click', e => {
+            if (!e.target.closest('#userMenu')) document.getElementById('userDropdown').classList.remove('show');
+        });
+        document.getElementById('loginModal').addEventListener('click', e => {
+            if (e.target.id === 'loginModal') closeLogin();
+        });
+
+        // =============================================
+        // PRODUCTS (Supabase)
+        // =============================================
         async function fetchProducts() {
             try {
                 const { data, error } = await db
@@ -560,91 +1413,159 @@
 
                 if (error) throw error;
                 products = data || [];
+                buildBrandTabs();
+                buildSizeFilters();
+                syncCartWithProducts();
                 renderProducts();
             } catch (err) {
                 console.error("Supabase Error:", err);
+                document.getElementById('resultsCount').textContent = '';
                 document.getElementById('productsGrid').innerHTML = `
                     <div class="empty-state">
                         <i class="fas fa-exclamation-triangle" style="color:var(--neon-pink)"></i>
-                        <p>Could not load products. Please check your Supabase URL & Key.</p>
-                    </div>
-                `;
+                        <p>Could not load products right now. Please try again in a moment.</p>
+                    </div>`;
             }
         }
 
-        // Render Cards
+        // Unisex shoes show in both Men and Women
+        function matchesGender(p) {
+            if (activeGender === 'ALL') return true;
+            const g = (p.gender || 'Unisex').toLowerCase();
+            return g === activeGender.toLowerCase() || g === 'unisex';
+        }
+
+        function buildBrandTabs() {
+            const brands = [...new Set(products.map(p => p.brand).filter(Boolean))].sort();
+            if (activeBrand !== 'ALL' && !brands.includes(activeBrand)) activeBrand = 'ALL';
+            document.getElementById('brandTabs').innerHTML =
+                `<button class="tab-btn ${activeBrand === 'ALL' ? 'active' : ''}" data-brand="ALL">All Brands</button>` +
+                brands.map(b => `<button class="tab-btn ${activeBrand === b ? 'active' : ''}" data-brand="${esc(b)}">${esc(b)}</button>`).join('');
+        }
+
+        function buildSizeFilters() {
+            const sizes = [...new Set(products.flatMap(p => p.sizes || []))]
+                .sort((a, b) => (parseFloat(a) || 999) - (parseFloat(b) || 999) || String(a).localeCompare(String(b)));
+            if (activeSize !== 'ALL' && !sizes.includes(activeSize)) activeSize = 'ALL';
+            document.getElementById('sizeFilters').innerHTML =
+                `<button class="size-btn ${activeSize === 'ALL' ? 'active' : ''}" data-size="ALL">All</button>` +
+                sizes.map(s => `<button class="size-btn ${activeSize === s ? 'active' : ''}" data-size="${esc(s)}">${esc(s)}</button>`).join('');
+        }
+
         function renderProducts() {
             const container = document.getElementById('productsGrid');
-
-            // Apply brand & size filters
             const filtered = products.filter(p => {
-                const brandMatch = activeBrand === 'ALL' || p.brand.toLowerCase() === activeBrand.toLowerCase();
+                const brandMatch = activeBrand === 'ALL' || (p.brand || '').toLowerCase() === activeBrand.toLowerCase();
                 const sizeMatch = activeSize === 'ALL' || (p.sizes && p.sizes.includes(activeSize));
-                return brandMatch && sizeMatch;
+                return matchesGender(p) && brandMatch && sizeMatch;
             });
+
+            const label = activeGender === 'ALL' ? '' : ` in ${activeGender}`;
+            document.getElementById('resultsCount').textContent =
+                `Showing ${filtered.length} pair${filtered.length === 1 ? '' : 's'}${label}`;
 
             if (filtered.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
                         <i class="fas fa-shoe-prints"></i>
                         <p>No shoes found matching your filters.</p>
-                    </div>
-                `;
+                    </div>`;
                 return;
             }
 
             container.innerHTML = filtered.map(p => {
                 const img = p.images && p.images.length > 0 ? p.images[0] : 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600';
-                const tagClass = p.tag ? `badge-${p.tag.toLowerCase()}` : '';
-                const sizesStr = p.sizes ? p.sizes.join(', ') : 'Free Size';
+                const tag = p.tag ? String(p.tag).toLowerCase() : '';
+                const sizesStr = p.sizes && p.sizes.length ? p.sizes.join(', ') : 'Free Size';
+                const inCart = cart.some(c => c.id === p.id);
+                const genderLabel = p.gender && p.gender !== 'Unisex' ? ` • ${esc(p.gender)}` : ' • Unisex';
 
                 return `
                     <div class="product-card">
                         <div class="product-image">
-                            <img src="${img}" alt="${p.name}" loading="lazy">
-                            ${p.tag ? `<span class="product-badge ${tagClass}">${p.tag}</span>` : ''}
+                            <img src="${esc(img)}" alt="${esc(p.name)}" loading="lazy">
+                            ${p.tag ? `<span class="product-badge badge-${esc(tag)}">${esc(p.tag)}</span>` : ''}
                         </div>
                         <div class="product-info">
-                            <span class="product-brand">${p.brand}</span>
-                            <h3 class="product-name">${p.name}</h3>
-                            <div class="product-meta">Sizes (US): ${sizesStr}</div>
-                            <span class="cond-tag cond-${p.condition}">${p.condition} Condition</span>
+                            <span class="product-brand">${esc(p.brand)}${genderLabel}</span>
+                            <h3 class="product-name">${esc(p.name)}</h3>
+                            <div class="product-meta">Sizes (US): ${esc(sizesStr)}</div>
+                            <span class="cond-tag cond-${esc(p.condition)}">${esc(p.condition)} Condition</span>
                             <div class="product-price-row">
-                                <span class="price-current">PKR ${p.price.toLocaleString()}</span>
-                                ${p.original_price ? `<span class="price-orig">PKR ${p.original_price.toLocaleString()}</span>` : ''}
+                                <span class="price-current">${formatPKR(p.price)}</span>
+                                ${p.original_price ? `<span class="price-orig">${formatPKR(p.original_price)}</span>` : ''}
                             </div>
                             <div class="card-actions">
-                                <button class="btn-cart" onclick="addToCart('${p.id}')">
-                                    <i class="fas fa-plus"></i> Add To Bag
+                                <button class="btn-cart" data-add="${esc(p.id)}">
+                                    ${inCart ? '<i class="fas fa-check"></i> In Your Bag' : '<i class="fas fa-plus"></i> Add To Bag'}
                                 </button>
-                                <button class="btn-wa-icon" title="Order via WhatsApp" onclick="orderWhatsAppDirect('${p.name}', '${p.price}', '${sizesStr}')">
+                                <button class="btn-wa-icon" title="Order via WhatsApp" data-wa="${esc(p.id)}">
                                     <i class="fab fa-whatsapp"></i>
                                 </button>
                             </div>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             }).join('');
         }
 
-        // Filtering Handlers
+        // =============================================
+        // FILTERS
+        // =============================================
+        function filterByGender(gender) {
+            activeGender = gender;
+            document.querySelectorAll('#genderTabs .tab-btn').forEach(b => b.classList.toggle('active', b.dataset.gender === gender));
+            document.querySelectorAll('#navMenu [data-nav]').forEach(a => a.classList.toggle('active', a.dataset.nav === gender));
+            renderProducts();
+        }
         function filterByBrand(brand) {
             activeBrand = brand;
-            document.querySelectorAll('#brandTabs .tab-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.textContent.trim().toLowerCase() === (brand === 'ALL' ? 'all brands' : brand).toLowerCase());
-            });
+            document.querySelectorAll('#brandTabs .tab-btn').forEach(b => b.classList.toggle('active', b.dataset.brand === brand));
             renderProducts();
         }
-
         function filterBySize(size) {
             activeSize = size;
-            document.querySelectorAll('#sizeFilters .size-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.textContent.trim() === size);
-            });
+            document.querySelectorAll('#sizeFilters .size-btn').forEach(b => b.classList.toggle('active', b.dataset.size === size));
             renderProducts();
         }
+        function shopCategory(gender) {
+            filterByGender(gender);
+            document.getElementById('store').scrollIntoView({ behavior: 'smooth' });
+        }
 
-        // Cart Drawer Functions
+        document.getElementById('genderTabs').addEventListener('click', e => {
+            const b = e.target.closest('[data-gender]'); if (b) filterByGender(b.dataset.gender);
+        });
+        document.getElementById('brandTabs').addEventListener('click', e => {
+            const b = e.target.closest('[data-brand]'); if (b) filterByBrand(b.dataset.brand);
+        });
+        document.getElementById('sizeFilters').addEventListener('click', e => {
+            const b = e.target.closest('[data-size]'); if (b) filterBySize(b.dataset.size);
+        });
+        // Header / mobile / footer links with data-nav="Men" etc.
+        document.querySelectorAll('[data-nav]').forEach(a => {
+            a.addEventListener('click', () => {
+                filterByGender(a.dataset.nav);
+                document.getElementById('mobileMenu').classList.remove('show');
+            });
+        });
+        document.getElementById('productsGrid').addEventListener('click', e => {
+            const add = e.target.closest('[data-add]');
+            const wa = e.target.closest('[data-wa]');
+            if (add) addToCart(add.dataset.add);
+            if (wa) orderWhatsAppDirect(wa.dataset.wa);
+        });
+
+        // Mobile menu
+        document.getElementById('menuToggle').addEventListener('click', () => {
+            document.getElementById('mobileMenu').classList.toggle('show');
+        });
+        document.querySelectorAll('#mobileMenu a').forEach(a => a.addEventListener('click', () => {
+            document.getElementById('mobileMenu').classList.remove('show');
+        }));
+
+        // =============================================
+        // CART
+        // =============================================
         function toggleCart() {
             document.getElementById('cartSidebar').classList.toggle('active');
             renderCart();
@@ -653,18 +1574,50 @@
         function addToCart(productId) {
             const item = products.find(p => p.id === productId);
             if (!item) return;
-
-            cart.push(item);
-            localStorage.setItem('jenzyCart', JSON.stringify(cart));
-            updateCartBadge();
-            showToast(`Added ${item.name} to bag!`);
+            requireLogin({
+                reason: 'Sign in with Google to add shoes to your bag.',
+                run: () => {
+                    if (cart.some(c => c.id === item.id)) {
+                        showToast('This pair is already in your bag 👟');
+                        return;
+                    }
+                    cart.push({
+                        id: item.id,
+                        name: item.name,
+                        brand: item.brand,
+                        price: item.price,
+                        sizes: item.sizes || [],
+                        image: item.images && item.images[0] ? item.images[0] : ''
+                    });
+                    saveCart();
+                    updateCartBadge();
+                    renderProducts();
+                    showToast(`Added ${item.name} to bag!`);
+                }
+            });
         }
 
         function removeFromCart(index) {
             cart.splice(index, 1);
-            localStorage.setItem('jenzyCart', JSON.stringify(cart));
+            saveCart();
             updateCartBadge();
             renderCart();
+            renderProducts();
+        }
+
+        // Drop items that were sold/hidden and refresh prices from the live inventory
+        function syncCartWithProducts() {
+            const before = cart.length;
+            cart = cart
+                .map(c => {
+                    const live = products.find(p => p.id === c.id);
+                    return live ? { ...c, name: live.name, brand: live.brand, price: live.price, sizes: live.sizes || [],
+                        image: live.images && live.images[0] ? live.images[0] : c.image } : null;
+                })
+                .filter(Boolean);
+            saveCart();
+            updateCartBadge();
+            if (cart.length < before) showToast('Some items in your bag are no longer available and were removed');
         }
 
         function updateCartBadge() {
@@ -678,52 +1631,135 @@
                 document.getElementById('cartTotal').textContent = 'PKR 0';
                 return;
             }
-
             let total = 0;
             container.innerHTML = cart.map((item, index) => {
-                total += item.price;
-                const img = item.images && item.images.length > 0 ? item.images[0] : '';
+                total += Number(item.price) || 0;
                 return `
                     <div class="cart-item">
-                        <img src="${img}" alt="${item.name}">
+                        <img src="${esc(item.image)}" alt="${esc(item.name)}">
                         <div style="flex:1">
-                            <h5 style="font-size:14px">${item.name}</h5>
-                            <p style="font-size:12px; color:var(--neon-green)">PKR ${item.price.toLocaleString()}</p>
+                            <h5 style="font-size:14px">${esc(item.name)}</h5>
+                            <p style="font-size:11px; color:var(--text-muted)">Size: ${esc((item.sizes || []).join(', ') || '—')}</p>
+                            <p style="font-size:12px; color:var(--neon-green)">${formatPKR(item.price)}</p>
                         </div>
                         <button onclick="removeFromCart(${index})" style="background:none; border:none; color:var(--text-muted); cursor:pointer"><i class="fas fa-trash"></i></button>
-                    </div>
-                `;
+                    </div>`;
             }).join('');
-
-            document.getElementById('cartTotal').textContent = `PKR ${total.toLocaleString()}`;
+            document.getElementById('cartTotal').textContent = formatPKR(total);
         }
 
-        // WhatsApp Checkout
-        function orderWhatsAppDirect(name, price, sizes) {
-            const msg = `Hi JENZY THRIFTS! 👋 I want to order:%0A%0A👟 *Product:* ${name}%0A💰 *Price:* PKR ${price}%0A📏 *Sizes:* ${sizes}%0A%0APlease confirm if this pair is still available!`;
-            window.open(`https://wa.me/923001234567?text=${msg}`, '_blank');
+        // =============================================
+        // WHATSAPP ORDERING (requires Google sign-in)
+        // =============================================
+        function customerLines() {
+            return `👤 *Name:* ${currentUser.displayName || '-'}\n📧 *Email:* ${currentUser.email || '-'}`;
+        }
+
+        function orderWhatsAppDirect(productId) {
+            const p = products.find(x => x.id === productId);
+            if (!p) return;
+            requireLogin({
+                needsTap: true,
+                reason: 'Sign in with Google to order this pair on WhatsApp.',
+                run: () => {
+                    const sizes = p.sizes && p.sizes.length ? p.sizes.join(', ') : 'Free Size';
+                    const msg = `Hi JENZY THRIFTS! 👋 I want to order:\n\n` +
+                        `👟 *Product:* ${p.brand ? p.brand + ' — ' : ''}${p.name}\n` +
+                        `💰 *Price:* ${formatPKR(p.price)}\n` +
+                        `📏 *Sizes:* ${sizes}\n\n` +
+                        `${customerLines()}\n\nPlease confirm if this pair is still available!`;
+                    window.open(waLink(msg), '_blank');
+                }
+            });
         }
 
         function checkoutWhatsApp() {
-            if (cart.length === 0) return;
-            let msg = `Hi JENZY THRIFTS! 👋 I want to checkout my cart:%0A%0A`;
-            let total = 0;
-            cart.forEach((item, idx) => {
-                msg += `${idx + 1}. *${item.name}* — PKR ${item.price.toLocaleString()}%0A`;
-                total += item.price;
+            if (cart.length === 0) { showToast('Your bag is empty'); return; }
+            requireLogin({
+                needsTap: true,
+                reason: 'Sign in with Google to place your order.',
+                run: () => {
+                    let total = 0;
+                    let msg = `Hi JENZY THRIFTS! 👋 I want to checkout my bag:\n\n`;
+                    cart.forEach((item, idx) => {
+                        msg += `${idx + 1}. *${item.brand ? item.brand + ' ' : ''}${item.name}* (Size: ${(item.sizes || []).join(', ') || '-'}) — ${formatPKR(item.price)}\n`;
+                        total += Number(item.price) || 0;
+                    });
+                    msg += `\n💵 *Total Amount:* ${formatPKR(total)}\n\n${customerLines()}\n🚚 *Deliver to:* (My Address)`;
+                    window.open(waLink(msg), '_blank');
+                }
             });
-            msg += `%0A💵 *Total Amount:* PKR ${total.toLocaleString()}%0A🚚 *Deliver to:* (My Address)`;
-            window.open(`https://wa.me/923001234567?text=${msg}`, '_blank');
         }
 
+        // =============================================
+        // CONTACT FORM (saved to Supabase "messages" table)
+        // =============================================
+        function prefillContactForm() {
+            if (!currentUser) return;
+            const nameEl = document.getElementById('cfName');
+            const emailEl = document.getElementById('cfEmail');
+            if (!nameEl.value) nameEl.value = currentUser.displayName || '';
+            if (!emailEl.value) emailEl.value = currentUser.email || '';
+        }
+
+        document.getElementById('contactForm').addEventListener('submit', async e => {
+            e.preventDefault();
+            const status = document.getElementById('cfStatus');
+            const btn = document.getElementById('cfSubmit');
+            const name = document.getElementById('cfName').value.trim();
+            const email = document.getElementById('cfEmail').value.trim();
+            const phone = document.getElementById('cfPhone').value.trim();
+            const subject = document.getElementById('cfSubject').value;
+            const message = document.getElementById('cfMessage').value.trim();
+
+            const setStatus = (text, ok) => {
+                status.textContent = text;
+                status.className = 'form-status show ' + (ok ? 'ok' : 'err');
+            };
+
+            // Bots fill the hidden field — pretend success and do nothing
+            if (document.getElementById('cfWebsite').value) { setStatus('✅ Message sent!', true); return; }
+
+            if (!name || !email || !message) return setStatus('Please fill in your name, email and message.', false);
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return setStatus('Please enter a valid email address.', false);
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+            try {
+                const { error } = await db.from('messages').insert([{
+                    name, email, phone: phone || null, subject, message,
+                    user_uid: currentUser ? currentUser.uid : null
+                }]);
+                if (error) throw error;
+                setStatus("✅ Thanks! Your message has been sent. We'll get back to you soon.", true);
+                document.getElementById('cfMessage').value = '';
+                document.getElementById('cfPhone').value = '';
+                showToast('Message sent! 📩');
+            } catch (err) {
+                console.error('Contact form error:', err);
+                setStatus('Sorry, your message could not be sent. Please contact us on WhatsApp instead.', false);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Message';
+            }
+        });
+
+        // =============================================
+        // TOAST
+        // =============================================
+        let toastTimer;
         function showToast(text) {
             const t = document.getElementById('toast');
             t.textContent = text;
             t.classList.add('show');
-            setTimeout(() => t.classList.remove('show'), 3000);
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
         }
 
-        // Initialize
+        // =============================================
+        // START
+        // =============================================
+        applySiteInfo();
         updateCartBadge();
         fetchProducts();
     </script>

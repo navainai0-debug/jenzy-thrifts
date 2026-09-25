@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shoe details | JENZY THRIFTS</title>
+    <meta name="description" content="Authentic thrifted sneakers — see photos, condition, sizes and price. Cash on delivery across Pakistan.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/store.css">
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="assets/js/config.js"></script>
+</head>
+<body data-page="shop">
+
+<main class="container">
+    <nav class="breadcrumb" id="breadcrumb" aria-label="Breadcrumb">
+        <a href="index.html">Home</a><i class="fas fa-chevron-right"></i><a href="index.html#shop">Shop</a>
+    </nav>
+
+    <div id="productRoot">
+        <div class="pd-grid">
+            <div class="skeleton" style="aspect-ratio:1/1"></div>
+            <div>
+                <div class="skeleton" style="height:22px;width:30%;margin-bottom:14px"></div>
+                <div class="skeleton" style="height:40px;width:85%;margin-bottom:24px"></div>
+                <div class="skeleton" style="height:60px;margin-bottom:24px"></div>
+                <div class="skeleton" style="height:120px"></div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<section class="related container" id="relatedSection" hidden>
+    <div class="related-head">
+        <div>
+            <span class="eyebrow">You may also like</span>
+            <h2 class="section-title">More <span class="grad">shoes</span></h2>
+        </div>
+        <a href="index.html#shop" class="btn btn-outline btn-sm">View all <i class="fas fa-arrow-right"></i></a>
+    </div>
+    <div class="p-grid" id="relatedGrid"></div>
+</section>
+
+<script src="assets/js/store.js"></script>
+<script>
+(function () {
+    const { db, esc, pkr, sortSizes, discountPct, productCard } = Store;
+    const $ = (id) => document.getElementById(id);
+    const id = Store.qs('id');
+    const root = $('productRoot');
+
+    let product = null;
+    let selectedSize = null;
+    let imageIndex = 0;
+
+    const CONDITION_NOTES = {
+        Excellent: 'Barely worn — looks almost new, minimal signs of use.',
+        Good: 'Lightly worn — small signs of use, no major flaws.',
+        Fair: 'Visibly worn — still very wearable, priced accordingly.'
+    };
+
+    function notFound(message) {
+        document.title = 'Shoe not found | JENZY THRIFTS';
+        root.innerHTML = `
+            <div class="gate">
+                <div class="gate-icon"><i class="fas fa-shoe-prints"></i></div>
+                <h2>${esc(message || 'This shoe is no longer available')}</h2>
+                <p>It may have been sold or removed. Take a look at our other pairs below.</p>
+                <a href="index.html#shop" class="btn btn-primary btn-lg">Browse all shoes</a>
+            </div>`;
+    }
+
+    async function load(isRefresh) {
+        if (!id) { notFound('No shoe selected'); loadRelated(); return; }
+        if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) { notFound(); loadRelated(); return; }
+        const { data, error } = await db.from('products').select('*').eq('id', id).maybeSingle();
+        if (error && !data) {
+            console.error(error);
+            if (!isRefresh) { notFound("Couldn't load this shoe"); loadRelated(); }
+            return;
+        }
+        if (!data) { notFound(); loadRelated(); return; }
+        const firstLoad = !product;
+        product = data;
+        if (selectedSize && !(product.sizes || []).includes(selectedSize)) selectedSize = null;
+        render();
+        if (firstLoad) loadRelated();
+    }
+
+    function render() {
+        const p = product;
+        const images = (p.images && p.images.length) ? p.images : [Store.firstImage(p)];
+        imageIndex = Math.min(imageIndex, images.length - 1);
+        const sizes = sortSizes(p.sizes);
+        const off = discountPct(p);
+        const sold = p.status !== 'Active' || !sizes.length;
+        if (sizes.length === 1 && !sold) selectedSize = sizes[0];
+
+        document.title = `${p.name} | JENZY THRIFTS`;
+        $('breadcrumb').innerHTML = `<a href="index.html">Home</a><i class="fas fa-chevron-right"></i><a href="index.html#shop">Shop</a>` +
+            (p.gender === 'Men' || p.gender === 'Women' ? `<i class="fas fa-chevron-right"></i><a href="index.html?gender=${p.gender}#shop">${p.gender}</a>` : '') +
+            `<i class="fas fa-chevron-right"></i><span>${esc(p.name)}</span>`;
+
+        const specs = [
+            ['Brand', p.brand], ['Category', p.category], ['For', p.gender], ['Color', p.color],
+            ['Condition', p.condition], ['Available sizes', sizes.length ? 'US ' + sizes.join(', ') : 'Sold out'],
+            ['Retail price', p.original_price && p.original_price > p.price ? pkr(p.original_price) : '']
+        ].filter(([, v]) => v);
+
+        root.innerHTML = `
+        <div class="pd-grid">
+            <div class="gallery">
+                <div class="gallery-main">
+                    <img id="mainImage" src="${esc(images[imageIndex])}" alt="${esc(p.name)}">
+                    ${images.length > 1 ? `
+                        <button class="gallery-nav prev" id="prevImg" aria-label="Previous photo"><i class="fas fa-chevron-left"></i></button>
+                        <button class="gallery-nav next" id="nextImg" aria-label="Next photo"><i class="fas fa-chevron-right"></i></button>
+                        <span class="gallery-count" id="imgCount">${imageIndex + 1} / ${images.length}</span>` : ''}
+                    <div class="p-badges">
+                        ${sold ? '<span class="badge badge-sold">Sold out</span>' : ''}
+                        ${!sold && p.tag ? `<span class="badge badge-${esc(p.tag.toLowerCase())}">${esc(p.tag)}</span>` : ''}
+                    </div>
+                </div>
+                ${images.length > 1 ? `<div class="thumbs">${images.map((src, i) => `<button class="${i === imageIndex ? 'active' : ''}" data-img="${i}" aria-label="Photo ${i + 1}"><img src="${esc(src)}" alt="" loading="lazy"></button>`).join('')}</div>` : ''}
+            </div>
+
+            <div class="pd-info">
+                <span class="p-brand">${esc(p.brand || '')}</span>
+                <h1 class="pd-title">${esc(p.name)}</h1>
+                <div class="pd-tags">
+                    ${p.condition ? `<span class="cond cond-${esc(p.condition)}">${esc(p.condition)} condition</span>` : ''}
+                    ${p.gender ? `<span class="cond" style="border:1px solid var(--border-2);color:var(--text-2)">${esc(p.gender)}</span>` : ''}
+                    ${p.category ? `<span class="cond" style="border:1px solid var(--border-2);color:var(--text-2)">${esc(p.category)}</span>` : ''}
+                </div>
+                <div class="pd-price">
+                    <span class="now">${pkr(p.price)}</span>
+                    ${off > 0 ? `<span class="was">${pkr(p.original_price)}</span><span class="save">Save ${off}%</span>` : ''}
+                </div>
+
+                ${sold ? `
+                    <div class="pd-soldout"><i class="fas fa-circle-xmark"></i> This pair has been sold. Check out similar shoes below.</div>
+                ` : `
+                    <div class="pd-block">
+                        <div class="pd-block-head"><h4>Select size (US)</h4><span>${sizes.length === 1 ? 'Only 1 size available' : sizes.length + ' sizes available'}</span></div>
+                        <div class="size-grid" id="sizeGrid">
+                            ${sizes.map(s => `<button class="size-opt ${s === selectedSize ? 'active' : ''}" data-size="${esc(s)}">${esc(s)}</button>`).join('')}
+                        </div>
+                        <div class="size-error" id="sizeError">Please select a size first.</div>
+                    </div>
+                    <div class="pd-actions">
+                        <button class="btn btn-outline btn-lg" id="addToCart"><i class="fas fa-bag-shopping"></i> Add to Cart</button>
+                        <button class="btn btn-primary btn-lg" id="buyNow"><i class="fas fa-bolt"></i> Buy Now</button>
+                    </div>
+                `}
+
+                <ul class="pd-perks">
+                    <li><i class="fas fa-certificate"></i>100% authentic — checked before listing</li>
+                    <li><i class="fas fa-money-bill-wave"></i>Cash on delivery — pay when it arrives</li>
+                    <li><i class="fas fa-truck-fast"></i>Delivery across Pakistan</li>
+                    <li><i class="fas fa-gem"></i>One of a kind — only one pair per size</li>
+                </ul>
+
+                ${p.condition ? `
+                <div class="pd-block">
+                    <div class="pd-block-head"><h4>Condition: ${esc(p.condition)}</h4></div>
+                    <p class="cond-note">${esc(CONDITION_NOTES[p.condition] || '')}</p>
+                </div>` : ''}
+
+                ${p.description ? `
+                <div class="pd-block">
+                    <div class="pd-block-head"><h4>Description</h4></div>
+                    <p class="pd-desc">${esc(p.description)}</p>
+                </div>` : ''}
+
+                <div class="pd-block">
+                    <div class="pd-block-head"><h4>Details</h4></div>
+                    <table class="spec-table"><tbody>
+                        ${specs.map(([k, v]) => `<tr><td>${esc(k)}</td><td>${esc(v)}</td></tr>`).join('')}
+                    </tbody></table>
+                </div>
+            </div>
+        </div>`;
+
+        // Gallery
+        const show = (i) => {
+            imageIndex = (i + images.length) % images.length;
+            $('mainImage').src = images[imageIndex];
+            if ($('imgCount')) $('imgCount').textContent = `${imageIndex + 1} / ${images.length}`;
+            root.querySelectorAll('.thumbs button').forEach((b, j) => b.classList.toggle('active', j === imageIndex));
+        };
+        $('prevImg')?.addEventListener('click', () => show(imageIndex - 1));
+        $('nextImg')?.addEventListener('click', () => show(imageIndex + 1));
+        root.querySelectorAll('.thumbs button').forEach(b => b.addEventListener('click', () => show(Number(b.dataset.img))));
+        let touchX = null;
+        const gm = root.querySelector('.gallery-main');
+        gm.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; }, { passive: true });
+        gm.addEventListener('touchend', e => {
+            if (touchX === null || images.length < 2) return;
+            const dx = e.changedTouches[0].clientX - touchX;
+            if (Math.abs(dx) > 40) show(imageIndex + (dx < 0 ? 1 : -1));
+            touchX = null;
+        });
+
+        if (sold) return;
+
+        // Sizes
+        root.querySelectorAll('.size-opt').forEach(b => b.addEventListener('click', () => {
+            selectedSize = b.dataset.size;
+            root.querySelectorAll('.size-opt').forEach(x => x.classList.toggle('active', x === b));
+            $('sizeError').classList.remove('show');
+        }));
+        const needSize = () => {
+            if (selectedSize) return false;
+            $('sizeError').classList.add('show');
+            $('sizeGrid').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return true;
+        };
+        $('addToCart').addEventListener('click', () => {
+            if (needSize()) return;
+            if (Store.cart.add(p, selectedSize)) Store.cart.open();
+        });
+        $('buyNow').addEventListener('click', () => {
+            if (needSize()) return;
+            location.href = `checkout.html?buy=${encodeURIComponent(p.id)}&size=${encodeURIComponent(selectedSize)}`;
+        });
+    }
+
+    async function loadRelated() {
+        const { data } = await db.from('products').select('*').eq('status', 'Active')
+            .order('created_at', { ascending: false }).limit(40);
+        let list = (data || []).filter(x => x.id !== id);
+        if (!list.length) return;
+        // Prefer same brand / same gender, then the rest
+        const score = (x) => (product && x.brand && x.brand === product.brand ? 2 : 0) + (product && x.gender === product.gender ? 1 : 0);
+        list = list.map((x, i) => ({ x, s: score(x), i })).sort((a, b) => b.s - a.s || a.i - b.i).map(o => o.x).slice(0, 4);
+        $('relatedGrid').innerHTML = list.map(productCard).join('');
+        $('relatedSection').hidden = false;
+    }
+
+    load(false);
+
+    // Live: if this pair sells or the price changes, update the page
+    let t;
+    Store.onProductsChange(payload => {
+        const changedId = (payload.new && payload.new.id) || (payload.old && payload.old.id);
+        if (changedId && changedId !== id) return;
+        clearTimeout(t); t = setTimeout(() => load(true), 300);
+    });
+    document.addEventListener('visibilitychange', () => { if (!document.hidden && product) load(true); });
+})();
+</script>
+</body>
+</html>

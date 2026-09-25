@@ -20,10 +20,10 @@ window.JENZY_CONFIG = {
     // Your shop's contact details (shown in the Contact section & footer)
     site: {
         name: "JENZY THRIFTS",
-        phone: "+92 300 1234567",
-        whatsapp: "923001234567",      // 92 + number without the first 0 (for the "Chat with us" link)
+        phone: "+92 371 3432740",
+        whatsapp: "923713432740",      // 92 + number without the first 0 (for the "Chat with us" link)
         email: "info@jenzythrifts.com",
-        instagram: "",                 // e.g. "https://instagram.com/jenzythrifts" — leave empty to hide
+        instagram: "https://www.instagram.com/jenzythrift/",   // leave empty "" to hide
         city: "Pakistan",
         announcement: "Free delivery on orders above PKR 5,000  •  Use code JENZY20 for 20% off  •  100% authentic branded shoes"
     }

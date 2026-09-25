@@ -27,7 +27,7 @@
     const navLink = (href, label, key) => `<a href="${href}" data-nav="${key}" class="${page === key ? 'active' : ''}">${label}</a>`;
 
     document.body.insertAdjacentHTML('afterbegin', `
-    <div class="announce" id="announceBar">${esc(SITE.announcement)}</div>
+    <div class="announce" id="announceBar"><div class="announce-track"><span>${esc(SITE.announcement)}</span><span aria-hidden="true">${esc(SITE.announcement)}</span></div></div>
     <header class="site-header">
         <div class="container header-inner">
             <div style="display:flex;align-items:center;gap:10px">
@@ -76,6 +76,7 @@
             <div class="brand"><span class="brand-main">JENZY</span><span class="brand-sub">THRIFTS</span></div>
             <h3 id="loginTitle">Log in to your account</h3>
             <p id="loginReason">Log in to place orders and track them.</p>
+            <div id="inappNote"></div>
             <button class="google-btn" id="googleBtn">${GOOGLE_SVG}<span>Continue with Google</span></button>
             <div class="alert" id="loginError"></div>
             <p class="modal-legal">We only use your name and email to process your orders.</p>
@@ -159,6 +160,33 @@
         toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
     }
 
+    // ---------- In-app browsers (Instagram, Facebook, TikTok…) ----------
+    // Google does not allow signing in inside these apps' built-in browsers.
+    const UA = navigator.userAgent || '';
+    const inAppBrowser = /Instagram|FBAN|FBAV|FB_IAB|FBIOS|TikTok|musical_ly|BytedanceWebview|Snapchat|Line\/|Twitter/i.test(UA);
+    const isAndroid = /Android/i.test(UA);
+    const appName = /Instagram/i.test(UA) ? 'Instagram' : /FBAN|FBAV|FB_IAB|FBIOS/i.test(UA) ? 'Facebook' : /TikTok|musical_ly|Bytedance/i.test(UA) ? 'TikTok' : 'this app';
+    function renderInAppNote() {
+        const box = $('inappNote');
+        if (!inAppBrowser) { box.innerHTML = ''; return; }
+        const chromeUrl = `intent://${location.host}${location.pathname}${location.search}${location.hash}#Intent;scheme=https;package=com.android.chrome;end`;
+        box.innerHTML = `
+            <div class="inapp-note">
+                <strong><i class="fas fa-circle-info"></i> Open in your browser to log in</strong>
+                Google login doesn't work inside ${esc(appName)}. ${isAndroid
+                    ? 'Tap the button below to open this page in Chrome.'
+                    : 'Tap <b>•••</b> (top-right) and choose <b>Open in external browser</b> (Safari), then log in.'}
+                <div class="inapp-actions">
+                    ${isAndroid ? `<a class="btn btn-primary btn-sm" href="${esc(chromeUrl)}"><i class="fab fa-chrome"></i> Open in Chrome</a>` : ''}
+                    <button class="btn btn-outline btn-sm" id="copyLinkBtn" type="button"><i class="fas fa-link"></i> Copy link</button>
+                </div>
+            </div>`;
+        $('copyLinkBtn').addEventListener('click', async () => {
+            try { await navigator.clipboard.writeText(location.href); toast('Link copied — paste it in Chrome or Safari'); }
+            catch { window.prompt('Copy this link and open it in Chrome or Safari:', location.href); }
+        });
+    }
+
     // ---------- Auth (Google) ----------
     let currentUser = null;
     let authResolved = false;
@@ -215,10 +243,13 @@
     function openLogin(reason) {
         $('loginReason').textContent = reason || 'Log in to place orders and track them.';
         $('loginError').classList.remove('show');
+        renderInAppNote();
         $('loginModal').classList.add('open');
+        document.body.style.overflow = 'hidden';
     }
     function closeLogin(success) {
         $('loginModal').classList.remove('open');
+        if (!document.querySelector('.cart-drawer.open, .mobile-nav.open')) document.body.style.overflow = '';
         if (!success) {
             const resolvers = loginResolvers; loginResolvers = [];
             resolvers.forEach(r => r.reject(new Error('login-cancelled')));
@@ -258,7 +289,9 @@
                 'auth/network-request-failed': 'Network problem. Please check your internet and try again.'
             };
             const msg = e.code in messages ? messages[e.code]
-                : 'Login failed. If you opened this link inside Instagram/Facebook/TikTok, tap ⋮ → "Open in browser" and try again.';
+                : (inAppBrowser
+                    ? `Google login is blocked inside ${appName}. Please open this page in Chrome or Safari (see above).`
+                    : 'Login failed. Please try again.');
             if (msg) { err.textContent = msg; err.classList.add('show'); }
         } finally {
             btn.disabled = false;

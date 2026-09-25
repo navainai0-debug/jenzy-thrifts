@@ -400,50 +400,39 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 // =============================================
 // INIT FIREBASE & SUPABASE
 // =============================================
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const { createClient } = supabase;
-const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-let allProducts = [];
-let uploadedImageUrls = [];
-let editingProductId = null;
-let deleteTargetId = null;
-
-// =============================================
 // AUTH STATE
 // =============================================
+// 🔐 ONLY THESE EMAILS CAN OPEN THE ADMIN PANEL
+// Customers sign in with Google on the store, so without this list
+// any signed-in customer could open admin.html.
+// Put your admin email(s) here, e.g. ["jenzy.admin@gmail.com"]
+// (If left empty, only accounts using Email/Password sign-in are allowed.)
+const ADMIN_EMAILS = [];
+
+function isAdmin(user) {
+    const email = (user.email || '').toLowerCase();
+    if (ADMIN_EMAILS.length > 0) {
+        return ADMIN_EMAILS.map(e => e.trim().toLowerCase()).includes(email);
+    }
+    return user.providerData.some(p => p.providerId === 'password');
+}
+
+function showLoginError(msg) {
+    document.getElementById('loginErrorMsg').textContent = msg;
+    document.getElementById('loginError').classList.add('show');
+    setTimeout(() => document.getElementById('loginError').classList.remove('show'), 5000);
+}
+
 auth.onAuthStateChanged(async (user) => {
     document.getElementById('authLoading').classList.add('hidden');
+    if (user && !isAdmin(user)) {
+        await auth.signOut();   // triggers this handler again with user = null
+        showLoginError('This account does not have admin access');
+        return;
+    }
     if (user) {
         document.getElementById('loginPage').classList.remove('active');
         document.getElementById('adminLayout').classList.add('active');
-        document.getElementById('adminEmail').textContent = user.email;
-        await loadProducts();
-    } else {
-        document.getElementById('loginPage').classList.add('active');
-        document.getElementById('adminLayout').classList.remove('active');
-    }
-});
-
-// LOGIN
-document.getElementById('loginForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    const email = document.getElementById('loginEmail').value;
-    const password = document.getElementById('loginPassword').value;
-    const btn = document.getElementById('loginBtn');
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in...';
-    try {
-        await auth.signInWithEmailAndPassword(email, password);
-    } catch (error) {
-        let msg = 'Login failed';
-        if (error.code === 'auth/user-not-found') msg = 'No account with this email';
-        if (error.code === 'auth/wrong-password') msg = 'Incorrect password';
-        if (error.code === 'auth/invalid-credential') msg = 'Invalid email or password';
-        document.getElementById('loginErrorMsg').textContent = msg;
-        document.getElementById('loginError').classList.add('show');
-        setTimeout(() => document.getElementById('loginError').classList.remove('show'), 4000);
     } finally {
         btn.disabled = false;
         btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login to Dashboard';

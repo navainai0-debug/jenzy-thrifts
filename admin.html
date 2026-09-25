@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0a0a0b">
     <meta name="robots" content="noindex, nofollow">
     <title>Admin | JENZY THRIFTS</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -246,6 +247,13 @@
             .content { padding: 18px 14px; }
             .form-grid, .od-grid { grid-template-columns: 1fr; }
             .view-store span, .hide-sm { display: none; }
+            .input, .select, textarea.input { font-size: 16px; }
+            .toolbar .select { flex: 1; }
+            .search { max-width: none; flex-basis: 100%; }
+            .modal { padding: 0; align-items: flex-end; }
+            .modal-card { border-radius: 18px 18px 0 0; max-height: 92vh; overflow-y: auto; }
+            .modal-card.sm { border-radius: 18px; margin: auto 16px; }
+            .toast { left: 16px; right: 16px; top: 12px; min-width: 0; }
         }
         @media (max-width: 520px) {
             .stats { grid-template-columns: 1fr 1fr; gap: 10px; }

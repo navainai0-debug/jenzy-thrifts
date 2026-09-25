@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Orders | JENZY THRIFTS</title>
+    <meta name="robots" content="noindex">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/store.css">
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="assets/js/config.js"></script>
+</head>
+<body data-page="orders">
+
+<main class="container" style="padding-bottom:88px;min-height:60vh">
+    <div class="page-head">
+        <h1>My Orders</h1>
+        <p>Track the status of your orders. This page updates automatically.</p>
+    </div>
+
+    <div id="placedBanner"></div>
+    <div id="ordersRoot"><div class="loading-state"><i class="fas fa-spinner fa-spin"></i><p>Loading your orders…</p></div></div>
+</main>
+
+<script src="assets/js/store.js"></script>
+<script>
+(function () {
+    const { esc, pkr, api, orderNo } = Store;
+    const $ = (id) => document.getElementById(id);
+    const STEPS = ['Pending', 'Confirmed', 'Shipped', 'Delivered'];
+    const STEP_LABELS = { Pending: 'Placed', Confirmed: 'Confirmed', Shipped: 'Shipped', Delivered: 'Delivered' };
+    const STATUS_TEXT = {
+        Pending: 'We received your order and will confirm it shortly.',
+        Confirmed: 'Your order is confirmed and being packed.',
+        Shipped: 'Your order is on the way.',
+        Delivered: 'Delivered. Enjoy your new shoes!',
+        Cancelled: 'This order was cancelled.'
+    };
+    const placed = Store.qs('placed');
+    let pollTimer = null;
+    let lastJson = '';
+
+    if (placed) {
+        $('placedBanner').innerHTML = `
+            <div class="success-banner">
+                <i class="fas fa-circle-check"></i>
+                <div>
+                    <h3>Thank you! Your order ${esc(orderNo(placed))} has been placed.</h3>
+                    <p>We'll call you to confirm. Keep this page to track your order — you'll pay cash when it arrives.</p>
+                </div>
+            </div>`;
+    }
+
+    const fmtDate = (d) => new Date(d).toLocaleString('en-PK', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+
+    function tracker(o) {
+        if (o.status === 'Cancelled') return '';
+        const idx = STEPS.indexOf(o.status);
+        const when = {};
+        (o.status_history || []).forEach(h => { if (h && h.status) when[h.status] = h.at; });
+        if (!when.Pending) when.Pending = o.created_at;
+        return `<div class="tracker">${STEPS.map((s, i) => `
+            <div class="t-step ${i <= idx ? 'done' : ''}">
+                <div class="t-dot">${i <= idx ? '<i class="fas fa-check"></i>' : i + 1}</div>
+                <div>${STEP_LABELS[s]}</div>
+                ${i <= idx && when[s] ? `<div class="muted" style="font-size:11px">${new Date(when[s]).toLocaleDateString('en-PK', { day: 'numeric', month: 'short' })}</div>` : ''}
+            </div>`).join('')}</div>`;
+    }
+
+    function orderCard(o) {
+        const items = Array.isArray(o.items) ? o.items : [];
+        const highlight = placed && String(o.order_no) === String(placed);
+        return `
+        <article class="order-card" ${highlight ? 'style="border-color:rgba(57,255,20,.45)"' : ''}>
+            <div class="order-head">
+                <div>
+                    <div class="o-no">Order ${esc(orderNo(o.order_no))}</div>
+                    <div class="o-date">${fmtDate(o.created_at)} • ${items.length} ${items.length === 1 ? 'item' : 'items'}</div>
+                </div>
+                <span class="status-pill st-${esc(o.status)}"><i class="fas fa-circle" style="font-size:7px"></i>${esc(o.status)}</span>
+            </div>
+            ${tracker(o)}
+            ${o.status === 'Cancelled' ? `<div class="cancelled-note" style="margin-top:18px">${STATUS_TEXT.Cancelled}</div>` : ''}
+            <div class="order-body">
+                <div class="order-items">
+                    ${items.map(it => `
+                        <div class="sum-item">
+                            <a href="${Store.productUrl(it.product_id)}"><img src="${esc(it.image || Store.firstImage({}))}" alt=""></a>
+                            <div><h5>${esc(it.name)}</h5><small>${esc(it.brand || '')} • US ${esc(it.size)}</small></div>
+                            <span class="price">${pkr(it.price)}</span>
+                        </div>`).join('')}
+                </div>
+                <div class="order-side">
+                    <div class="block"><h5>Status</h5><p>${esc(STATUS_TEXT[o.status] || o.status)}</p></div>
+                    <div class="block"><h5>Deliver to</h5><p>${esc(o.customer_name)}<br>${esc(o.phone)}<br>${esc(o.address)}, ${esc(o.city)}</p></div>
+                    <div class="block">
+                        <h5>Payment • Cash on Delivery</h5>
+                        <div class="sum-row"><span>Subtotal</span><span>${pkr(o.subtotal)}</span></div>
+                        ${o.discount ? `<div class="sum-row"><span>Discount${o.coupon ? ' (' + esc(o.coupon) + ')' : ''}</span><span>− ${pkr(o.discount)}</span></div>` : ''}
+                        <div class="sum-row"><span>Delivery</span><span>${o.delivery_fee ? pkr(o.delivery_fee) : 'Free'}</span></div>
+                        <div class="sum-row total"><span>Total</span><span>${pkr(o.total)}</span></div>
+                    </div>
+                    ${o.status === 'Pending' ? `<button class="btn btn-danger btn-sm" data-cancel="${esc(o.id)}" data-no="${esc(o.order_no)}" style="margin-top:14px"><i class="fas fa-xmark"></i> Cancel order</button>` : ''}
+                </div>
+            </div>
+        </article>`;
+    }
+
+    async function load(silent) {
+        if (!Store.user) return;
+        try {
+            const { orders } = await api('/api/orders?action=mine', { auth: true });
+            const json = JSON.stringify(orders);
+            if (silent && json === lastJson) return;
+            lastJson = json;
+            if (!orders.length) {
+                $('ordersRoot').innerHTML = `
+                    <div class="gate">
+                        <div class="gate-icon"><i class="fas fa-box-open"></i></div>
+                        <h2>No orders yet</h2>
+                        <p>When you place an order it will show up here, and you can track it live.</p>
+                        <a href="index.html#shop" class="btn btn-primary btn-lg">Start shopping</a>
+                    </div>`;
+                return;
+            }
+            $('ordersRoot').innerHTML = orders.map(orderCard).join('');
+            $('ordersRoot').querySelectorAll('[data-cancel]').forEach(b => b.addEventListener('click', () => cancel(b)));
+        } catch (e) {
+            if (!silent) $('ordersRoot').innerHTML = `<div class="alert show">${esc(e.message)}</div>`;
+        }
+    }
+
+    async function cancel(btn) {
+        if (!confirm(`Cancel order ${orderNo(btn.dataset.no)}?`)) return;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cancelling…';
+        try {
+            await api('/api/orders?action=cancel', { method: 'POST', auth: true, body: { id: btn.dataset.cancel } });
+            Store.toast(`Order ${orderNo(btn.dataset.no)} cancelled`);
+            await load(false);
+        } catch (e) {
+            Store.toast(e.message, 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-xmark"></i> Cancel order';
+        }
+    }
+
+    Store.onAuth(user => {
+        clearInterval(pollTimer);
+        lastJson = '';
+        if (!user) {
+            $('ordersRoot').innerHTML = `
+                <div class="gate">
+                    <div class="gate-icon"><i class="fas fa-user-lock"></i></div>
+                    <h2>Log in to see your orders</h2>
+                    <p>Your orders are saved to your account.</p>
+                    <button class="btn btn-primary btn-lg" id="ordersLogin"><i class="fa-regular fa-user"></i> Login</button>
+                </div>`;
+            $('ordersLogin').addEventListener('click', () => Store.requireLogin('Log in to see your orders.').catch(() => {}));
+            return;
+        }
+        $('ordersRoot').innerHTML = '<div class="loading-state"><i class="fas fa-spinner fa-spin"></i><p>Loading your orders…</p></div>';
+        load(false);
+        pollTimer = setInterval(() => { if (!document.hidden) load(true); }, 20000);
+    });
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) load(true); });
+})();
+</script>
+</body>
+</html>

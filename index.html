@@ -2,1766 +2,377 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JENZY THRIFTS - Premium Thrifted Shoes</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JENZY THRIFTS | Authentic Thrifted Sneakers in Pakistan</title>
+    <meta name="description" content="Shop authentic, hand-picked thrifted sneakers from Nike, Adidas, New Balance, Jordan and more. Cash on delivery across Pakistan.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Poppins:wght@300;400;500;600;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Firebase (Google sign-in) -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/store.css">
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-
-    <!-- Supabase JS Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-
-    <style>
-        :root {
-            --neon-green: #39ff14;
-            --neon-pink: #ff1493;
-            --neon-blue: #00f0ff;
-            --neon-purple: #bf00ff;
-            --neon-yellow: #ffff00;
-            --dark-bg: #0a0a0a;
-            --darker-bg: #050505;
-            --card-bg: #111111;
-            --text-primary: #ffffff;
-            --text-secondary: #b0b0b0;
-            --text-muted: #666666;
-            --border-color: #222222;
-            --gradient-neon: linear-gradient(135deg, var(--neon-green), var(--neon-blue));
-            --gradient-pink: linear-gradient(135deg, var(--neon-pink), var(--neon-purple));
-            --glow-green: 0 0 10px var(--neon-green), 0 0 20px var(--neon-green);
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        html { scroll-behavior: smooth; }
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: var(--dark-bg);
-            color: var(--text-primary);
-            overflow-x: hidden;
-        }
-        a { text-decoration: none; color: inherit; }
-        ul { list-style: none; }
-        img { max-width: 100%; display: block; }
-
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: var(--darker-bg); }
-        ::-webkit-scrollbar-thumb { background: var(--neon-green); border-radius: 10px; }
-
-        /* Announcement Bar */
-        .announcement-bar {
-            background: linear-gradient(90deg, var(--neon-pink), var(--neon-purple), var(--neon-blue), var(--neon-green));
-            background-size: 300% 100%;
-            animation: gradientMove 5s ease infinite;
-            padding: 8px 0;
-            text-align: center;
-            font-size: 13px;
-            font-weight: 700;
-            color: #000;
-            letter-spacing: 1px;
-            overflow: hidden;
-            white-space: nowrap;
-        }
-        @keyframes gradientMove { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
-
-        /* Top Bar */
-        .top-bar {
-            background: var(--darker-bg);
-            padding: 8px 40px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: var(--text-muted);
-            border-bottom: 1px solid var(--border-color);
-        }
-        .top-bar a:hover { color: var(--neon-green); }
-        .top-bar-left, .top-bar-right { display: flex; align-items: center; gap: 20px; }
-
-        /* Header */
-        .header {
-            background: rgba(10, 10, 10, 0.95);
-            backdrop-filter: blur(20px);
-            top: 0;
-            z-index: 1000;
-            border-bottom: 1px solid var(--border-color);
-        }
-        .logo {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 26px;
-            font-weight: 900;
-            background: var(--gradient-neon);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            letter-spacing: 3px;
-        }
-        .logo span {
-            font-size: 12px;
-            display: block;
-            letter-spacing: 6px;
-            background: var(--gradient-pink);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .nav-menu { display: flex; align-items: center; gap: 25px; }
-        .nav-menu a {
-            font-family: 'Rajdhani', sans-serif;
-            font-size: 15px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            color: var(--text-secondary);
-            transition: color 0.3s;
-        }
-        .nav-menu a:hover, .nav-menu a.active { color: var(--neon-green); text-shadow: 0 0 10px rgba(57,255,20,0.5); }
-
-        .header-icons { display: flex; align-items: center; gap: 15px; }
-        .icon-btn {
-            position: relative;
-            background: none;
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        .icon-btn:hover { border-color: var(--neon-green); color: var(--neon-green); }
-        .badge {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* Hero Section */
-        .hero {
-            position: relative;
-            height: 75vh;
-            min-height: 500px;
-            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1556906781-9a412961c28c?w=1920') center/cover no-repeat;
-            display: flex;
-            align-items: center;
-            padding: 0 60px;
-        }
-        .hero-content { max-width: 650px; }
-        .hero-tag {
-            display: inline-block;
-            padding: 6px 18px;
-            background: rgba(57, 255, 20, 0.1);
-            border: 1px solid var(--neon-green);
-            border-radius: 30px;
-            font-family: 'Rajdhani', sans-serif;
-            font-size: 13px;
-            font-weight: 700;
-            letter-spacing: 3px;
-            text-transform: uppercase;
-            color: var(--neon-green);
-            margin-bottom: 15px;
-        }
-        .hero-title {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 48px;
-            font-weight: 900;
-            line-height: 1.1;
-            margin-bottom: 15px;
-            text-transform: uppercase;
-        }
-        .hero-title span {
-            background: var(--gradient-neon);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        .hero-desc { color: var(--text-secondary); margin-bottom: 25px; font-size: 15px; }
-        .btn-neon {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px 30px;
-            font-family: 'Rajdhani', sans-serif;
-            font-size: 15px;
-            font-weight: 700;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        .btn-neon-green { background: var(--gradient-neon); color: #000; border: none; }
-        .btn-neon-green:hover { box-shadow: var(--glow-green); transform: translateY(-2px); }
-
-        /* Sections */
-        .section { padding: 70px 40px; max-width: 1350px; margin: 0 auto; }
-        .section-header { text-align: center; margin-bottom: 40px; }
-        .section-tag { color: var(--neon-pink); font-family: 'Rajdhani'; font-size: 13px; letter-spacing: 4px; font-weight: 700; text-transform: uppercase; }
-        .section-title { font-family: 'Orbitron'; font-size: 32px; font-weight: 800; text-transform: uppercase; margin-top: 5px; }
-        .section-title span { background: var(--gradient-neon); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-
-        /* Filter Tabs */
-        .product-tabs, .size-filter { display: flex; justify-content: center; gap: 8px; margin-bottom: 35px; flex-wrap: wrap; }
-        .tab-btn, .size-btn {
-            padding: 8px 20px;
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            color: var(--text-secondary);
-            font-family: 'Rajdhani';
-            font-size: 14px;
-            font-weight: 600;
-            border-radius: 30px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        .size-btn { width: 44px; height: 44px; border-radius: 10px; padding: 0; display: flex; align-items: center; justify-content: center; }
-        .tab-btn.active, .tab-btn:hover, .size-btn.active, .size-btn:hover {
-            border-color: var(--neon-green);
-            color: var(--neon-green);
-            background: rgba(57,255,20,0.1);
-        }
-
-        /* Products Grid */
-        .products-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 25px;
-        }
-        .product-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            overflow: hidden;
-            transition: all 0.3s;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-        }
-        .product-card:hover {
-            transform: translateY(-5px);
-            border-color: var(--neon-green);
-            box-shadow: 0 10px 30px rgba(57,255,20,0.1);
-        }
-        .product-image {
-            position: relative;
-            height: 250px;
-            background: #000;
-            overflow: hidden;
-        }
-        .product-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.4s;
-        }
-        .product-card:hover .product-image img { transform: scale(1.08); }
-        .product-badge {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 10px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            z-index: 2;
-        }
-        .badge-new { background: var(--neon-green); color: #000; }
-        .badge-sale { background: var(--neon-pink); color: #fff; }
-        .badge-hot { background: var(--neon-yellow); color: #000; }
-
-        .product-info { padding: 18px; flex: 1; display: flex; flex-direction: column; }
-        .product-brand { font-size: 11px; color: var(--neon-blue); font-weight: 700; text-transform: uppercase; letter-spacing: 2px; }
-        .product-name { font-family: 'Rajdhani'; font-size: 18px; font-weight: 700; margin: 4px 0 6px; }
-        .product-meta { font-size: 12px; color: var(--text-muted); margin-bottom: 10px; }
-        .cond-tag {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 10px;
-            font-weight: 700;
-            text-transform: uppercase;
-            margin-bottom: 12px;
-            width: fit-content;
-        }
-        .cond-Excellent { background: rgba(57,255,20,0.1); color: var(--neon-green); border: 1px solid rgba(57,255,20,0.3); }
-        .cond-Good { background: rgba(0,240,255,0.1); color: var(--neon-blue); border: 1px solid rgba(0,240,255,0.3); }
-        .cond-Fair { background: rgba(255,255,0,0.1); color: var(--neon-yellow); border: 1px solid rgba(255,255,0,0.3); }
-
-        .product-price-row {
-            display: flex;
-            align-items: baseline;
-            gap: 10px;
-            margin-top: auto;
-            margin-bottom: 15px;
-        }
-        .price-current { font-family: 'Orbitron'; font-size: 18px; font-weight: 700; color: var(--neon-green); }
-        .price-orig { font-size: 12px; color: var(--text-muted); text-decoration: line-through; }
-
-        .card-actions { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
-        .btn-cart {
-            padding: 10px;
-            background: rgba(57,255,20,0.1);
-            border: 1px solid var(--neon-green);
-            color: var(--neon-green);
-            font-family: 'Rajdhani';
-            font-weight: 700;
-            font-size: 13px;
-            text-transform: uppercase;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        .btn-cart:hover { background: var(--neon-green); color: #000; }
-        .btn-wa-icon {
-            width: 38px;
-            height: 38px;
-            background: #25D366;
-            color: #fff;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            border: none;
-            cursor: pointer;
-            transition: transform 0.3s;
-        }
-        .btn-wa-icon:hover { transform: scale(1.08); }
-
-        /* Loading / Empty States */
-        .loading-state, .empty-state {
-            grid-column: 1 / -1;
-            text-align: center;
-            padding: 60px 20px;
-            color: var(--text-muted);
-        }
-        .loading-state i, .empty-state i { font-size: 40px; margin-bottom: 15px; color: var(--neon-green); }
-
-        /* Cart Drawer */
-        .cart-sidebar {
-            position: fixed;
-            top: 0;
-            right: -420px;
-            width: 400px;
-            max-width: 90%;
-            height: 100%;
-            background: var(--darker-bg);
-            border-left: 2px solid var(--neon-green);
-            z-index: 10000;
-            transition: right 0.4s;
-            display: flex;
-            flex-direction: column;
-            padding: 25px;
-        }
-        .cart-sidebar.active { right: 0; }
-        .cart-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; }
-        .cart-items { flex: 1; overflow-y: auto; padding: 20px 0; }
-        .cart-item { display: flex; gap: 12px; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; }
-        .cart-item img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; }
-        .cart-footer { border-top: 1px solid var(--border-color); padding-top: 15px; }
-
-        /* Toast */
-        .toast {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%) translateY(100px);
-            background: var(--card-bg);
-            border: 1px solid var(--neon-green);
-            padding: 12px 25px;
-            border-radius: 30px;
-            color: #fff;
-            font-size: 14px;
-            z-index: 99999;
-            transition: transform 0.3s;
-        }
-        .toast.show { transform: translateX(-50%) translateY(0); }
-
-        /* WhatsApp Floating Button */
-        .wa-float {
-            position: fixed;
-            bottom: 25px;
-            right: 25px;
-            width: 55px;
-            height: 55px;
-            background: #25D366;
-            color: #fff;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            box-shadow: 0 5px 20px rgba(37,211,102,0.4);
-            z-index: 999;
-        }
-
-        /* ===== Account (Google sign-in) ===== */
-        .signin-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 16px;
-            background: #fff;
-            color: #222;
-            border: none;
-            border-radius: 30px;
-            font-family: 'Poppins', sans-serif;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: box-shadow 0.3s, transform 0.3s;
-        }
-        .signin-btn:hover { box-shadow: 0 0 15px rgba(255,255,255,0.35); transform: translateY(-1px); }
-        .signin-btn img { width: 18px; height: 18px; }
-        .user-menu { position: relative; display: none; }
-        .user-menu.show { display: block; }
-        .user-avatar-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border: 2px solid var(--neon-green);
-            background: var(--gradient-neon);
-            color: #000;
-            font-family: 'Orbitron', sans-serif;
-            font-weight: 700;
-            cursor: pointer;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0;
-        }
-        .user-avatar-btn img { width: 100%; height: 100%; object-fit: cover; }
-        .user-dropdown {
-            position: absolute;
-            right: 0;
-            top: 50px;
-            width: 240px;
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 14px;
-            padding: 16px;
-            display: none;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-        }
-        .user-dropdown.show { display: block; }
-        .user-dropdown .u-name { font-weight: 600; font-size: 14px; }
-        .user-dropdown .u-email { font-size: 12px; color: var(--text-muted); word-break: break-all; margin-bottom: 14px; }
-        .user-dropdown button {
-            width: 100%;
-            padding: 9px;
-            background: transparent;
-            border: 1px solid var(--neon-pink);
-            color: var(--neon-pink);
-            border-radius: 8px;
-            font-family: 'Rajdhani', sans-serif;
-            font-weight: 700;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            cursor: pointer;
-        }
-        .user-dropdown button:hover { background: var(--neon-pink); color: #fff; }
-
-        /* ===== Login Modal ===== */
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.8);
-            backdrop-filter: blur(6px);
-            z-index: 20000;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-        .modal-overlay.show { display: flex; }
-        .modal-box {
-            position: relative;
-            width: 400px;
-            max-width: 100%;
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 20px;
-            padding: 35px 30px;
-            text-align: center;
-        }
-        .modal-close {
-            position: absolute;
-            top: 14px;
-            right: 16px;
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            font-size: 20px;
-            cursor: pointer;
-        }
-        .modal-close:hover { color: #fff; }
-        .modal-icon {
-            width: 64px;
-            height: 64px;
-            margin: 0 auto 18px;
-            border-radius: 50%;
-            background: rgba(57,255,20,0.1);
-            border: 1px solid var(--neon-green);
-            color: var(--neon-green);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 26px;
-        }
-        .modal-box h3 { font-family: 'Orbitron', sans-serif; font-size: 20px; margin-bottom: 8px; }
-        .modal-box p { color: var(--text-secondary); font-size: 14px; margin-bottom: 22px; }
-        .google-btn {
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            padding: 13px;
-            background: #fff;
-            color: #222;
-            border: none;
-            border-radius: 12px;
-            font-family: 'Poppins', sans-serif;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: box-shadow 0.3s;
-        }
-        .google-btn:hover { box-shadow: 0 0 20px rgba(255,255,255,0.3); }
-        .google-btn:disabled { opacity: 0.6; cursor: wait; }
-        .google-btn img { width: 20px; height: 20px; }
-        .modal-note { font-size: 11px !important; color: var(--text-muted) !important; margin: 16px 0 0 !important; }
-        .modal-error {
-            display: none;
-            margin-top: 14px;
-            padding: 10px 12px;
-            border-radius: 10px;
-            background: rgba(255,20,147,0.1);
-            border: 1px solid rgba(255,20,147,0.4);
-            color: #ff7ab8;
-            font-size: 13px;
-            text-align: left;
-        }
-        .modal-error.show { display: block; }
-
-        /* ===== Shop by Category ===== */
-        .category-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 25px; }
-        .category-card {
-            position: relative;
-            height: 280px;
-            border-radius: 20px;
-            overflow: hidden;
-            cursor: pointer;
-            border: 1px solid var(--border-color);
-            display: flex;
-            align-items: flex-end;
-            padding: 30px;
-            transition: all 0.4s;
-        }
-        .category-card .cat-bg {
-            position: absolute;
-            inset: 0;
-            background-size: cover;
-            background-position: center;
-            transition: transform 0.6s;
-        }
-        .category-card::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-        }
-        .category-card.men::after { background: linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,240,255,0.15)); }
-        .category-card.women::after { background: linear-gradient(to top, rgba(0,0,0,0.9), rgba(255,20,147,0.2)); }
-        .category-card:hover .cat-bg { transform: scale(1.08); }
-        .category-card.men:hover { border-color: var(--neon-blue); box-shadow: 0 0 30px rgba(0,240,255,0.2); }
-        .category-card.women:hover { border-color: var(--neon-pink); box-shadow: 0 0 30px rgba(255,20,147,0.2); }
-        .cat-content { position: relative; z-index: 2; }
-        .cat-content small { font-family: 'Rajdhani'; letter-spacing: 4px; text-transform: uppercase; font-weight: 700; font-size: 13px; }
-        .category-card.men small { color: var(--neon-blue); }
-        .category-card.women small { color: var(--neon-pink); }
-        .cat-content h3 { font-family: 'Orbitron'; font-size: 30px; font-weight: 900; text-transform: uppercase; margin: 4px 0 10px; }
-        .cat-content span { font-family: 'Rajdhani'; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; font-size: 14px; }
-        .cat-content span i { margin-left: 6px; transition: margin 0.3s; }
-        .category-card:hover .cat-content span i { margin-left: 12px; }
-
-        .filter-label {
-            text-align: center;
-            font-family: 'Rajdhani';
-            font-size: 12px;
-            letter-spacing: 3px;
-            text-transform: uppercase;
-            color: var(--text-muted);
-            margin-bottom: 10px;
-        }
-        .gender-tabs .tab-btn { padding: 10px 28px; font-size: 15px; }
-        .results-count { text-align: center; color: var(--text-muted); font-size: 13px; margin: -15px 0 25px; }
-
-        /* ===== Why Us ===== */
-        .alt-bg { background: var(--darker-bg); border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); }
-        .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; }
-        .feature-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 18px;
-            padding: 30px 25px;
-            transition: all 0.3s;
-        }
-        .feature-card:hover { border-color: var(--neon-green); transform: translateY(-5px); box-shadow: 0 10px 30px rgba(57,255,20,0.08); }
-        .feature-icon {
-            width: 56px;
-            height: 56px;
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-            margin-bottom: 18px;
-        }
-        .fi-green { background: rgba(57,255,20,0.1); color: var(--neon-green); }
-        .fi-blue { background: rgba(0,240,255,0.1); color: var(--neon-blue); }
-        .fi-pink { background: rgba(255,20,147,0.1); color: var(--neon-pink); }
-        .fi-purple { background: rgba(191,0,255,0.12); color: #d466ff; }
-        .fi-yellow { background: rgba(255,255,0,0.1); color: var(--neon-yellow); }
-        .feature-card h4 { font-family: 'Rajdhani'; font-size: 20px; font-weight: 700; margin-bottom: 8px; }
-        .feature-card p { color: var(--text-secondary); font-size: 14px; line-height: 1.7; }
-
-        /* ===== How To Order ===== */
-        .steps-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; counter-reset: step; }
-        .step-card {
-            text-align: center;
-            padding: 25px 18px;
-            border: 1px dashed var(--border-color);
-            border-radius: 18px;
-            position: relative;
-        }
-        .step-num {
-            width: 48px;
-            height: 48px;
-            margin: 0 auto 15px;
-            border-radius: 50%;
-            background: var(--gradient-neon);
-            color: #000;
-            font-family: 'Orbitron';
-            font-weight: 900;
-            font-size: 18px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .step-card h4 { font-family: 'Rajdhani'; font-size: 18px; font-weight: 700; margin-bottom: 6px; }
-        .step-card p { color: var(--text-secondary); font-size: 13px; line-height: 1.6; }
-
-        /* ===== About ===== */
-        .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 50px; align-items: center; }
-        .about-img { border-radius: 20px; overflow: hidden; border: 1px solid var(--border-color); height: 380px; }
-        .about-img img { width: 100%; height: 100%; object-fit: cover; }
-        .about-text .section-tag, .about-text .section-title { text-align: left; }
-        .about-text p { color: var(--text-secondary); line-height: 1.8; margin: 18px 0; font-size: 15px; }
-        .about-stats { display: flex; gap: 35px; margin-top: 25px; flex-wrap: wrap; }
-        .about-stats div strong { display: block; font-family: 'Orbitron'; font-size: 26px; color: var(--neon-green); }
-        .about-stats div span { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px; }
-
-        /* ===== Contact ===== */
-        .contact-grid { display: grid; grid-template-columns: 1fr 1.3fr; gap: 35px; }
-        .contact-info { display: flex; flex-direction: column; gap: 15px; }
-        .contact-item {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            padding: 18px 20px;
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 14px;
-            transition: border-color 0.3s;
-        }
-        a.contact-item:hover { border-color: var(--neon-green); }
-        .contact-item .ci-icon {
-            width: 46px;
-            height: 46px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            flex-shrink: 0;
-        }
-        .contact-item h5 { font-family: 'Rajdhani'; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); }
-        .contact-item p { font-size: 15px; font-weight: 500; word-break: break-word; }
-        .contact-form {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 20px;
-            padding: 30px;
-        }
-        .contact-form h3 { font-family: 'Orbitron'; font-size: 20px; margin-bottom: 6px; }
-        .contact-form > p { color: var(--text-secondary); font-size: 14px; margin-bottom: 22px; }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .field { margin-bottom: 15px; }
-        .field label {
-            display: block;
-            font-family: 'Rajdhani';
-            font-size: 12px;
-            font-weight: 700;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            color: var(--text-secondary);
-            margin-bottom: 6px;
-        }
-        .field input, .field textarea, .field select {
-            width: 100%;
-            padding: 13px 15px;
-            background: var(--darker-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            color: #fff;
-            font-family: 'Poppins', sans-serif;
-            font-size: 14px;
-            outline: none;
-            transition: border-color 0.3s, box-shadow 0.3s;
-        }
-        .field textarea { resize: vertical; min-height: 120px; }
-        .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--neon-green); box-shadow: 0 0 12px rgba(57,255,20,0.1); }
-        .hp-field { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
-        .form-status { font-size: 13px; margin-top: 12px; display: none; }
-        .form-status.show { display: block; }
-        .form-status.ok { color: var(--neon-green); }
-        .form-status.err { color: #ff7ab8; }
-
-        /* ===== Footer ===== */
-        .footer { background: var(--darker-bg); border-top: 1px solid var(--border-color); padding: 55px 40px 25px; }
-        .footer-grid { max-width: 1350px; margin: 0 auto; display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 40px; }
-        .footer p { color: var(--text-muted); font-size: 14px; line-height: 1.8; margin-top: 12px; }
-        .footer h5 { font-family: 'Rajdhani'; font-size: 15px; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 15px; color: var(--neon-green); }
-        .footer ul li { margin-bottom: 10px; }
-        .footer ul a { color: var(--text-secondary); font-size: 14px; transition: color 0.3s; cursor: pointer; }
-        .footer ul a:hover { color: var(--neon-green); }
-        .footer-social { display: flex; gap: 10px; margin-top: 18px; }
-        .footer-social a {
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            border: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-secondary);
-            transition: all 0.3s;
-        }
-        .footer-social a:hover { border-color: var(--neon-green); color: var(--neon-green); }
-        .footer-bottom { max-width: 1350px; margin: 35px auto 0; padding-top: 20px; border-top: 1px solid var(--border-color); text-align: center; color: var(--text-muted); font-size: 13px; }
-
-        /* ===== Mobile Menu ===== */
-        .menu-toggle { display: none; }
-        .mobile-menu {
-            display: none;
-            position: sticky;
-            top: 71px;
-            z-index: 999;
-            background: rgba(5,5,5,0.98);
-            border-bottom: 1px solid var(--border-color);
-            padding: 10px 20px 18px;
-        }
-        .mobile-menu.show { display: block; }
-        .mobile-menu a {
-            display: block;
-            padding: 12px 0;
-            border-bottom: 1px solid var(--border-color);
-            font-family: 'Rajdhani';
-            font-weight: 600;
-            font-size: 16px;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            color: var(--text-secondary);
-        }
-        .mobile-menu a:hover { color: var(--neon-green); }
-
-        @media (max-width: 1024px) {
-            .products-grid { grid-template-columns: repeat(3, 1fr); }
-            .features-grid { grid-template-columns: repeat(2, 1fr); }
-            .steps-grid { grid-template-columns: repeat(2, 1fr); }
-        }
-        @media (max-width: 768px) {
-            .header, .top-bar { padding: 12px 20px; }
-            .nav-menu, .top-bar { display: none; }
-            .menu-toggle { display: flex; }
-            .signin-btn .signin-text { display: none; }
-            .signin-btn { padding: 10px; border-radius: 50%; }
-            .hero { padding: 0 20px; height: 60vh; }
-            .hero-title { font-size: 32px; }
-            .products-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
-            .section { padding: 50px 15px; }
-            .category-grid, .features-grid, .about-grid, .contact-grid, .footer-grid { grid-template-columns: 1fr; }
-            .category-card { height: 200px; }
-            .about-img { height: 240px; }
-            .form-row { grid-template-columns: 1fr; gap: 0; }
-            .footer { padding: 45px 20px 25px; }
-            .product-image { height: 180px; }
-            .card-actions { grid-template-columns: 1fr auto; }
-        }
-        @media (max-width: 420px) {
-            .steps-grid { grid-template-columns: 1fr; }
-            .logo { font-size: 20px; }
-        }
-    </style>
+    <script src="assets/js/config.js"></script>
 </head>
-<body>
+<body data-page="home">
 
-    <!-- Announcement Bar -->
-    <div class="announcement-bar">
-        🔥 FLAT 20% OFF ON ALL SHOES — USE CODE: JENZY20 &nbsp;&nbsp;|&nbsp;&nbsp; 🚚 FREE DELIVERY ON ORDERS ABOVE PKR 5000 &nbsp;&nbsp;|&nbsp;&nbsp; ✨ AUTHENTIC BRANDED THRIFTED SHOES
-    </div>
-
-    <!-- Top Bar -->
-    <div class="top-bar">
-        <div class="top-bar-left">
-            <a data-site="email-link"><i class="fas fa-envelope"></i> <span data-site="email"></span></a>
-            <a data-site="phone-link"><i class="fas fa-phone"></i> <span data-site="phone"></span></a>
-        </div>
-        <div class="top-bar-right">
-            <a href="#why-us">Why Jenzy?</a>
-            <a href="#contact">Contact</a>
-        </div>
-    </div>
-
-    <!-- Header -->
-    <header class="header" id="siteHeader">
-        <a href="#" class="logo">JENZY<span>THRIFTS</span></a>
-        <nav class="nav-menu" id="navMenu">
-            <a href="#store" data-nav="ALL" class="active">Store</a>
-            <a href="#store" data-nav="Men">Men</a>
-            <a href="#store" data-nav="Women">Women</a>
-            <a href="#why-us">Why Us</a>
-            <a href="#about">About</a>
-            <a href="#contact">Contact</a>
-        </nav>
-        <div class="header-icons">
-            <!-- Signed out -->
-            <button class="signin-btn" id="signinBtn" onclick="openLogin()" style="display:none">
-                <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
-                <span class="signin-text">Sign in</span>
-            </button>
-            <!-- Signed in -->
-            <div class="user-menu" id="userMenu">
-                <button class="user-avatar-btn" id="userAvatarBtn" title="My account"></button>
-                <div class="user-dropdown" id="userDropdown">
-                    <div class="u-name" id="userName"></div>
-                    <div class="u-email" id="userEmail"></div>
-                    <button onclick="signOutUser()"><i class="fas fa-sign-out-alt"></i> Sign out</button>
+<main>
+    <!-- HERO -->
+    <section class="hero" id="home">
+        <div class="container">
+            <div class="hero-content">
+                <span class="hero-badge"><i class="fas fa-circle-check"></i> 100% Authentic • Hand-checked</span>
+                <h1>Premium sneakers.<br><span class="grad">Thrift prices.</span></h1>
+                <p>Original Nike, Adidas, Jordan, New Balance and more — every pair inspected, cleaned and ready to wear. Order online, pay cash on delivery.</p>
+                <div class="hero-cta">
+                    <a href="#shop" class="btn btn-primary btn-lg"><i class="fas fa-bag-shopping"></i> Shop Now</a>
+                    <a href="#how" class="btn btn-outline btn-lg">How it works</a>
                 </div>
-            </div>
-            <button class="icon-btn" onclick="toggleCart()" title="Your bag"><i class="fas fa-shopping-bag"></i><span class="badge" id="cartBadge">0</span></button>
-            <button class="icon-btn menu-toggle" id="menuToggle" title="Menu"><i class="fas fa-bars"></i></button>
-        </div>
-    </header>
-
-    <!-- Mobile Menu -->
-    <div class="mobile-menu" id="mobileMenu">
-        <a href="#store" data-nav="ALL">Store</a>
-        <a href="#store" data-nav="Men">Men</a>
-        <a href="#store" data-nav="Women">Women</a>
-        <a href="#why-us">Why Us</a>
-        <a href="#about">About</a>
-        <a href="#contact">Contact</a>
-    </div>
-
-    <!-- Hero Section -->
-    <section class="hero">
-        <div class="hero-content">
-            <span class="hero-tag">Originals Only</span>
-            <h1 class="hero-title">Hand-Picked <span>Thrifted</span> Kicks</h1>
-            <p class="hero-desc">Authentic Nike, Adidas, Jordan, and New Balance shoes verified and cleaned. High quality for the lowest prices.</p>
-            <a href="#categories" class="btn-neon btn-neon-green"><i class="fas fa-fire"></i> Shop Collection</a>
-        </div>
-    </section>
-
-    <!-- Shop by Category -->
-    <section class="section" id="categories">
-        <div class="section-header">
-            <div class="section-tag">Find Your Fit</div>
-            <h2 class="section-title">Shop By <span>Category</span></h2>
-        </div>
-        <div class="category-grid">
-            <div class="category-card men" onclick="shopCategory('Men')">
-                <div class="cat-bg" style="background-image:url('https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=900')"></div>
-                <div class="cat-content">
-                    <small>For Him</small>
-                    <h3>Men's Shoes</h3>
-                    <span>Shop Men <i class="fas fa-arrow-right"></i></span>
-                </div>
-            </div>
-            <div class="category-card women" onclick="shopCategory('Women')">
-                <div class="cat-bg" style="background-image:url('https://images.unsplash.com/photo-1556906781-9a412961c28c?w=900')"></div>
-                <div class="cat-content">
-                    <small>For Her</small>
-                    <h3>Women's Shoes</h3>
-                    <span>Shop Women <i class="fas fa-arrow-right"></i></span>
+                <div class="hero-stats" id="heroStats" hidden>
+                    <div><strong id="statPairs">–</strong><span>Pairs in stock</span></div>
+                    <div><strong id="statBrands">–</strong><span>Brands</span></div>
+                    <div><strong>COD</strong><span>Cash on delivery</span></div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Store Section (Live from Supabase) -->
-    <section class="section" id="store" style="padding-top:20px">
-        <div class="section-header">
-            <div class="section-tag">Direct From Inventory</div>
-            <h2 class="section-title">Latest <span>Drops</span></h2>
-        </div>
-
-        <!-- Category (Gender) Tabs -->
-        <div class="product-tabs gender-tabs" id="genderTabs">
-            <button class="tab-btn active" data-gender="ALL">All</button>
-            <button class="tab-btn" data-gender="Men"><i class="fas fa-mars"></i> Men</button>
-            <button class="tab-btn" data-gender="Women"><i class="fas fa-venus"></i> Women</button>
-        </div>
-
-        <!-- Brand Tabs (built from your products) -->
-        <div class="filter-label">Brand</div>
-        <div class="product-tabs" id="brandTabs"></div>
-
-        <!-- Size Filter (built from your products) -->
-        <div class="filter-label">Size (US)</div>
-        <div class="size-filter" id="sizeFilters"></div>
-
-        <p class="results-count" id="resultsCount"></p>
-
-        <!-- Products Container -->
-        <div class="products-grid" id="productsGrid">
-            <div class="loading-state">
-                <i class="fas fa-spinner fa-spin"></i>
-                <p>Fetching inventory...</p>
-            </div>
+    <!-- TRUST STRIP -->
+    <section class="trust">
+        <div class="container trust-grid">
+            <div class="trust-item"><i class="fas fa-certificate"></i><div><strong>100% Authentic</strong><span>Every pair verified</span></div></div>
+            <div class="trust-item"><i class="fas fa-truck-fast"></i><div><strong>Nationwide Delivery</strong><span>Across Pakistan</span></div></div>
+            <div class="trust-item"><i class="fas fa-money-bill-wave"></i><div><strong>Cash on Delivery</strong><span>Pay when it arrives</span></div></div>
+            <div class="trust-item"><i class="fas fa-box-open"></i><div><strong>Live Order Tracking</strong><span>From your account</span></div></div>
         </div>
     </section>
 
-    <!-- Why Us -->
-    <section class="alt-bg" id="why-us">
-        <div class="section">
-            <div class="section-header">
-                <div class="section-tag">Why Jenzy Thrifts</div>
-                <h2 class="section-title">Why Shop <span>With Us</span></h2>
+    <!-- CATEGORIES -->
+    <section class="section">
+        <div class="container">
+            <div class="section-head">
+                <span class="eyebrow">Categories</span>
+                <h2 class="section-title">Shop by <span class="grad">Category</span></h2>
             </div>
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-icon fi-green"><i class="fas fa-certificate"></i></div>
-                    <h4>100% Original</h4>
-                    <p>Every pair is checked for authenticity before it is listed. No first-copies, no replicas — only genuine branded shoes.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon fi-blue"><i class="fas fa-soap"></i></div>
-                    <h4>Cleaned &amp; Sanitised</h4>
-                    <p>Each pair is deep-cleaned and sanitised, so it arrives fresh and ready to wear.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon fi-pink"><i class="fas fa-tags"></i></div>
-                    <h4>Fraction of Retail</h4>
-                    <p>Premium brands like Nike, Adidas, Jordan and New Balance at thrift prices — big savings compared to buying new.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon fi-yellow"><i class="fas fa-clipboard-check"></i></div>
-                    <h4>Honest Condition</h4>
-                    <p>Every listing is graded Excellent, Good or Fair with real photos, so you know exactly what you are getting.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon fi-purple"><i class="fas fa-truck-fast"></i></div>
-                    <h4>Delivery Nationwide</h4>
-                    <p>We deliver across Pakistan, with free delivery on orders above PKR 5,000.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon fi-green"><i class="fab fa-whatsapp"></i></div>
-                    <h4>Real Human Support</h4>
-                    <p>Order and ask questions directly on WhatsApp. Talk to a real person, get real answers — fast.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- How to Order -->
-    <section class="section" id="how-to-order">
-        <div class="section-header">
-            <div class="section-tag">Simple &amp; Fast</div>
-            <h2 class="section-title">How To <span>Order</span></h2>
-        </div>
-        <div class="steps-grid">
-            <div class="step-card">
-                <div class="step-num">1</div>
-                <h4>Sign In With Google</h4>
-                <p>One tap sign-in — no passwords, no long forms.</p>
-            </div>
-            <div class="step-card">
-                <div class="step-num">2</div>
-                <h4>Pick Your Pair</h4>
-                <p>Browse by category, brand and size, then add to your bag.</p>
-            </div>
-            <div class="step-card">
-                <div class="step-num">3</div>
-                <h4>Order on WhatsApp</h4>
-                <p>Send your order in one click. We confirm availability right away.</p>
-            </div>
-            <div class="step-card">
-                <div class="step-num">4</div>
-                <h4>Get It Delivered</h4>
-                <p>Your cleaned, verified pair ships straight to your door.</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- About -->
-    <section class="alt-bg" id="about">
-        <div class="section">
-            <div class="about-grid">
-                <div class="about-img">
-                    <img src="https://images.unsplash.com/photo-1556906781-9a412961c28c?w=900" alt="Thrifted sneakers" loading="lazy">
-                </div>
-                <div class="about-text">
-                    <div class="section-tag">Our Story</div>
-                    <h2 class="section-title">About <span>Jenzy Thrifts</span></h2>
-                    <p>JENZY THRIFTS started with one simple idea: everyone deserves to wear authentic branded sneakers without paying crazy retail prices.</p>
-                    <p>We hand-pick pre-loved shoes from the world's top brands, check every pair for authenticity, clean them properly and grade their condition honestly. Thrifting is also better for the planet — every pair we sell is one less pair in a landfill.</p>
-                    <div class="about-stats">
-                        <div><strong>100%</strong><span>Authentic</span></div>
-                        <div><strong>10+</strong><span>Top Brands</span></div>
-                        <div><strong>PK</strong><span>Nationwide</span></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Contact -->
-    <section class="section" id="contact">
-        <div class="section-header">
-            <div class="section-tag">Get In Touch</div>
-            <h2 class="section-title">Contact <span>Us</span></h2>
-        </div>
-        <div class="contact-grid">
-            <div class="contact-info">
-                <a class="contact-item" data-site="whatsapp-link" target="_blank" rel="noopener">
-                    <div class="ci-icon fi-green"><i class="fab fa-whatsapp"></i></div>
-                    <div><h5>WhatsApp</h5><p data-site="phone"></p></div>
+            <div class="cat-grid">
+                <a href="?gender=Men#shop" class="cat-card" data-gender-link="Men">
+                    <div class="cat-bg" style="background-image:url('https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?w=1000&q=80')"></div>
+                    <small>Collection</small>
+                    <h3>MEN</h3>
+                    <span class="cat-link">Shop Men <i class="fas fa-arrow-right"></i><span class="cat-count" id="countMen"></span></span>
                 </a>
-                <a class="contact-item" data-site="phone-link">
-                    <div class="ci-icon fi-blue"><i class="fas fa-phone"></i></div>
-                    <div><h5>Call Us</h5><p data-site="phone"></p></div>
-                </a>
-                <a class="contact-item" data-site="email-link">
-                    <div class="ci-icon fi-pink"><i class="fas fa-envelope"></i></div>
-                    <div><h5>Email</h5><p data-site="email"></p></div>
-                </a>
-                <a class="contact-item" data-site="instagram-link" target="_blank" rel="noopener">
-                    <div class="ci-icon fi-purple"><i class="fab fa-instagram"></i></div>
-                    <div><h5>Instagram</h5><p data-site="instagram-handle"></p></div>
+                <a href="?gender=Women#shop" class="cat-card" data-gender-link="Women">
+                    <div class="cat-bg" style="background-image:url('https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=1000&q=80')"></div>
+                    <small>Collection</small>
+                    <h3>WOMEN</h3>
+                    <span class="cat-link">Shop Women <i class="fas fa-arrow-right"></i><span class="cat-count" id="countWomen"></span></span>
                 </a>
             </div>
-
-            <form class="contact-form" id="contactForm" novalidate>
-                <h3>Send Us a Message</h3>
-                <p>Looking for a specific pair or size? Have a question? Drop us a message and we'll reply by email.</p>
-                <div class="form-row">
-                    <div class="field">
-                        <label for="cfName">Your Name</label>
-                        <input type="text" id="cfName" maxlength="100" required placeholder="Ali Khan">
-                    </div>
-                    <div class="field">
-                        <label for="cfEmail">Email</label>
-                        <input type="email" id="cfEmail" maxlength="150" required placeholder="you@example.com">
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="field">
-                        <label for="cfPhone">Phone (optional)</label>
-                        <input type="tel" id="cfPhone" maxlength="30" placeholder="03XX XXXXXXX">
-                    </div>
-                    <div class="field">
-                        <label for="cfSubject">Subject</label>
-                        <select id="cfSubject">
-                            <option>General Question</option>
-                            <option>Looking For a Pair</option>
-                            <option>Order Help</option>
-                            <option>Sell Us Your Shoes</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="field">
-                    <label for="cfMessage">Message</label>
-                    <textarea id="cfMessage" maxlength="2000" required placeholder="Hi! I'm looking for Nike Air Force 1 in size 9..."></textarea>
-                </div>
-                <!-- Spam trap: real people never fill this -->
-                <div class="hp-field" aria-hidden="true">
-                    <label for="cfWebsite">Website</label>
-                    <input type="text" id="cfWebsite" tabindex="-1" autocomplete="off">
-                </div>
-                <button type="submit" class="btn-neon btn-neon-green" id="cfSubmit" style="width:100%; justify-content:center;">
-                    <i class="fas fa-paper-plane"></i> Send Message
-                </button>
-                <div class="form-status" id="cfStatus"></div>
-            </form>
         </div>
     </section>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="footer-grid">
-            <div>
-                <div class="logo">JENZY<span>THRIFTS</span></div>
-                <p>Authentic, hand-picked thrifted sneakers from the world's top brands — verified, cleaned and priced for everyone.</p>
-                <div class="footer-social">
-                    <a data-site="whatsapp-link" target="_blank" rel="noopener" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
-                    <a data-site="instagram-link" target="_blank" rel="noopener" title="Instagram"><i class="fab fa-instagram"></i></a>
-                    <a data-site="email-link" title="Email"><i class="fas fa-envelope"></i></a>
+    <!-- SHOP -->
+    <section class="section section-alt" id="shop">
+        <div class="container">
+            <div class="section-head">
+                <span class="eyebrow">Shop</span>
+                <h2 class="section-title">Latest <span class="grad">Arrivals</span></h2>
+                <p class="section-sub">Every pair is one of a kind. When it's gone, it's gone.</p>
+            </div>
+
+            <div class="shop-toolbar">
+                <div class="segmented" id="genderTabs" role="tablist">
+                    <button class="active" data-gender="All">All</button>
+                    <button data-gender="Men">Men</button>
+                    <button data-gender="Women">Women</button>
+                </div>
+                <div class="toolbar-right">
+                    <label class="field-inline"><i class="fas fa-magnifying-glass"></i><input class="input" id="searchInput" type="search" placeholder="Search shoes or brands" aria-label="Search"></label>
+                    <select class="select" id="brandFilter" aria-label="Brand"><option value="">All brands</option></select>
+                    <select class="select" id="sizeFilter" aria-label="Size"><option value="">All sizes</option></select>
+                    <select class="select" id="sortSelect" aria-label="Sort">
+                        <option value="new">Newest</option>
+                        <option value="low">Price: Low to High</option>
+                        <option value="high">Price: High to Low</option>
+                        <option value="off">Biggest discount</option>
+                    </select>
                 </div>
             </div>
-            <div>
-                <h5>Shop</h5>
-                <ul>
-                    <li><a href="#store" data-nav="ALL">All Shoes</a></li>
-                    <li><a href="#store" data-nav="Men">Men</a></li>
-                    <li><a href="#store" data-nav="Women">Women</a></li>
-                </ul>
+            <div class="results-bar">
+                <span id="resultCount">Loading…</span>
+                <span class="live-dot">Live stock</span>
             </div>
-            <div>
-                <h5>Info</h5>
-                <ul>
-                    <li><a href="#why-us">Why Us</a></li>
-                    <li><a href="#how-to-order">How To Order</a></li>
-                    <li><a href="#about">About Us</a></li>
-                    <li><a href="#contact">Contact</a></li>
+            <div class="p-grid" id="productGrid">
+                <div class="skeleton sk-card"></div><div class="skeleton sk-card"></div><div class="skeleton sk-card"></div><div class="skeleton sk-card"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- WHY US -->
+    <section class="section" id="why">
+        <div class="container">
+            <div class="section-head">
+                <span class="eyebrow">Why Jenzy</span>
+                <h2 class="section-title">Why shop <span class="grad">with us</span></h2>
+            </div>
+            <div class="feature-grid">
+                <div class="feature"><div class="f-icon"><i class="fas fa-shield-halved"></i></div><h4>Authenticity guaranteed</h4><p>We only sell original branded shoes. Every pair is checked for tags, stitching and materials before listing.</p></div>
+                <div class="feature"><div class="f-icon"><i class="fas fa-soap"></i></div><h4>Cleaned &amp; ready to wear</h4><p>All shoes are deep-cleaned and honestly graded — Excellent, Good or Fair — so you know exactly what you get.</p></div>
+                <div class="feature"><div class="f-icon"><i class="fas fa-tags"></i></div><h4>Fraction of retail</h4><p>Get premium sneakers for much less than the retail price. The discount is shown on every product.</p></div>
+                <div class="feature"><div class="f-icon"><i class="fas fa-camera"></i></div><h4>Real photos</h4><p>Every photo is of the actual pair you receive — no stock images, no surprises.</p></div>
+                <div class="feature"><div class="f-icon"><i class="fas fa-money-bill-wave"></i></div><h4>Cash on delivery</h4><p>No advance payment. Pay the rider when your shoes reach your door.</p></div>
+                <div class="feature"><div class="f-icon"><i class="fas fa-location-crosshairs"></i></div><h4>Track your order</h4><p>See your order status live from your account — confirmed, shipped and delivered.</p></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- HOW TO ORDER -->
+    <section class="section section-alt" id="how">
+        <div class="container">
+            <div class="section-head">
+                <span class="eyebrow">Simple &amp; secure</span>
+                <h2 class="section-title">How to <span class="grad">order</span></h2>
+            </div>
+            <div class="steps">
+                <div class="step"><span class="step-no">STEP 01</span><h4>Pick your pair</h4><p>Open any shoe to see all photos, the condition and available sizes.</p></div>
+                <div class="step"><span class="step-no">STEP 02</span><h4>Log in</h4><p>Log in with your Google account in one tap — no passwords to remember.</p></div>
+                <div class="step"><span class="step-no">STEP 03</span><h4>Place your order</h4><p>Enter your delivery address and confirm. Your order number appears instantly.</p></div>
+                <div class="step"><span class="step-no">STEP 04</span><h4>Pay on delivery</h4><p>We confirm and ship your order. Track it in My Orders and pay cash on arrival.</p></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ABOUT -->
+    <section class="section" id="about">
+        <div class="container about-grid">
+            <div class="about-img"><img src="https://images.unsplash.com/photo-1552346154-21d32810aba3?w=1000&q=80" alt="Sneakers collection" loading="lazy"></div>
+            <div class="about-text">
+                <span class="eyebrow">About us</span>
+                <h2 class="section-title">Pre-loved sneakers, <span class="grad">new energy</span></h2>
+                <p>JENZY THRIFTS started with a simple idea: everyone deserves great shoes. We source authentic, gently used sneakers from top brands, inspect and clean every pair, and sell them at prices that make sense.</p>
+                <p>Buying thrifted is also better for the planet — every pair we sell is one less pair in a landfill.</p>
+                <ul class="about-points">
+                    <li><i class="fas fa-check"></i>Only original, branded footwear</li>
+                    <li><i class="fas fa-check"></i>Honest condition grading on every listing</li>
+                    <li><i class="fas fa-check"></i>Friendly support before and after your order</li>
                 </ul>
             </div>
         </div>
-        <div class="footer-bottom">© <span id="year"></span> JENZY THRIFTS. All rights reserved.</div>
-    </footer>
+    </section>
 
-    <!-- Cart Drawer -->
-    <div class="cart-sidebar" id="cartSidebar">
-        <div class="cart-header">
-            <h3 style="font-family:'Orbitron'; color:var(--neon-green);">Your Bag</h3>
-            <button onclick="toggleCart()" style="background:none; border:none; color:#fff; font-size:20px; cursor:pointer;"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="cart-items" id="cartItems">
-            <p style="text-align:center; color:var(--text-muted); margin-top:40px;">Your cart is empty</p>
-        </div>
-        <div class="cart-footer">
-            <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-                <span>Total:</span>
-                <span style="font-family:'Orbitron'; color:var(--neon-green); font-size:18px;" id="cartTotal">PKR 0</span>
+    <!-- CONTACT -->
+    <section class="section section-alt" id="contact">
+        <div class="container">
+            <div class="section-head">
+                <span class="eyebrow">Contact</span>
+                <h2 class="section-title">Get in <span class="grad">touch</span></h2>
+                <p class="section-sub">Questions about a size, condition or your order? Send us a message.</p>
             </div>
-            <button class="btn-neon btn-neon-green" style="width:100%; justify-content:center;" onclick="checkoutWhatsApp()">
-                <i class="fab fa-whatsapp"></i> Order via WhatsApp
-            </button>
-        </div>
-    </div>
-
-    <!-- Login Modal (Google) -->
-    <div class="modal-overlay" id="loginModal">
-        <div class="modal-box">
-            <button class="modal-close" onclick="closeLogin()" title="Close"><i class="fas fa-times"></i></button>
-
-            <!-- Step 1: sign in -->
-            <div id="loginStep">
-                <div class="modal-icon"><i class="fas fa-user-lock"></i></div>
-                <h3>Sign In To Order</h3>
-                <p id="loginReason">Please sign in with your Google account to add shoes to your bag and place orders.</p>
-                <button class="google-btn" id="googleBtn" onclick="signInWithGoogle()">
-                    <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
-                    <span>Continue with Google</span>
-                </button>
-                <div class="modal-error" id="loginError"></div>
-                <p class="modal-note">We only use your name and email to confirm your order.</p>
-            </div>
-
-            <!-- Step 2: signed in, continue (needed so WhatsApp can open from a real tap) -->
-            <div id="continueStep" style="display:none">
-                <div class="modal-icon"><i class="fas fa-check"></i></div>
-                <h3>You're Signed In!</h3>
-                <p id="continueText">Welcome! Tap below to continue with your order.</p>
-                <button class="btn-neon btn-neon-green" id="continueBtn" style="width:100%; justify-content:center;">
-                    <i class="fab fa-whatsapp"></i> Continue to WhatsApp
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Floating WhatsApp -->
-    <a data-site="whatsapp-link" class="wa-float" target="_blank" rel="noopener" title="Chat on WhatsApp">
-        <i class="fab fa-whatsapp"></i>
-    </a>
-
-    <!-- Toast Notification -->
-    <div class="toast" id="toast">Added to Cart! 🛒</div>
-
-    <!-- ============================================== -->
-    <!-- CONFIG & LOGIC -->
-    <!-- ============================================== -->
-    <script>
-        // =============================================
-        // ✏️ YOUR SHOP DETAILS — edit these
-        // =============================================
-        const SITE = {
-            whatsapp: "923001234567",          // WhatsApp number: 92 + number without the first 0
-            phone: "+92 300 1234567",          // shown on the page
-            email: "info@jenzythrifts.com",
-            instagram: ""                      // e.g. "https://instagram.com/jenzythrifts" (leave empty to hide)
-        };
-
-        // 🔥 FIREBASE — used for Google sign-in
-        const firebaseConfig = {
-            apiKey: "AIzaSyBcPi4kwtQmZjPpU9v4jmK-ggC2CsoJD38",
-            authDomain: "jenzythrifts-c7f90.firebaseapp.com",
-            projectId: "jenzythrifts-c7f90",
-            storageBucket: "jenzythrifts-c7f90.firebasestorage.app",
-            messagingSenderId: "698531856654",
-            appId: "1:698531856654:web:e3edf1169b3a50b5ac575f"
-        };
-
-        // 🟢 SUPABASE — products + contact messages
-        const SUPABASE_URL = "https://zurvhjraxenbnvmwdurz.supabase.co";
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1cnZoanJheGVuYm52bXdkdXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAzNTI2NzAsImV4cCI6MjEwNTkyODY3MH0.mdmGZCNYds6wPHY8hE3_Eq1BaZ-x4LvPd-AIEsoJrTM";
-
-        // =============================================
-        // INIT
-        // =============================================
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const { createClient } = supabase;
-        const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-        let products = [];
-        let activeGender = 'ALL';
-        let activeBrand = 'ALL';
-        let activeSize = 'ALL';
-        let currentUser = null;
-        let pendingAction = null;   // what to do after the customer signs in
-        let cart = loadCart();
-
-        // =============================================
-        // HELPERS
-        // =============================================
-        function esc(value) {
-            return String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-        }
-        function formatPKR(n) { return 'PKR ' + Number(n || 0).toLocaleString(); }
-        function waLink(text) {
-            return `https://wa.me/${SITE.whatsapp}` + (text ? `?text=${encodeURIComponent(text)}` : '');
-        }
-        function loadCart() {
-            try { return JSON.parse(localStorage.getItem('jenzyCart')) || []; } catch { return []; }
-        }
-        function saveCart() { localStorage.setItem('jenzyCart', JSON.stringify(cart)); }
-
-        // Fill contact details everywhere on the page from SITE
-        function applySiteInfo() {
-            const telHref = 'tel:' + SITE.phone.replace(/[^\d+]/g, '');
-            const handle = SITE.instagram ? '@' + SITE.instagram.replace(/\/+$/, '').split('/').pop() : '';
-            document.querySelectorAll('[data-site]').forEach(el => {
-                switch (el.dataset.site) {
-                    case 'email': el.textContent = SITE.email; break;
-                    case 'phone': el.textContent = SITE.phone; break;
-                    case 'instagram-handle': el.textContent = handle; break;
-                    case 'email-link': el.href = 'mailto:' + SITE.email; break;
-                    case 'phone-link': el.href = telHref; break;
-                    case 'whatsapp-link': el.href = waLink('Hi JENZY THRIFTS, I have an inquiry about shoes'); break;
-                    case 'instagram-link':
-                        if (SITE.instagram) el.href = SITE.instagram; else el.style.display = 'none';
-                        break;
-                }
-            });
-            document.getElementById('year').textContent = new Date().getFullYear();
-        }
-
-        // =============================================
-        // GOOGLE SIGN-IN (Firebase)
-        // =============================================
-        auth.onAuthStateChanged(user => {
-            currentUser = user;
-            renderUserUI();
-            prefillContactForm();
-            if (user && pendingAction) {
-                const action = pendingAction;
-                pendingAction = null;
-                if (action.needsTap) {
-                    // WhatsApp must be opened from a real tap, otherwise browsers block it
-                    showContinueStep(action);
-                } else {
-                    closeLogin();
-                    action.run();
-                }
-            }
-        });
-
-        auth.getRedirectResult().catch(err => console.warn('Redirect sign-in error:', err));
-
-        function renderUserUI() {
-            const signinBtn = document.getElementById('signinBtn');
-            const userMenu = document.getElementById('userMenu');
-            if (currentUser) {
-                signinBtn.style.display = 'none';
-                userMenu.classList.add('show');
-                const name = currentUser.displayName || currentUser.email || 'Customer';
-                document.getElementById('userName').textContent = name;
-                document.getElementById('userEmail').textContent = currentUser.email || '';
-                const avatarBtn = document.getElementById('userAvatarBtn');
-                if (currentUser.photoURL) {
-                    avatarBtn.innerHTML = `<img src="${esc(currentUser.photoURL)}" alt="" referrerpolicy="no-referrer">`;
-                } else {
-                    avatarBtn.textContent = name.charAt(0).toUpperCase();
-                }
-            } else {
-                signinBtn.style.display = 'inline-flex';
-                userMenu.classList.remove('show');
-                document.getElementById('userDropdown').classList.remove('show');
-            }
-        }
-
-        // Run an action only if signed in; otherwise ask to sign in first
-        function requireLogin(action) {
-            if (currentUser) return action.run();
-            pendingAction = action;
-            openLogin(action.reason);
-        }
-
-        function openLogin(reason) {
-            document.getElementById('loginReason').textContent = reason ||
-                'Sign in with your Google account to add shoes to your bag and place orders.';
-            document.getElementById('loginStep').style.display = 'block';
-            document.getElementById('continueStep').style.display = 'none';
-            document.getElementById('loginError').classList.remove('show');
-            document.getElementById('loginModal').classList.add('show');
-        }
-
-        function closeLogin() {
-            document.getElementById('loginModal').classList.remove('show');
-            pendingAction = null;
-        }
-
-        function showContinueStep(action) {
-            const first = (currentUser.displayName || '').split(' ')[0];
-            document.getElementById('continueText').textContent =
-                `Welcome${first ? ', ' + first : ''}! Tap below to send your order on WhatsApp.`;
-            document.getElementById('loginStep').style.display = 'none';
-            document.getElementById('continueStep').style.display = 'block';
-            document.getElementById('continueBtn').onclick = () => { closeLogin(); action.run(); };
-        }
-
-        async function signInWithGoogle() {
-            const btn = document.getElementById('googleBtn');
-            const errBox = document.getElementById('loginError');
-            errBox.classList.remove('show');
-            btn.disabled = true;
-            const hadPendingAction = !!pendingAction;   // e.g. "add to bag" waiting for sign-in
-            const provider = new firebase.auth.GoogleAuthProvider();
-            provider.setCustomParameters({ prompt: 'select_account' });
-            try {
-                await auth.signInWithPopup(provider);
-                // If an order action was waiting, onAuthStateChanged already handled it
-                if (!hadPendingAction) {
-                    closeLogin();
-                    showToast('Signed in successfully ✅');
-                }
-            } catch (err) {
-                console.error('Google sign-in error:', err);
-                if (err.code === 'auth/popup-blocked' || err.code === 'auth/operation-not-supported-in-this-environment') {
-                    return auth.signInWithRedirect(provider);
-                }
-                const messages = {
-                    'auth/popup-closed-by-user': null,
-                    'auth/cancelled-popup-request': null,
-                    'auth/unauthorized-domain': 'This website domain is not authorised in Firebase (Authentication → Settings → Authorized domains).',
-                    'auth/operation-not-allowed': 'Google sign-in is not enabled in Firebase (Authentication → Sign-in method → Google).',
-                    'auth/network-request-failed': 'Network error. Please check your internet connection and try again.',
-                    'auth/web-storage-unsupported': 'Your browser is blocking sign-in. Please open this site in Chrome or Safari.'
-                };
-                const msg = err.code in messages ? messages[err.code]
-                    : 'Sign-in failed. If you opened this link inside Instagram/Facebook/TikTok, tap ⋮ and choose "Open in browser", then try again.';
-                if (msg) { errBox.textContent = msg; errBox.classList.add('show'); }
-            } finally {
-                btn.disabled = false;
-            }
-        }
-
-        async function signOutUser() {
-            await auth.signOut();
-            showToast('Signed out');
-        }
-
-        document.getElementById('userAvatarBtn').addEventListener('click', e => {
-            e.stopPropagation();
-            document.getElementById('userDropdown').classList.toggle('show');
-        });
-        document.addEventListener('click', e => {
-            if (!e.target.closest('#userMenu')) document.getElementById('userDropdown').classList.remove('show');
-        });
-        document.getElementById('loginModal').addEventListener('click', e => {
-            if (e.target.id === 'loginModal') closeLogin();
-        });
-
-        // =============================================
-        // PRODUCTS (Supabase)
-        // =============================================
-        async function fetchProducts() {
-            try {
-                const { data, error } = await db
-                    .from('products')
-                    .select('*')
-                    .eq('status', 'Active')
-                    .order('created_at', { ascending: false });
-
-                if (error) throw error;
-                products = data || [];
-                buildBrandTabs();
-                buildSizeFilters();
-                syncCartWithProducts();
-                renderProducts();
-            } catch (err) {
-                console.error("Supabase Error:", err);
-                document.getElementById('resultsCount').textContent = '';
-                document.getElementById('productsGrid').innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-exclamation-triangle" style="color:var(--neon-pink)"></i>
-                        <p>Could not load products right now. Please try again in a moment.</p>
-                    </div>`;
-            }
-        }
-
-        // Unisex shoes show in both Men and Women
-        function matchesGender(p) {
-            if (activeGender === 'ALL') return true;
-            const g = (p.gender || 'Unisex').toLowerCase();
-            return g === activeGender.toLowerCase() || g === 'unisex';
-        }
-
-        function buildBrandTabs() {
-            const brands = [...new Set(products.map(p => p.brand).filter(Boolean))].sort();
-            if (activeBrand !== 'ALL' && !brands.includes(activeBrand)) activeBrand = 'ALL';
-            document.getElementById('brandTabs').innerHTML =
-                `<button class="tab-btn ${activeBrand === 'ALL' ? 'active' : ''}" data-brand="ALL">All Brands</button>` +
-                brands.map(b => `<button class="tab-btn ${activeBrand === b ? 'active' : ''}" data-brand="${esc(b)}">${esc(b)}</button>`).join('');
-        }
-
-        function buildSizeFilters() {
-            const sizes = [...new Set(products.flatMap(p => p.sizes || []))]
-                .sort((a, b) => (parseFloat(a) || 999) - (parseFloat(b) || 999) || String(a).localeCompare(String(b)));
-            if (activeSize !== 'ALL' && !sizes.includes(activeSize)) activeSize = 'ALL';
-            document.getElementById('sizeFilters').innerHTML =
-                `<button class="size-btn ${activeSize === 'ALL' ? 'active' : ''}" data-size="ALL">All</button>` +
-                sizes.map(s => `<button class="size-btn ${activeSize === s ? 'active' : ''}" data-size="${esc(s)}">${esc(s)}</button>`).join('');
-        }
-
-        function renderProducts() {
-            const container = document.getElementById('productsGrid');
-            const filtered = products.filter(p => {
-                const brandMatch = activeBrand === 'ALL' || (p.brand || '').toLowerCase() === activeBrand.toLowerCase();
-                const sizeMatch = activeSize === 'ALL' || (p.sizes && p.sizes.includes(activeSize));
-                return matchesGender(p) && brandMatch && sizeMatch;
-            });
-
-            const label = activeGender === 'ALL' ? '' : ` in ${activeGender}`;
-            document.getElementById('resultsCount').textContent =
-                `Showing ${filtered.length} pair${filtered.length === 1 ? '' : 's'}${label}`;
-
-            if (filtered.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-shoe-prints"></i>
-                        <p>No shoes found matching your filters.</p>
-                    </div>`;
-                return;
-            }
-
-            container.innerHTML = filtered.map(p => {
-                const img = p.images && p.images.length > 0 ? p.images[0] : 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600';
-                const tag = p.tag ? String(p.tag).toLowerCase() : '';
-                const sizesStr = p.sizes && p.sizes.length ? p.sizes.join(', ') : 'Free Size';
-                const inCart = cart.some(c => c.id === p.id);
-                const genderLabel = p.gender && p.gender !== 'Unisex' ? ` • ${esc(p.gender)}` : ' • Unisex';
-
-                return `
-                    <div class="product-card">
-                        <div class="product-image">
-                            <img src="${esc(img)}" alt="${esc(p.name)}" loading="lazy">
-                            ${p.tag ? `<span class="product-badge badge-${esc(tag)}">${esc(p.tag)}</span>` : ''}
-                        </div>
-                        <div class="product-info">
-                            <span class="product-brand">${esc(p.brand)}${genderLabel}</span>
-                            <h3 class="product-name">${esc(p.name)}</h3>
-                            <div class="product-meta">Sizes (US): ${esc(sizesStr)}</div>
-                            <span class="cond-tag cond-${esc(p.condition)}">${esc(p.condition)} Condition</span>
-                            <div class="product-price-row">
-                                <span class="price-current">${formatPKR(p.price)}</span>
-                                ${p.original_price ? `<span class="price-orig">${formatPKR(p.original_price)}</span>` : ''}
+            <div class="contact-grid">
+                <div class="contact-cards" id="contactCards"></div>
+                <div class="card">
+                    <h3>Send a message</h3>
+                    <p class="card-sub">We usually reply within a few hours.</p>
+                    <form id="contactForm" novalidate>
+                        <div class="form-grid">
+                            <div class="field"><label for="cName">Name <span class="req">*</span></label><input class="input" id="cName" maxlength="100" required></div>
+                            <div class="field"><label for="cEmail">Email <span class="req">*</span></label><input class="input" id="cEmail" type="email" maxlength="150" required></div>
+                            <div class="field"><label for="cPhone">Phone</label><input class="input" id="cPhone" type="tel" maxlength="30"></div>
+                            <div class="field"><label for="cSubject">Subject</label>
+                                <select class="select" id="cSubject">
+                                    <option>General question</option><option>Size / condition</option><option>My order</option><option>Other</option>
+                                </select>
                             </div>
-                            <div class="card-actions">
-                                <button class="btn-cart" data-add="${esc(p.id)}">
-                                    ${inCart ? '<i class="fas fa-check"></i> In Your Bag' : '<i class="fas fa-plus"></i> Add To Bag'}
-                                </button>
-                                <button class="btn-wa-icon" title="Order via WhatsApp" data-wa="${esc(p.id)}">
-                                    <i class="fab fa-whatsapp"></i>
-                                </button>
-                            </div>
+                            <div class="field full"><label for="cMessage">Message <span class="req">*</span></label><textarea id="cMessage" maxlength="2000" required></textarea></div>
+                            <div class="hp" aria-hidden="true"><input id="cWebsite" tabindex="-1" autocomplete="off"></div>
                         </div>
-                    </div>`;
-            }).join('');
-        }
+                        <div class="alert" id="contactAlert" style="margin-top:16px"></div>
+                        <button class="btn btn-primary btn-lg" id="contactBtn" type="submit" style="margin-top:18px"><i class="fas fa-paper-plane"></i> Send message</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
 
-        // =============================================
-        // FILTERS
-        // =============================================
-        function filterByGender(gender) {
-            activeGender = gender;
-            document.querySelectorAll('#genderTabs .tab-btn').forEach(b => b.classList.toggle('active', b.dataset.gender === gender));
-            document.querySelectorAll('#navMenu [data-nav]').forEach(a => a.classList.toggle('active', a.dataset.nav === gender));
-            renderProducts();
-        }
-        function filterByBrand(brand) {
-            activeBrand = brand;
-            document.querySelectorAll('#brandTabs .tab-btn').forEach(b => b.classList.toggle('active', b.dataset.brand === brand));
-            renderProducts();
-        }
-        function filterBySize(size) {
-            activeSize = size;
-            document.querySelectorAll('#sizeFilters .size-btn').forEach(b => b.classList.toggle('active', b.dataset.size === size));
-            renderProducts();
-        }
-        function shopCategory(gender) {
-            filterByGender(gender);
-            document.getElementById('store').scrollIntoView({ behavior: 'smooth' });
-        }
+<script src="assets/js/store.js"></script>
+<script>
+(function () {
+    const { db, esc, productCard, sortSizes, site } = Store;
+    const $ = (id) => document.getElementById(id);
 
-        document.getElementById('genderTabs').addEventListener('click', e => {
-            const b = e.target.closest('[data-gender]'); if (b) filterByGender(b.dataset.gender);
+    let products = [];
+    const state = {
+        gender: ['Men', 'Women'].includes(Store.qs('gender')) ? Store.qs('gender') : 'All',
+        search: '', brand: '', size: '', sort: 'new'
+    };
+
+    // ---------- Load products (only real data from the database) ----------
+    async function loadProducts() {
+        const { data, error } = await db.from('products').select('*')
+            .in('status', ['Active', 'Sold'])
+            .order('created_at', { ascending: false });
+        if (error) {
+            console.error(error);
+            $('productGrid').innerHTML = `<div class="empty-state"><i class="fas fa-triangle-exclamation"></i><p>Couldn't load shoes right now. Please refresh the page.</p></div>`;
+            $('resultCount').textContent = '';
+            return;
+        }
+        products = data || [];
+        buildFilters();
+        render();
+        renderStats();
+    }
+
+    function buildFilters() {
+        const active = products.filter(p => p.status === 'Active');
+        const brands = [...new Set(active.map(p => (p.brand || '').trim()).filter(Boolean))].sort();
+        const sizes = sortSizes([...new Set(active.flatMap(p => p.sizes || []))]);
+        const keep = (sel, val) => { sel.value = [...sel.options].some(o => o.value === val) ? val : ''; };
+        $('brandFilter').innerHTML = '<option value="">All brands</option>' + brands.map(b => `<option>${esc(b)}</option>`).join('');
+        $('sizeFilter').innerHTML = '<option value="">All sizes</option>' + sizes.map(s => `<option value="${esc(s)}">US ${esc(s)}</option>`).join('');
+        keep($('brandFilter'), state.brand); state.brand = $('brandFilter').value;
+        keep($('sizeFilter'), state.size); state.size = $('sizeFilter').value;
+    }
+
+    function renderStats() {
+        const active = products.filter(p => p.status === 'Active');
+        const brands = new Set(active.map(p => (p.brand || '').trim().toLowerCase()).filter(Boolean));
+        if (active.length) {
+            $('statPairs').textContent = active.length;
+            $('statBrands').textContent = brands.size;
+            $('heroStats').hidden = false;
+        } else {
+            $('heroStats').hidden = true;
+        }
+        const count = (g) => active.filter(p => p.gender === g || p.gender === 'Unisex').length;
+        $('countMen').textContent = count('Men') ? `• ${count('Men')} pairs` : '';
+        $('countWomen').textContent = count('Women') ? `• ${count('Women')} pairs` : '';
+    }
+
+    function render() {
+        const q = state.search.trim().toLowerCase();
+        let list = products.filter(p => {
+            if (state.gender !== 'All' && !(p.gender === state.gender || p.gender === 'Unisex')) return false;
+            if (state.brand && (p.brand || '').trim() !== state.brand) return false;
+            if (state.size && !(p.sizes || []).includes(state.size)) return false;
+            if (q && !`${p.name} ${p.brand || ''} ${p.category || ''} ${p.color || ''}`.toLowerCase().includes(q)) return false;
+            return true;
         });
-        document.getElementById('brandTabs').addEventListener('click', e => {
-            const b = e.target.closest('[data-brand]'); if (b) filterByBrand(b.dataset.brand);
+        const soldLast = (a, b) => (a.status === 'Sold') - (b.status === 'Sold');
+        const sorters = {
+            new: (a, b) => soldLast(a, b) || new Date(b.created_at) - new Date(a.created_at),
+            low: (a, b) => soldLast(a, b) || a.price - b.price,
+            high: (a, b) => soldLast(a, b) || b.price - a.price,
+            off: (a, b) => soldLast(a, b) || Store.discountPct(b) - Store.discountPct(a)
+        };
+        list.sort(sorters[state.sort]);
+
+        const available = list.filter(p => p.status === 'Active').length;
+        $('resultCount').textContent = `${available} ${available === 1 ? 'pair' : 'pairs'} available`;
+
+        if (!list.length) {
+            const filtered = state.gender !== 'All' || state.brand || state.size || q;
+            $('productGrid').innerHTML = `<div class="empty-state"><i class="fas fa-shoe-prints"></i><p>${filtered ? 'No shoes match your filters.' : 'New stock is coming soon. Check back shortly!'}</p>${filtered ? '<button class="btn btn-outline btn-sm" id="clearFilters" style="margin-top:14px">Clear filters</button>' : ''}</div>`;
+            $('clearFilters')?.addEventListener('click', clearFilters);
+            return;
+        }
+        $('productGrid').innerHTML = list.map(productCard).join('');
+    }
+
+    function clearFilters() {
+        state.search = state.brand = state.size = '';
+        $('searchInput').value = ''; $('brandFilter').value = ''; $('sizeFilter').value = '';
+        setGender('All', true);
+    }
+
+    function setGender(g, updateUrl) {
+        state.gender = g;
+        document.querySelectorAll('#genderTabs button').forEach(b => b.classList.toggle('active', b.dataset.gender === g));
+        document.querySelectorAll('.main-nav a').forEach(a => {
+            const key = a.dataset.nav;
+            a.classList.toggle('active', (g === 'Men' && key === 'men') || (g === 'Women' && key === 'women'));
         });
-        document.getElementById('sizeFilters').addEventListener('click', e => {
-            const b = e.target.closest('[data-size]'); if (b) filterBySize(b.dataset.size);
+        if (updateUrl) {
+            const url = new URL(location.href);
+            if (g === 'All') url.searchParams.delete('gender'); else url.searchParams.set('gender', g);
+            history.replaceState(null, '', url);
+        }
+        render();
+    }
+
+    document.querySelectorAll('#genderTabs button').forEach(b => b.addEventListener('click', () => setGender(b.dataset.gender, true)));
+    // Header / category links to ?gender= on this same page: filter without reloading
+    document.addEventListener('click', e => {
+        const a = e.target.closest('a[href*="gender="]');
+        if (!a) return;
+        const url = new URL(a.href, location.href);
+        if (url.pathname !== location.pathname) return;
+        e.preventDefault();
+        setGender(url.searchParams.get('gender') || 'All', true);
+        document.getElementById('shop').scrollIntoView({ behavior: 'smooth' });
+    });
+    let searchTimer;
+    $('searchInput').addEventListener('input', e => { clearTimeout(searchTimer); searchTimer = setTimeout(() => { state.search = e.target.value; render(); }, 150); });
+    $('brandFilter').addEventListener('change', e => { state.brand = e.target.value; render(); });
+    $('sizeFilter').addEventListener('change', e => { state.size = e.target.value; render(); });
+    $('sortSelect').addEventListener('change', e => { state.sort = e.target.value; render(); });
+
+    setGender(state.gender, false);
+    loadProducts();
+
+    // Live updates: when you add/sell a product in admin, the shop updates by itself
+    let reloadTimer;
+    Store.onProductsChange(() => { clearTimeout(reloadTimer); reloadTimer = setTimeout(loadProducts, 400); });
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) loadProducts(); });
+
+    // ---------- Contact ----------
+    const tel = site.phone.replace(/[^\d+]/g, '');
+    $('contactCards').innerHTML = `
+        <a class="contact-card" href="tel:${esc(tel)}"><span class="cc-icon"><i class="fas fa-phone"></i></span><div><small>Call us</small><strong>${esc(site.phone)}</strong></div></a>
+        <a class="contact-card" href="https://wa.me/${esc(site.whatsapp)}" target="_blank" rel="noopener"><span class="cc-icon"><i class="fab fa-whatsapp"></i></span><div><small>Chat with us</small><strong>WhatsApp support</strong></div></a>
+        <a class="contact-card" href="mailto:${esc(site.email)}"><span class="cc-icon"><i class="fas fa-envelope"></i></span><div><small>Email</small><strong>${esc(site.email)}</strong></div></a>
+        <div class="contact-card"><span class="cc-icon"><i class="fas fa-location-dot"></i></span><div><small>Location</small><strong>${esc(site.city)} • Delivery nationwide</strong></div></div>`;
+
+    Store.onAuth(user => {
+        if (!user) return;
+        if (!$('cName').value) $('cName').value = user.displayName || '';
+        if (!$('cEmail').value) $('cEmail').value = user.email || '';
+    });
+
+    $('contactForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const alertBox = $('contactAlert');
+        const show = (msg, ok) => { alertBox.textContent = msg; alertBox.className = 'alert show' + (ok ? ' ok' : ''); };
+        alertBox.className = 'alert';
+        if ($('cWebsite').value) return; // bot
+        const name = $('cName').value.trim();
+        const email = $('cEmail').value.trim();
+        const message = $('cMessage').value.trim();
+        if (name.length < 2) return show('Please enter your name.');
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return show('Please enter a valid email address.');
+        if (message.length < 5) return show('Please write a message.');
+        const last = Number(localStorage.getItem('jenzyLastMsg') || 0);
+        if (Date.now() - last < 60000) return show('Please wait a minute before sending another message.');
+
+        const btn = $('contactBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending…';
+        const { error } = await db.from('messages').insert({
+            name, email, message,
+            phone: $('cPhone').value.trim() || null,
+            subject: $('cSubject').value,
+            user_uid: Store.user ? Store.user.uid : null
         });
-        // Header / mobile / footer links with data-nav="Men" etc.
-        document.querySelectorAll('[data-nav]').forEach(a => {
-            a.addEventListener('click', () => {
-                filterByGender(a.dataset.nav);
-                document.getElementById('mobileMenu').classList.remove('show');
-            });
-        });
-        document.getElementById('productsGrid').addEventListener('click', e => {
-            const add = e.target.closest('[data-add]');
-            const wa = e.target.closest('[data-wa]');
-            if (add) addToCart(add.dataset.add);
-            if (wa) orderWhatsAppDirect(wa.dataset.wa);
-        });
-
-        // Mobile menu
-        document.getElementById('menuToggle').addEventListener('click', () => {
-            document.getElementById('mobileMenu').classList.toggle('show');
-        });
-        document.querySelectorAll('#mobileMenu a').forEach(a => a.addEventListener('click', () => {
-            document.getElementById('mobileMenu').classList.remove('show');
-        }));
-
-        // =============================================
-        // CART
-        // =============================================
-        function toggleCart() {
-            document.getElementById('cartSidebar').classList.toggle('active');
-            renderCart();
-        }
-
-        function addToCart(productId) {
-            const item = products.find(p => p.id === productId);
-            if (!item) return;
-            requireLogin({
-                reason: 'Sign in with Google to add shoes to your bag.',
-                run: () => {
-                    if (cart.some(c => c.id === item.id)) {
-                        showToast('This pair is already in your bag 👟');
-                        return;
-                    }
-                    cart.push({
-                        id: item.id,
-                        name: item.name,
-                        brand: item.brand,
-                        price: item.price,
-                        sizes: item.sizes || [],
-                        image: item.images && item.images[0] ? item.images[0] : ''
-                    });
-                    saveCart();
-                    updateCartBadge();
-                    renderProducts();
-                    showToast(`Added ${item.name} to bag!`);
-                }
-            });
-        }
-
-        function removeFromCart(index) {
-            cart.splice(index, 1);
-            saveCart();
-            updateCartBadge();
-            renderCart();
-            renderProducts();
-        }
-
-        // Drop items that were sold/hidden and refresh prices from the live inventory
-        function syncCartWithProducts() {
-            const before = cart.length;
-            cart = cart
-                .map(c => {
-                    const live = products.find(p => p.id === c.id);
-                    return live ? { ...c, name: live.name, brand: live.brand, price: live.price, sizes: live.sizes || [],
-                        image: live.images && live.images[0] ? live.images[0] : c.image } : null;
-                })
-                .filter(Boolean);
-            saveCart();
-            updateCartBadge();
-            if (cart.length < before) showToast('Some items in your bag are no longer available and were removed');
-        }
-
-        function updateCartBadge() {
-            document.getElementById('cartBadge').textContent = cart.length;
-        }
-
-        function renderCart() {
-            const container = document.getElementById('cartItems');
-            if (cart.length === 0) {
-                container.innerHTML = '<p style="text-align:center; color:var(--text-muted); margin-top:40px;">Your cart is empty</p>';
-                document.getElementById('cartTotal').textContent = 'PKR 0';
-                return;
-            }
-            let total = 0;
-            container.innerHTML = cart.map((item, index) => {
-                total += Number(item.price) || 0;
-                return `
-                    <div class="cart-item">
-                        <img src="${esc(item.image)}" alt="${esc(item.name)}">
-                        <div style="flex:1">
-                            <h5 style="font-size:14px">${esc(item.name)}</h5>
-                            <p style="font-size:11px; color:var(--text-muted)">Size: ${esc((item.sizes || []).join(', ') || '—')}</p>
-                            <p style="font-size:12px; color:var(--neon-green)">${formatPKR(item.price)}</p>
-                        </div>
-                        <button onclick="removeFromCart(${index})" style="background:none; border:none; color:var(--text-muted); cursor:pointer"><i class="fas fa-trash"></i></button>
-                    </div>`;
-            }).join('');
-            document.getElementById('cartTotal').textContent = formatPKR(total);
-        }
-
-        // =============================================
-        // WHATSAPP ORDERING (requires Google sign-in)
-        // =============================================
-        function customerLines() {
-            return `👤 *Name:* ${currentUser.displayName || '-'}\n📧 *Email:* ${currentUser.email || '-'}`;
-        }
-
-        function orderWhatsAppDirect(productId) {
-            const p = products.find(x => x.id === productId);
-            if (!p) return;
-            requireLogin({
-                needsTap: true,
-                reason: 'Sign in with Google to order this pair on WhatsApp.',
-                run: () => {
-                    const sizes = p.sizes && p.sizes.length ? p.sizes.join(', ') : 'Free Size';
-                    const msg = `Hi JENZY THRIFTS! 👋 I want to order:\n\n` +
-                        `👟 *Product:* ${p.brand ? p.brand + ' — ' : ''}${p.name}\n` +
-                        `💰 *Price:* ${formatPKR(p.price)}\n` +
-                        `📏 *Sizes:* ${sizes}\n\n` +
-                        `${customerLines()}\n\nPlease confirm if this pair is still available!`;
-                    window.open(waLink(msg), '_blank');
-                }
-            });
-        }
-
-        function checkoutWhatsApp() {
-            if (cart.length === 0) { showToast('Your bag is empty'); return; }
-            requireLogin({
-                needsTap: true,
-                reason: 'Sign in with Google to place your order.',
-                run: () => {
-                    let total = 0;
-                    let msg = `Hi JENZY THRIFTS! 👋 I want to checkout my bag:\n\n`;
-                    cart.forEach((item, idx) => {
-                        msg += `${idx + 1}. *${item.brand ? item.brand + ' ' : ''}${item.name}* (Size: ${(item.sizes || []).join(', ') || '-'}) — ${formatPKR(item.price)}\n`;
-                        total += Number(item.price) || 0;
-                    });
-                    msg += `\n💵 *Total Amount:* ${formatPKR(total)}\n\n${customerLines()}\n🚚 *Deliver to:* (My Address)`;
-                    window.open(waLink(msg), '_blank');
-                }
-            });
-        }
-
-        // =============================================
-        // CONTACT FORM (saved to Supabase "messages" table)
-        // =============================================
-        function prefillContactForm() {
-            if (!currentUser) return;
-            const nameEl = document.getElementById('cfName');
-            const emailEl = document.getElementById('cfEmail');
-            if (!nameEl.value) nameEl.value = currentUser.displayName || '';
-            if (!emailEl.value) emailEl.value = currentUser.email || '';
-        }
-
-        document.getElementById('contactForm').addEventListener('submit', async e => {
-            e.preventDefault();
-            const status = document.getElementById('cfStatus');
-            const btn = document.getElementById('cfSubmit');
-            const name = document.getElementById('cfName').value.trim();
-            const email = document.getElementById('cfEmail').value.trim();
-            const phone = document.getElementById('cfPhone').value.trim();
-            const subject = document.getElementById('cfSubject').value;
-            const message = document.getElementById('cfMessage').value.trim();
-
-            const setStatus = (text, ok) => {
-                status.textContent = text;
-                status.className = 'form-status show ' + (ok ? 'ok' : 'err');
-            };
-
-            // Bots fill the hidden field — pretend success and do nothing
-            if (document.getElementById('cfWebsite').value) { setStatus('✅ Message sent!', true); return; }
-
-            if (!name || !email || !message) return setStatus('Please fill in your name, email and message.', false);
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return setStatus('Please enter a valid email address.', false);
-
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
-            try {
-                const { error } = await db.from('messages').insert([{
-                    name, email, phone: phone || null, subject, message,
-                    user_uid: currentUser ? currentUser.uid : null
-                }]);
-                if (error) throw error;
-                setStatus("✅ Thanks! Your message has been sent. We'll get back to you soon.", true);
-                document.getElementById('cfMessage').value = '';
-                document.getElementById('cfPhone').value = '';
-                showToast('Message sent! 📩');
-            } catch (err) {
-                console.error('Contact form error:', err);
-                setStatus('Sorry, your message could not be sent. Please contact us on WhatsApp instead.', false);
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Message';
-            }
-        });
-
-        // =============================================
-        // TOAST
-        // =============================================
-        let toastTimer;
-        function showToast(text) {
-            const t = document.getElementById('toast');
-            t.textContent = text;
-            t.classList.add('show');
-            clearTimeout(toastTimer);
-            toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
-        }
-
-        // =============================================
-        // START
-        // =============================================
-        applySiteInfo();
-        updateCartBadge();
-        fetchProducts();
-    </script>
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send message';
+        if (error) { console.error(error); return show("Couldn't send your message. Please try again or contact us by phone."); }
+        localStorage.setItem('jenzyLastMsg', String(Date.now()));
+        $('cMessage').value = ''; $('cPhone').value = '';
+        show("Thanks! Your message has been sent. We'll get back to you soon.", true);
+    });
+})();
+</script>
 </body>
 </html>
+

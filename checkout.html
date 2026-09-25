@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout | JENZY THRIFTS</title>
+    <meta name="robots" content="noindex">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/store.css">
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="assets/js/config.js"></script>
+</head>
+<body data-page="checkout">
+
+<main class="container">
+    <div class="page-head">
+        <h1>Checkout</h1>
+        <p id="modeNote">Review your order and enter your delivery details.</p>
+    </div>
+
+    <div id="emptyState" class="gate" hidden>
+        <div class="gate-icon"><i class="fas fa-bag-shopping"></i></div>
+        <h2>Your cart is empty</h2>
+        <p>Add a pair you love, then come back here to place your order.</p>
+        <a href="index.html#shop" class="btn btn-primary btn-lg">Browse shoes</a>
+    </div>
+
+    <div class="checkout-grid" id="checkoutGrid" hidden>
+        <div>
+            <!-- Shown when logged out -->
+            <div class="card" id="loginGate" hidden>
+                <div class="gate" style="margin:10px auto">
+                    <div class="gate-icon"><i class="fas fa-user-lock"></i></div>
+                    <h2>Log in to place your order</h2>
+                    <p>We use your account to save your order and let you track it anytime.</p>
+                    <button class="btn btn-primary btn-lg" id="gateLogin"><i class="fa-regular fa-user"></i> Login</button>
+                </div>
+            </div>
+
+            <!-- Shown when logged in -->
+            <form id="orderForm" novalidate hidden>
+                <div class="card checkout-section">
+                    <h3><span class="n">1</span> Contact</h3>
+                    <p class="card-sub">Ordering as <strong id="accountEmail"></strong></p>
+                    <div class="form-grid">
+                        <div class="field"><label for="fName">Full name <span class="req">*</span></label><input class="input" id="fName" autocomplete="name" maxlength="80" required></div>
+                        <div class="field"><label for="fPhone">Phone number <span class="req">*</span></label><input class="input" id="fPhone" type="tel" autocomplete="tel" placeholder="03001234567" maxlength="20" required><div class="hint">Our rider will call this number.</div></div>
+                    </div>
+                </div>
+
+                <div class="card checkout-section">
+                    <h3><span class="n">2</span> Delivery address</h3>
+                    <div class="form-grid" style="margin-top:16px">
+                        <div class="field"><label for="fCity">City <span class="req">*</span></label><input class="input" id="fCity" autocomplete="address-level2" maxlength="60" required></div>
+                        <div class="field"><label for="fArea">Area / Landmark</label><input class="input" id="fArea" maxlength="80" placeholder="Optional"></div>
+                        <div class="field full"><label for="fAddress">Full address <span class="req">*</span></label><textarea id="fAddress" autocomplete="street-address" maxlength="220" style="min-height:80px" placeholder="House #, street, block, area" required></textarea></div>
+                        <div class="field full"><label for="fNotes">Order notes</label><input class="input" id="fNotes" maxlength="300" placeholder="Optional — e.g. best time to call"></div>
+                    </div>
+                </div>
+
+                <div class="card checkout-section">
+                    <h3><span class="n">3</span> Payment</h3>
+                    <div class="pay-option" style="margin-top:16px">
+                        <span class="radio"></span>
+                        <div><strong>Cash on Delivery</strong><span>Pay the rider in cash when your order arrives.</span></div>
+                        <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <aside class="card summary">
+            <h3>Order summary</h3>
+            <div id="summaryItems"><div class="loading-state" style="padding:30px"><i class="fas fa-spinner fa-spin"></i></div></div>
+            <div class="alert" id="availAlert" style="margin-top:14px"></div>
+
+            <div class="coupon-row">
+                <input class="input" id="couponInput" placeholder="Discount code" maxlength="30" aria-label="Discount code">
+                <button class="btn btn-dark" id="couponBtn" type="button">Apply</button>
+            </div>
+            <div class="coupon-msg" id="couponMsg"></div>
+
+            <div class="sum-row"><span>Subtotal</span><span id="sSubtotal">–</span></div>
+            <div class="sum-row" id="discountRow" hidden><span>Discount <span id="sCouponCode" class="muted"></span></span><span id="sDiscount" style="color:var(--accent)"></span></div>
+            <div class="sum-row"><span>Delivery</span><span id="sDelivery">–</span></div>
+            <div class="sum-row total"><span>Total</span><span id="sTotal">–</span></div>
+            <p class="drawer-note" id="freeNote"></p>
+
+            <div class="alert" id="orderAlert" style="margin-top:14px"></div>
+            <button class="btn btn-primary btn-block btn-lg" id="placeBtn" style="margin-top:16px" disabled><i class="fas fa-lock"></i> Place order</button>
+            <div class="secure-note"><i class="fas fa-shield-halved"></i> Your order is saved securely. Pay on delivery.</div>
+        </aside>
+    </div>
+</main>
+
+<script src="assets/js/store.js"></script>
+<script>
+(function () {
+    const { esc, pkr, api } = Store;
+    const $ = (id) => document.getElementById(id);
+
+    // Buy Now → checkout.html?buy=<id>&size=<size>  (just that pair)
+    const buyId = Store.qs('buy');
+    const buySize = Store.qs('size');
+    const buyNow = !!(buyId && buySize);
+
+    let quote = null;
+    let coupon = sessionStorage.getItem('jenzyCoupon') || '';
+    let placing = false;
+
+    const items = () => buyNow ? [{ id: buyId, size: buySize }] : Store.cart.items.map(i => ({ id: i.id, size: i.size }));
+
+    if (buyNow) $('modeNote').textContent = 'Buy Now — you are ordering this pair only. Your cart is not affected.';
+
+    async function refreshQuote() {
+        const list = items();
+        if (!list.length) {
+            $('checkoutGrid').hidden = true;
+            $('emptyState').hidden = false;
+            return;
+        }
+        $('checkoutGrid').hidden = false;
+        $('emptyState').hidden = true;
+        try {
+            quote = await api('/api/orders?action=quote', {
+                method: 'POST',
+                body: { items: list.map(i => ({ product_id: i.id, size: i.size })), coupon }
+            });
+        } catch (e) {
+            $('summaryItems').innerHTML = `<div class="alert show">${esc(e.message)}</div>`;
+            quote = null;
+            updateButton();
+            return;
+        }
+        if (quote.couponError) {
+            $('couponMsg').textContent = quote.couponError;
+            $('couponMsg').className = 'coupon-msg err';
+            coupon = '';
+            sessionStorage.removeItem('jenzyCoupon');
+        } else if (quote.coupon) {
+            $('couponMsg').textContent = `Code ${quote.coupon} applied — ${quote.couponPercent}% off`;
+            $('couponMsg').className = 'coupon-msg ok';
+            $('couponInput').value = quote.coupon;
+        }
+        renderSummary();
+    }
+
+    function renderSummary() {
+        const q = quote;
+        $('summaryItems').innerHTML = q.items.map(it => `
+            <div class="sum-item ${it.available ? '' : 'unavailable'}">
+                <a href="${Store.productUrl(it.product_id)}"><img src="${esc(it.image || Store.firstImage({}))}" alt=""></a>
+                <div>
+                    <h5>${esc(it.name)}</h5>
+                    <small>${esc(it.brand || '')} • US ${esc(it.size)}</small>
+                    ${it.available ? '' : `<span class="flag">${esc(it.reason || 'Sold out')}</span>`}
+                    ${!it.available && !buyNow ? `<button class="rm" data-rm="${esc(it.product_id)}" data-size="${esc(it.size)}">Remove</button>` : ''}
+                </div>
+                <span class="price">${it.available ? pkr(it.price) : '—'}</span>
+            </div>`).join('');
+        $('summaryItems').querySelectorAll('[data-rm]').forEach(b => b.addEventListener('click', () => {
+            Store.cart.remove(b.dataset.rm, b.dataset.size);
+            refreshQuote();
+        }));
+
+        const alertBox = $('availAlert');
+        if (!q.allAvailable) {
+            alertBox.textContent = buyNow
+                ? 'Sorry, this pair was just sold. Please choose another shoe.'
+                : 'Some items are no longer available. Remove them to continue.';
+            alertBox.classList.add('show');
+        } else {
+            alertBox.classList.remove('show');
+        }
+
+        $('sSubtotal').textContent = pkr(q.subtotal);
+        $('discountRow').hidden = !q.discount;
+        $('sDiscount').textContent = '− ' + pkr(q.discount);
+        $('sCouponCode').textContent = q.coupon ? `(${q.coupon})` : '';
+        $('sDelivery').textContent = q.subtotal === 0 ? '–' : (q.deliveryFee ? pkr(q.deliveryFee) : 'Free');
+        $('sTotal').textContent = pkr(q.total);
+        const after = q.subtotal - q.discount;
+        $('freeNote').textContent = q.deliveryFee && q.freeDeliveryMin
+            ? `Add ${pkr(q.freeDeliveryMin - after)} more for free delivery.`
+            : (q.subtotal ? 'You get free delivery on this order.' : '');
+        updateButton();
+    }
+
+    function updateButton() {
+        const ok = quote && quote.allAvailable && quote.subtotal > 0 && Store.user && !placing;
+        $('placeBtn').disabled = !ok;
+        $('placeBtn').innerHTML = !Store.user
+            ? '<i class="fa-regular fa-user"></i> Log in to place order'
+            : '<i class="fas fa-lock"></i> Place order' + (quote && quote.total ? ' • ' + pkr(quote.total) : '');
+        if (!Store.user && quote && quote.allAvailable) $('placeBtn').disabled = false;
+    }
+
+    // ---------- Login state ----------
+    const savedKey = (uid) => 'jenzyCheckout.' + uid;
+    Store.onAuth(user => {
+        $('loginGate').hidden = !!user;
+        $('orderForm').hidden = !user;
+        if (user) {
+            $('accountEmail').textContent = user.email || user.displayName || '';
+            let saved = {};
+            try { saved = JSON.parse(localStorage.getItem(savedKey(user.uid))) || {}; } catch { saved = {}; }
+            const fill = (id, v) => { if (!$(id).value && v) $(id).value = v; };
+            fill('fName', saved.name || user.displayName);
+            fill('fPhone', saved.phone);
+            fill('fCity', saved.city);
+            fill('fArea', saved.area);
+            fill('fAddress', saved.address);
+        }
+        updateButton();
+    });
+    $('gateLogin').addEventListener('click', () => Store.requireLogin('Log in to place your order.').catch(() => {}));
+
+    // ---------- Coupon ----------
+    $('couponBtn').addEventListener('click', async () => {
+        const code = $('couponInput').value.trim().toUpperCase();
+        $('couponMsg').className = 'coupon-msg';
+        $('couponMsg').textContent = '';
+        coupon = code;
+        if (code) sessionStorage.setItem('jenzyCoupon', code); else sessionStorage.removeItem('jenzyCoupon');
+        $('couponBtn').disabled = true;
+        await refreshQuote();
+        $('couponBtn').disabled = false;
+    });
+    $('couponInput').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('couponBtn').click(); } });
+
+    // ---------- Place order ----------
+    function validate() {
+        const name = $('fName').value.trim();
+        const phoneDigits = $('fPhone').value.replace(/\D/g, '');
+        const city = $('fCity').value.trim();
+        const address = $('fAddress').value.trim();
+        if (name.length < 2) return ['fName', 'Please enter your full name.'];
+        if (phoneDigits.length < 10 || phoneDigits.length > 15) return ['fPhone', 'Please enter a valid phone number, e.g. 03001234567.'];
+        if (city.length < 2) return ['fCity', 'Please enter your city.'];
+        if (address.length < 10) return ['fAddress', 'Please enter your full delivery address (house, street, area).'];
+        return null;
+    }
+
+    $('placeBtn').addEventListener('click', async () => {
+        const alertBox = $('orderAlert');
+        alertBox.className = 'alert';
+        if (!Store.user) {
+            try { await Store.requireLogin('Log in to place your order.'); } catch { return; }
+            return;
+        }
+        const invalid = validate();
+        if (invalid) {
+            alertBox.textContent = invalid[1];
+            alertBox.className = 'alert show';
+            $(invalid[0]).focus();
+            $(invalid[0]).scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
+        const area = $('fArea').value.trim();
+        const customer = {
+            name: $('fName').value.trim(),
+            phone: $('fPhone').value.trim(),
+            city: $('fCity').value.trim(),
+            address: $('fAddress').value.trim() + (area ? ', ' + area : ''),
+            notes: $('fNotes').value.trim()
+        };
+        placing = true;
+        updateButton();
+        $('placeBtn').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Placing your order…';
+        try {
+            const { order } = await api('/api/orders?action=place', {
+                method: 'POST', auth: true,
+                body: { items: items().map(i => ({ product_id: i.id, size: i.size })), customer, coupon: quote && quote.coupon }
+            });
+            localStorage.setItem(savedKey(Store.user.uid), JSON.stringify({
+                name: customer.name, phone: customer.phone, city: customer.city, area, address: $('fAddress').value.trim()
+            }));
+            // Remove ordered pairs from the cart
+            items().forEach(i => Store.cart.remove(i.id, i.size));
+            sessionStorage.removeItem('jenzyCoupon');
+            location.replace('orders.html?placed=' + encodeURIComponent(order.order_no));
+        } catch (e) {
+            placing = false;
+            alertBox.textContent = e.message;
+            alertBox.className = 'alert show';
+            if (e.status === 409) await refreshQuote();
+            else updateButton();
+        }
+    });
+
+    $('orderForm').addEventListener('input', () => $('orderAlert').classList.remove('show'));
+
+    refreshQuote();
+    // Keep prices/stock fresh while the customer fills the form
+    Store.onProductsChange(() => { if (!placing) refreshQuote(); });
+    document.addEventListener('visibilitychange', () => { if (!document.hidden && !placing) refreshQuote(); });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    { "source": "/shoe/:id", "destination": "/api/shoe?id=:id" }
+  ],
+  "functions": {
+    "api/shoe.js": { "includeFiles": "product.html" }
+  }
+}

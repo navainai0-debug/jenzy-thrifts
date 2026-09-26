@@ -87,11 +87,27 @@ create table if not exists public.orders (
   status_history jsonb not null default '[]'
 );
 
+-- Courier tracking (added later — safe to run again on an existing shop)
+alter table public.orders add column if not exists courier text;
+alter table public.orders add column if not exists tracking_no text;
+alter table public.orders add column if not exists tracking_url text;
+
 create index if not exists orders_user_uid_idx on public.orders (user_uid);
 create index if not exists orders_created_at_idx on public.orders (created_at desc);
 
 alter table public.orders enable row level security;   -- no policies = no browser access
 revoke all on public.orders from anon, authenticated;
+
+
+-- Private shop settings (e.g. which Telegram chat gets order alerts).
+-- Only the secure server can read/write it.
+create table if not exists public.shop_settings (
+  key text primary key,
+  value jsonb not null default '{}',
+  updated_at timestamptz not null default now()
+);
+alter table public.shop_settings enable row level security;
+revoke all on public.shop_settings from anon, authenticated;
 
 
 -- ---------------------------------------------------------------------

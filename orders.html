@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#0a0a0b">
     <title>My Orders | JENZY THRIFTS</title>
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/img/icon-192.png">
+    <link rel="apple-touch-icon" href="assets/img/icon-180.png">
     <meta name="robots" content="noindex">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -72,6 +74,20 @@
             </div>`).join('')}</div>`;
     }
 
+    function trackBox(o) {
+        if (o.status === 'Cancelled' || (!o.tracking_no && !o.courier)) return '';
+        return `
+            <div class="track-box">
+                <h5><i class="fas fa-truck-fast"></i> Track your parcel</h5>
+                ${o.courier ? `<div class="t-courier">Courier: <strong>${esc(o.courier)}</strong></div>` : ''}
+                ${o.tracking_no ? `<div class="t-no">${esc(o.tracking_no)}</div>` : ''}
+                <div class="t-actions">
+                    ${o.tracking_link ? `<a class="btn btn-primary btn-sm" href="${esc(o.tracking_link)}" target="_blank" rel="noopener"><i class="fas fa-location-dot"></i> Track parcel</a>` : ''}
+                    ${o.tracking_no ? `<button class="btn btn-outline btn-sm" type="button" data-copy="${esc(o.tracking_no)}"><i class="fas fa-copy"></i> Copy number</button>` : ''}
+                </div>
+            </div>`;
+    }
+
     function orderCard(o) {
         const items = Array.isArray(o.items) ? o.items : [];
         const highlight = placed && String(o.order_no) === String(placed);
@@ -96,7 +112,7 @@
                         </div>`).join('')}
                 </div>
                 <div class="order-side">
-                    <div class="block"><h5>Status</h5><p>${esc(STATUS_TEXT[o.status] || o.status)}</p></div>
+                    <div class="block"><h5>Status</h5><p>${esc(STATUS_TEXT[o.status] || o.status)}</p>${trackBox(o)}</div>
                     <div class="block"><h5>Deliver to</h5><p>${esc(o.customer_name)}<br>${esc(o.phone)}<br>${esc(o.address)}, ${esc(o.city)}</p></div>
                     <div class="block">
                         <h5>Payment • Cash on Delivery</h5>
@@ -130,6 +146,7 @@
             }
             $('ordersRoot').innerHTML = orders.map(orderCard).join('');
             $('ordersRoot').querySelectorAll('[data-cancel]').forEach(b => b.addEventListener('click', () => cancel(b)));
+            $('ordersRoot').querySelectorAll('[data-copy]').forEach(b => b.addEventListener('click', () => Store.copyText(b.dataset.copy, 'Tracking number copied')));
         } catch (e) {
             if (!silent) $('ordersRoot').innerHTML = `<div class="alert show">${esc(e.message)}</div>`;
         }

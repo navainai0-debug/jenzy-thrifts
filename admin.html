@@ -6,6 +6,8 @@
     <meta name="theme-color" content="#0a0a0b">
     <meta name="robots" content="noindex, nofollow">
     <title>Admin | JENZY THRIFTS</title>
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/img/icon-192.png">
+    <link rel="apple-touch-icon" href="assets/img/icon-180.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -226,6 +228,23 @@
         .sum-row.total { color: var(--text); font-weight: 700; font-size: 16px; padding-top: 10px; border-top: 1px solid var(--border); }
         .status-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
         .history { margin-top: 18px; font-size: 12.5px; color: var(--text-3); display: grid; gap: 4px; }
+        .ship-box { margin-top: 18px; padding: 16px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg); }
+        .ship-box h5 { font-size: 11.5px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-3); margin-bottom: 10px; display: flex; gap: 8px; align-items: center; }
+        .ship-box h5 i { color: var(--accent); }
+        .ship-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .ship-grid .wide { grid-column: 1 / -1; }
+        .ship-box .hint { font-size: 12.5px; margin: 10px 0 0; }
+        .ship-box .btn { margin-top: 12px; }
+        .track-line { font-size: 12px; color: var(--accent-2); margin-top: 2px; white-space: nowrap; }
+        .state { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; }
+        .state.ok { color: var(--accent); background: rgba(57,255,20,.1); }
+        .state.warn { color: var(--yellow); background: rgba(250,204,21,.1); }
+        .howto { margin: 0; padding-left: 20px; display: grid; gap: 9px; color: var(--text-2); font-size: 14px; }
+        .howto code { background: var(--surface-2); padding: 2px 7px; border-radius: 6px; font-size: 12.5px; color: var(--text); word-break: break-all; }
+        .howto a { color: var(--accent-2); }
+        .alert-lead { color: var(--text-2); font-size: 14px; margin-bottom: 14px; }
+        .alert-list { display: grid; gap: 6px; font-size: 14px; color: var(--text-2); margin: 10px 0 0; }
+        .alert-list i { color: var(--accent); width: 18px; }
         .del-icon { font-size: 40px; color: var(--danger); margin-bottom: 12px; }
 
         /* Toast */
@@ -256,6 +275,7 @@
             .toast { left: 16px; right: 16px; top: 12px; min-width: 0; }
         }
         @media (max-width: 520px) {
+            .ship-grid { grid-template-columns: 1fr; }
             .stats { grid-template-columns: 1fr 1fr; gap: 10px; }
             .stat { padding: 14px; }
             .stat-value { font-size: 19px; }
@@ -308,6 +328,8 @@
             <a href="#add" data-view="add"><i class="fas fa-circle-plus"></i>Add Product</a>
             <div class="sec">Customers</div>
             <a href="#messages" data-view="messages"><i class="fas fa-envelope"></i>Messages<span class="nav-badge zero" id="badgeMessages">0</span></a>
+            <div class="sec">Settings</div>
+            <a href="#alerts" data-view="alerts"><i class="fas fa-bell"></i>Order Alerts</a>
         </nav>
         <div class="side-foot"><div class="av" id="adminAvatar">A</div><div style="min-width:0"><div style="font-size:13px;font-weight:600">Admin</div><div class="em" id="adminEmail"></div></div></div>
     </aside>
@@ -412,6 +434,25 @@
                 </div>
             </section>
 
+            <!-- ORDER ALERTS -->
+            <section class="view" id="view-alerts">
+                <p class="alert-lead">Get a message on your phone the moment someone orders — even when this admin panel is closed. Customers also get emails when their order is placed, confirmed, shipped (with tracking number) and delivered.</p>
+                <div class="panel">
+                    <div class="panel-head"><h3><i class="fab fa-telegram"></i> Telegram — instant order alerts</h3><span id="tgState"></span></div>
+                    <div class="panel-body" id="tgBody"><div class="spinner"></div></div>
+                </div>
+                <div class="panel">
+                    <div class="panel-head"><h3><i class="fas fa-envelope"></i> Emails — you &amp; your customers</h3><span id="emState"></span></div>
+                    <div class="panel-body" id="emBody"><div class="spinner"></div></div>
+                </div>
+                <div class="panel">
+                    <div class="panel-body" style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+                        <button class="btn btn-primary" id="testAlertBtn"><i class="fas fa-bell"></i> Send test alert</button>
+                        <span class="muted" id="testAlertResult">Sends a test message to Telegram and your email.</span>
+                    </div>
+                </div>
+            </section>
+
             <!-- MESSAGES -->
             <section class="view" id="view-messages">
                 <div class="panel">
@@ -454,9 +495,10 @@
     const sb = supabase.createClient(CFG.supabaseUrl, CFG.supabaseAnonKey);
     const BUCKET = 'product-images';
     const STATUSES = ['Pending', 'Confirmed', 'Shipped', 'Delivered', 'Cancelled'];
+    const COURIER_NAMES = ['TCS', 'Leopards', 'PostEx', 'Trax', 'M&P', 'Call Courier', 'BlueEx', 'Pakistan Post', 'Other'];
     const STATUS_COLORS = { Pending: 'var(--yellow)', Confirmed: 'var(--accent-2)', Shipped: 'var(--purple)', Delivered: 'var(--accent)', Cancelled: 'var(--danger)' };
     const DEFAULT_SIZES = ['5', '6', '6.5', '7', '7.5', '8', '8.5', '9', '9.5', '10', '10.5', '11', '12', '13'];
-    const VIEW_TITLES = { dashboard: 'Dashboard', orders: 'Orders', products: 'Products', add: 'Add Product', messages: 'Messages' };
+    const VIEW_TITLES = { dashboard: 'Dashboard', orders: 'Orders', products: 'Products', add: 'Add Product', messages: 'Messages', alerts: 'Order Alerts' };
 
     const $ = (id) => document.getElementById(id);
     const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -635,6 +677,7 @@
         if (view === 'products') loadProducts();
         if (view === 'messages') loadMessages();
         if (view === 'dashboard') loadDashboard();
+        if (view === 'alerts') loadAlerts();
     }
     window.addEventListener('hashchange', route);
     const closeSidebar = () => { $('sidebar').classList.remove('open'); $('scrim').classList.remove('show'); };
@@ -776,7 +819,7 @@
                 <td data-stop>${o.status === 'Cancelled' ? pill('Cancelled') : `
                     <select class="select status-select" data-status="${esc(o.id)}">
                         ${STATUSES.map(s => `<option ${s === o.status ? 'selected' : ''}>${s}</option>`).join('')}
-                    </select>`}</td>
+                    </select>`}${o.tracking_no ? `<div class="track-line"><i class="fas fa-truck-fast"></i> ${esc(o.courier || '')} ${esc(o.tracking_no)}</div>` : ''}</td>
             </tr>`).join('');
         $('ordersTable').querySelectorAll('tr[data-order]').forEach(tr => tr.addEventListener('click', (e) => {
             if (e.target.closest('[data-stop]')) return;
@@ -787,7 +830,7 @@
     $('orderSearch').addEventListener('input', renderOrders);
     $('refreshOrders').addEventListener('click', () => loadOrders(false));
 
-    async function changeStatus(id, status, control) {
+    async function changeStatus(id, status, control, extra = {}) {
         const o = orders.find(x => x.id === id) || {};
         if (status === 'Cancelled' && !confirm(`Cancel order ${orderNo(o.order_no)}? The pairs will go back into stock.`)) {
             if (control) control.value = o.status;
@@ -795,7 +838,7 @@
         }
         if (control) control.disabled = true;
         try {
-            await api('orderStatus', { method: 'POST', body: { id, status } });
+            await api('orderStatus', { method: 'POST', body: { id, status, ...extra } });
             toast(`Order ${orderNo(o.order_no || '')} → ${status}`, status === 'Cancelled' ? 'Pairs returned to stock' : '');
             await Promise.all([loadOrders(true), loadDashboard()]);
             if ($('orderModal').classList.contains('open')) openOrder(id);
@@ -831,11 +874,137 @@
                 <div class="sum-row"><span>Delivery</span><span>${o.delivery_fee ? pkr(o.delivery_fee) : 'Free'}</span></div>
                 <div class="sum-row total"><span>Collect (COD)</span><span style="color:var(--accent)">${pkr(o.total)}</span></div>
             </div>
+            ${['Confirmed', 'Shipped', 'Delivered'].includes(o.status) ? `
+            <div class="ship-box">
+                <h5><i class="fas fa-truck-fast"></i> Shipping &amp; tracking</h5>
+                <div class="ship-grid">
+                    <select class="select" id="omCourier"><option value="">Choose courier…</option>${COURIER_NAMES.map(c => `<option ${c === o.courier ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select>
+                    <input class="input" id="omTrackNo" placeholder="Tracking number (CN)" value="${esc(o.tracking_no || '')}" autocomplete="off">
+                    <input class="input wide" id="omTrackUrl" placeholder="Exact tracking link (optional)" value="${esc(o.tracking_url || '')}" autocomplete="off">
+                </div>
+                <p class="muted hint">${o.status === 'Confirmed'
+                    ? 'Fill this in, then press <strong>Mark Shipped</strong> — the customer gets an email with the tracking number and sees it on their My Orders page.'
+                    : 'The customer sees this on their My Orders page. Changing the number emails them the new one.'}</p>
+                ${o.status !== 'Confirmed' ? `<button class="btn btn-outline btn-sm" id="omSaveTrack"><i class="fas fa-floppy-disk"></i> Save tracking</button>` : ''}
+            </div>` : ''}
             ${next.length ? `<div class="status-actions">${next.map(s => `<button class="btn ${s === 'Cancelled' ? 'btn-danger' : 'btn-primary'} btn-sm" data-set="${s}"><i class="fas ${s === 'Cancelled' ? 'fa-xmark' : 'fa-check'}"></i> Mark ${s}</button>`).join('')}</div>` : ''}
             <div class="history">${(o.status_history || []).map(h => `<div><i class="fas fa-circle" style="font-size:6px;vertical-align:middle"></i> ${esc(h.status)} — ${fmtDateLong(h.at)}${h.by ? ' • by ' + esc(h.by) : ''}</div>`).join('')}</div>`;
-        $('omBody').querySelectorAll('[data-set]').forEach(b => b.addEventListener('click', () => changeStatus(o.id, b.dataset.set)));
+        const trackingFields = () => $('omCourier') ? {
+            courier: $('omCourier').value, tracking_no: $('omTrackNo').value.trim(), tracking_url: $('omTrackUrl').value.trim()
+        } : {};
+        $('omBody').querySelectorAll('[data-set]').forEach(b => b.addEventListener('click', () => {
+            const status = b.dataset.set;
+            const extra = status === 'Shipped' ? trackingFields() : {};
+            if (status === 'Shipped' && !extra.tracking_no && !confirm('Mark as shipped without a tracking number? You can add it later.')) return;
+            changeStatus(o.id, status, null, extra);
+        }));
+        $('omSaveTrack')?.addEventListener('click', async () => {
+            const btn = $('omSaveTrack');
+            btn.disabled = true;
+            try {
+                const res = await api('orderTracking', { method: 'POST', body: { id: o.id, ...trackingFields() } });
+                toast('Tracking saved', res.emailed ? 'Customer emailed the tracking number' : '');
+                await loadOrders(true);
+                openOrder(o.id);
+            } catch (e) {
+                toast('Could not save tracking', e.message, 'error');
+                btn.disabled = false;
+            }
+        });
         $('orderModal').classList.add('open');
     }
+
+    // ---------- Order alerts (Telegram + email) ----------
+    const state = (ok, text) => `<span class="state ${ok ? 'ok' : 'warn'}"><i class="fas ${ok ? 'fa-circle-check' : 'fa-circle-exclamation'}"></i> ${text}</span>`;
+    const VERCEL_ENV = 'Vercel → your project → <strong>Settings → Environment Variables</strong>';
+    async function loadAlerts() {
+        try {
+            renderAlerts(await api('notifyStatus'));
+        } catch (e) {
+            $('tgBody').innerHTML = `<div class="alert show">${esc(e.message)}</div>`;
+            $('emBody').innerHTML = '';
+        }
+    }
+    function renderAlerts(st) {
+        const tg = st.telegram, em = st.email;
+        $('tgState').innerHTML = tg.token && tg.connected ? state(true, 'Connected') : state(false, tg.token ? 'Not connected' : 'Not set up');
+        if (!tg.token) {
+            $('tgBody').innerHTML = `
+                <ol class="howto">
+                    <li>Install <strong>Telegram</strong> on your phone and open <a href="https://t.me/BotFather" target="_blank" rel="noopener">@BotFather</a>.</li>
+                    <li>Send <code>/newbot</code>, give it a name (e.g. <em>Jenzy Orders</em>) and a username ending in <code>bot</code>.</li>
+                    <li>BotFather replies with a <strong>token</strong> (looks like <code>123456:ABC-xyz…</code>). Copy it.</li>
+                    <li>In ${VERCEL_ENV} add <code>TELEGRAM_BOT_TOKEN</code> = the token, then <strong>Redeploy</strong>.</li>
+                    <li>Come back to this page — a <strong>Connect Telegram</strong> button will appear.</li>
+                </ol>`;
+        } else if (tg.tokenError) {
+            $('tgBody').innerHTML = `<div class="alert show">${esc(tg.tokenError)}</div>
+                <p class="muted" style="font-size:13px;margin-top:10px">Fix <code>TELEGRAM_BOT_TOKEN</code> in ${VERCEL_ENV}, then Redeploy.</p>`;
+        } else if (!tg.connected) {
+            $('tgBody').innerHTML = `
+                <ol class="howto">
+                    <li>Open Telegram, search for your bot${tg.bot ? ` <strong>@${esc(tg.bot)}</strong>` : ''} and press <strong>START</strong> (or send "hi").</li>
+                    <li>Then press the button below.</li>
+                </ol>
+                <button class="btn btn-primary" id="tgConnect" style="margin-top:16px"><i class="fab fa-telegram"></i> Connect Telegram</button>`;
+        } else {
+            $('tgBody').innerHTML = `
+                <div class="alert-list">
+                    ${tg.bot ? `<div><i class="fab fa-telegram"></i> Bot: <strong>@${esc(tg.bot)}</strong></div>` : ''}
+                    <div><i class="fas fa-user"></i> Sends to: <strong>${esc(tg.chats.join(', ') || '—')}</strong></div>
+                    <div><i class="fas fa-bell"></i> Every new order and every order the customer cancels</div>
+                </div>
+                <p class="muted" style="font-size:12.5px;margin-top:14px">Want a partner to get alerts too? They press START on the bot, then you press Reconnect.</p>
+                <button class="btn btn-outline btn-sm" id="tgConnect" style="margin-top:10px"><i class="fas fa-rotate"></i> Reconnect</button>`;
+        }
+        $('tgConnect')?.addEventListener('click', connectTelegram);
+
+        $('emState').innerHTML = em.configured ? state(true, 'Sending') : state(false, 'Not set up');
+        if (!em.configured) {
+            $('emBody').innerHTML = `
+                <ol class="howto">
+                    <li>Use a Gmail account for the shop. Turn on <a href="https://myaccount.google.com/signinoptions/twosv" target="_blank" rel="noopener">2-Step Verification</a>.</li>
+                    <li>Open <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener">App passwords</a>, create one called <em>Jenzy</em> and copy the 16-letter password.</li>
+                    <li>In ${VERCEL_ENV} add <code>GMAIL_USER</code> = your Gmail address and <code>GMAIL_APP_PASSWORD</code> = the 16-letter password, then <strong>Redeploy</strong>.</li>
+                    <li>Optional: <code>NOTIFY_EMAIL</code> = where new-order emails go (default: your admin email). <code>CUSTOMER_EMAILS</code> = <code>off</code> to stop emails to customers.</li>
+                </ol>`;
+        } else {
+            $('emBody').innerHTML = `
+                <div class="alert-list">
+                    <div><i class="fas fa-paper-plane"></i> Sending from: <strong>${esc(em.from)}</strong></div>
+                    <div><i class="fas fa-inbox"></i> New-order emails to: <strong>${esc(em.owner.join(', ') || '—')}</strong></div>
+                    <div><i class="fas fa-user-check"></i> Customer emails: <strong>${em.customers ? 'On — order placed, confirmed, shipped (with tracking), delivered, cancelled' : 'Off'}</strong></div>
+                </div>`;
+        }
+    }
+    async function connectTelegram() {
+        const btn = $('tgConnect');
+        btn.disabled = true;
+        const html = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner" style="width:16px;height:16px;border-width:2px"></span> Connecting…';
+        try {
+            const res = await api('telegramConnect', { method: 'POST' });
+            toast('Telegram connected', `Alerts will go to ${res.chats.join(', ')}`);
+            loadAlerts();
+        } catch (e) {
+            toast('Could not connect Telegram', e.message, 'error');
+            btn.disabled = false;
+            btn.innerHTML = html;
+        }
+    }
+    $('testAlertBtn').addEventListener('click', async () => {
+        const btn = $('testAlertBtn');
+        btn.disabled = true;
+        $('testAlertResult').textContent = 'Sending…';
+        const label = (v) => v === 'sent' ? '✅ sent' : v === 'skipped' ? '— not set up' : '❌ ' + String(v).replace(/^error: /, '');
+        try {
+            const r = await api('testNotify', { method: 'POST' });
+            $('testAlertResult').textContent = `Telegram: ${label(r.telegram)}   •   Email: ${label(r.email)}`;
+        } catch (e) {
+            $('testAlertResult').textContent = e.message;
+        }
+        btn.disabled = false;
+    });
 
     // ---------- Products ----------
     let productsLoaded = false;
@@ -948,7 +1117,7 @@
     }
 
     // Resize big photos in the browser so uploads are fast
-    function resizeImage(file, maxSide = 1600) {
+    function resizeImage(file, maxSide = 1200) {
         return new Promise((resolve) => {
             if (!/^image\/(jpeg|png|webp)$/.test(file.type)) return resolve(file);
             const url = URL.createObjectURL(file);
@@ -963,7 +1132,7 @@
                 const ctx = canvas.getContext('2d');
                 ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                canvas.toBlob(b => resolve(b && b.size < file.size ? new File([b], file.name.replace(/\.\w+$/, '') + '.jpg', { type: 'image/jpeg' }) : file), 'image/jpeg', 0.85);
+                canvas.toBlob(b => resolve(b && b.size < file.size ? new File([b], file.name.replace(/\.\w+$/, '') + '.jpg', { type: 'image/jpeg' }) : file), 'image/jpeg', 0.82);
             };
             img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
             img.src = url;

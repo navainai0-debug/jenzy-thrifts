@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#0a0a0b">
     <title>Shoe details | JENZY THRIFTS</title>
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/img/icon-192.png">
+    <link rel="apple-touch-icon" href="assets/img/icon-180.png">
     <meta name="description" content="Authentic thrifted sneakers — see photos, condition, sizes and price. Cash on delivery across Pakistan.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -51,7 +53,8 @@
 (function () {
     const { db, esc, pkr, sortSizes, discountPct, productCard } = Store;
     const $ = (id) => document.getElementById(id);
-    const id = Store.qs('id');
+    // Works for both /shoe/<id> (share links) and product.html?id=<id>
+    const id = Store.qs('id') || (location.pathname.match(/\/shoe\/([^/?#]+)/) || [])[1] || '';
     const root = $('productRoot');
 
     let product = null;
@@ -160,6 +163,13 @@
                     </div>
                 `}
 
+                <div class="pd-share">
+                    <span>Share</span>
+                    <a class="share-btn wa" id="shareWa" href="#" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+                    <button class="share-btn" id="shareCopy" type="button"><i class="fas fa-link"></i> Copy link</button>
+                    <button class="share-btn" id="shareMore" type="button" hidden><i class="fas fa-share-nodes"></i> More</button>
+                </div>
+
                 <ul class="pd-perks">
                     <li><i class="fas fa-certificate"></i>100% authentic — checked before listing</li>
                     <li><i class="fas fa-money-bill-wave"></i>Cash on delivery — pay when it arrives</li>
@@ -207,6 +217,16 @@
             if (Math.abs(dx) > 40) show(imageIndex + (dx < 0 ? 1 : -1));
             touchX = null;
         });
+
+        // Share (WhatsApp, copy link, phone share sheet)
+        const link = Store.shareUrl(p);
+        const shareText = `${p.brand && !p.name.toLowerCase().startsWith(p.brand.toLowerCase()) ? p.brand + ' ' : ''}${p.name} — ${pkr(p.price)}${sold ? ' (sold)' : ''} at JENZY THRIFTS`;
+        $('shareWa').href = 'https://wa.me/?text=' + encodeURIComponent(`${shareText}\n${link}`);
+        $('shareCopy').addEventListener('click', () => Store.copyText(link, 'Link copied — paste it anywhere to share'));
+        if (navigator.share) {
+            $('shareMore').hidden = false;
+            $('shareMore').addEventListener('click', () => navigator.share({ title: shareText, text: shareText, url: link }).catch(() => {}));
+        }
 
         renderBuyBar(sold);
         if (sold) return;

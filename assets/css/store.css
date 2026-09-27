@@ -487,6 +487,21 @@ a.contact-card:hover { border-color: var(--border-2); }
 .size-error.show { display: block; }
 .pd-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 26px; }
 .pd-soldout { margin-top: 26px; padding: 16px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--border); text-align: center; color: var(--text-2); }
+.pd-share { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+.pd-share > span { font-size: 13px; color: var(--text-3); margin-right: 4px; }
+.share-btn {
+    display: inline-flex; align-items: center; gap: 7px; height: 36px; padding: 0 14px; border-radius: 999px;
+    border: 1px solid var(--border-2); background: var(--surface); color: var(--text-2); font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: border-color .2s, color .2s; font-family: inherit;
+}
+.share-btn:hover { border-color: var(--accent); color: var(--text); }
+.share-btn.wa i { color: #25d366; font-size: 15px; }
+/* Tracking box on My Orders */
+.track-box { margin-top: 14px; padding: 14px 16px; border-radius: var(--radius); border: 1px solid rgba(57, 255, 20, .3); background: rgba(57, 255, 20, .05); }
+.track-box h5 { font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+.track-box .t-courier { font-size: 13px; color: var(--text-2); }
+.track-box .t-no { font-size: 17px; font-weight: 700; letter-spacing: .5px; margin: 2px 0 10px; word-break: break-all; }
+.track-box .t-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 .pd-perks { margin-top: 26px; display: grid; gap: 12px; padding: 20px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--border); }
 .pd-perks li { display: flex; gap: 14px; align-items: center; font-size: 14px; color: var(--text-2); }
 .pd-perks i { width: 20px; text-align: center; color: var(--accent); }

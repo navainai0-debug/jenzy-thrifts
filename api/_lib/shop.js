@@ -2,7 +2,8 @@
 // You can change these with Vercel environment variables (no code edit needed):
 //   DELIVERY_FEE=250          delivery charge in PKR
 //   FREE_DELIVERY_MIN=5000    free delivery when order total (after discount) is at least this
-//   COUPONS=JENZY20:20        comma separated CODE:PERCENT list, e.g. "JENZY20:20,EID10:10"
+// Coupon codes are created in the admin panel (Promotions) and stored in the
+// "coupons" table in Supabase.
 import { HttpError } from './http.js';
 
 function intEnv(name, fallback) {
@@ -11,17 +12,10 @@ function intEnv(name, fallback) {
 }
 
 export function shopConfig() {
-    const coupons = {};
-    (process.env.COUPONS ?? 'JENZY20:20').split(',').forEach(pair => {
-        const [code, pct] = pair.split(':').map(s => (s || '').trim());
-        const n = parseInt(pct, 10);
-        if (code && n > 0 && n <= 90) coupons[code.toUpperCase()] = n;
-    });
     return {
         currency: 'PKR',
         deliveryFee: intEnv('DELIVERY_FEE', 250),
         freeDeliveryMin: intEnv('FREE_DELIVERY_MIN', 5000),
-        coupons,
         paymentMethods: ['COD'],
         maxPendingOrdersPerUser: intEnv('MAX_PENDING_ORDERS', 5)
     };
@@ -35,13 +29,30 @@ export function computeTotals(subtotal, discountPercent, cfg = shopConfig()) {
     return { subtotal, discount, deliveryFee, total: after + deliveryFee };
 }
 
-export function couponPercent(code, cfg = shopConfig()) {
-    if (!code) return { code: null, percent: 0 };
-    const clean = String(code).trim().toUpperCase();
+export const COUPON_RE = /^[A-Z0-9_-]{3,20}$/;
+
+// Looks the code up in the coupons table. Same rules as place_order() in
+// supabase-setup.sql (which re-checks them when the order is saved).
+// Pass subtotal = null to skip the minimum-order check.
+export async function findCoupon(db, code, subtotal = null) {
+    const clean = String(code ?? '').trim().toUpperCase();
     if (!clean) return { code: null, percent: 0 };
-    const percent = cfg.coupons[clean];
-    if (!percent) throw new HttpError(400, `Coupon "${clean}" is not valid.`);
-    return { code: clean, percent };
+    const invalid = new HttpError(400, `Coupon "${clean.slice(0, 20)}" is not valid.`);
+    if (!COUPON_RE.test(clean)) throw invalid;
+    const { data, error } = await db.from('coupons')
+        .select('code, percent, active, min_order, max_uses, used_count, expires_at')
+        .eq('code', clean).maybeSingle();
+    if (error) {
+        if (/coupons/.test(error.message || '')) throw invalid; // table not created yet
+        throw error;
+    }
+    if (!data || !data.active) throw invalid;
+    if (data.expires_at && new Date(data.expires_at) <= new Date()) throw new HttpError(400, `Coupon "${clean}" has expired.`);
+    if (data.max_uses && data.used_count >= data.max_uses) throw new HttpError(400, `Coupon "${clean}" has been fully used.`);
+    if (subtotal !== null && data.min_order && subtotal < data.min_order) {
+        throw new HttpError(400, `Coupon "${clean}" needs an order of at least PKR ${Number(data.min_order).toLocaleString('en-US')}.`);
+    }
+    return { code: clean, percent: data.percent };
 }
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -90,5 +101,6 @@ export function orderErrorMessage(err) {
     if (msg.startsWith('UNAVAILABLE:')) return `Sorry, "${msg.slice(12)}" was just sold or is no longer available. Please remove it from your cart.`;
     if (msg.startsWith('SIZE_UNAVAILABLE:')) return `Sorry, ${msg.slice(17)} is no longer available. Please choose another size.`;
     if (msg.startsWith('EMPTY_CART')) return 'Your cart is empty.';
+    if (msg.startsWith('COUPON:')) return msg.slice(7);
     return null;
 }

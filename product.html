@@ -48,6 +48,24 @@
     <div class="p-grid" id="relatedGrid"></div>
 </section>
 
+<section class="recent-section container" id="recentSection" hidden>
+    <div class="related-head">
+        <div>
+            <span class="eyebrow">Your history</span>
+            <h2 class="section-title">Recently <span class="grad">viewed</span></h2>
+        </div>
+    </div>
+    <div class="p-grid" id="recentGrid"></div>
+</section>
+
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Photo viewer">
+    <button class="icon-btn lb-close" id="lbClose" aria-label="Close"><i class="fas fa-xmark"></i></button>
+    <button class="lb-nav prev" id="lbPrev" aria-label="Previous photo"><i class="fas fa-chevron-left"></i></button>
+    <img id="lbImg" alt="">
+    <button class="lb-nav next" id="lbNext" aria-label="Next photo"><i class="fas fa-chevron-right"></i></button>
+    <span class="lb-count" id="lbCount"></span>
+</div>
+
 <script src="assets/js/store.js"></script>
 <script>
 (function () {
@@ -60,6 +78,13 @@
     let product = null;
     let selectedSize = null;
     let imageIndex = 0;
+    let images = [];
+    let notifyOpen = false;
+    // Shoes seen before this one (this shoe is added once it loads)
+    const recentBefore = Store.recent.ids().filter(x => x !== id).slice(0, 4);
+    const ALL_SIZES = ['3', '3.5', '4', '4.5', '5', '5.5', '6', '6.5', '7', '7.5', '8', '8.5', '9', '9.5', '10', '10.5', '11', '11.5', '12', '12.5', '13', '14', '15'];
+    const NOTIFY_KEY = 'jenzyNotify.v1';
+    const notified = () => { try { return JSON.parse(localStorage.getItem(NOTIFY_KEY)) || []; } catch { return []; } };
 
     const CONDITION_NOTES = {
         Excellent: 'Barely worn — looks almost new, minimal signs of use.',
@@ -94,12 +119,15 @@
         product = data;
         if (selectedSize && !(product.sizes || []).includes(selectedSize)) selectedSize = null;
         render();
-        if (firstLoad) loadRelated();
+        if (firstLoad) {
+            loadRelated();
+            Store.recent.add(product.id);
+        }
     }
 
     function render() {
         const p = product;
-        const images = (p.images && p.images.length) ? p.images : [Store.firstImage(p)];
+        images = (p.images && p.images.length) ? p.images : [Store.firstImage(p)];
         imageIndex = Math.min(imageIndex, images.length - 1);
         const sizes = sortSizes(p.sizes);
         const off = discountPct(p);
@@ -120,8 +148,10 @@
         root.innerHTML = `
         <div class="pd-grid">
             <div class="gallery">
-                <div class="gallery-main">
+                <div class="gallery-main zoomable" id="galleryMain">
                     <img id="mainImage" src="${esc(images[imageIndex])}" alt="${esc(p.name)}">
+                    ${Store.wishlist.button(p.id, 'wish-lg')}
+                    <span class="zoom-hint"><i class="fas fa-magnifying-glass-plus"></i><span class="mouse-only">Hover to zoom</span><span class="touch-only">Tap to enlarge</span></span>
                     ${images.length > 1 ? `
                         <button class="gallery-nav prev" id="prevImg" aria-label="Previous photo"><i class="fas fa-chevron-left"></i></button>
                         <button class="gallery-nav next" id="nextImg" aria-label="Next photo"><i class="fas fa-chevron-right"></i></button>
@@ -135,7 +165,7 @@
             </div>
 
             <div class="pd-info">
-                <span class="p-brand">${esc(p.brand || '')}</span>
+                ${p.brand ? `<a class="p-brand" href="index.html?brand=${encodeURIComponent(p.brand)}#shop">${esc(p.brand)}</a>` : ''}
                 <h1 class="pd-title">${esc(p.name)}</h1>
                 <div class="pd-tags">
                     ${p.condition ? `<span class="cond cond-${esc(p.condition)}">${esc(p.condition)} condition</span>` : ''}
@@ -149,6 +179,7 @@
 
                 ${sold ? `
                     <div class="pd-soldout"><i class="fas fa-circle-xmark"></i> This pair has been sold. Check out similar shoes below.</div>
+                    ${notifyBox(p, sizes, true)}
                 ` : `
                     <div class="pd-block">
                         <div class="pd-block-head"><h4>Select size (US)</h4><span>${sizes.length === 1 ? 'Only 1 size available' : sizes.length + ' sizes available'}</span></div>
@@ -156,6 +187,8 @@
                             ${sizes.map(s => `<button class="size-opt ${s === selectedSize ? 'active' : ''}" data-size="${esc(s)}">${esc(s)}</button>`).join('')}
                         </div>
                         <div class="size-error" id="sizeError">Please select a size first.</div>
+                        <button class="link-btn" id="notifyToggle" type="button" aria-expanded="${notifyOpen}"><i class="fa-regular fa-bell"></i> Your size not here? Get notified when it arrives</button>
+                        <div id="notifyWrap" ${notifyOpen ? '' : 'hidden'}>${notifyBox(p, sizes, false)}</div>
                     </div>
                     <div class="pd-actions">
                         <button class="btn btn-outline btn-lg" id="addToCart"><i class="fas fa-bag-shopping"></i> Add to Cart</button>
@@ -168,6 +201,7 @@
                     <a class="share-btn wa" id="shareWa" href="#" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> WhatsApp</a>
                     <button class="share-btn" id="shareCopy" type="button"><i class="fas fa-link"></i> Copy link</button>
                     <button class="share-btn" id="shareMore" type="button" hidden><i class="fas fa-share-nodes"></i> More</button>
+                    <button class="share-btn wish-share" type="button" data-wish="${esc(p.id)}"><i class="${Store.wishlist.has(p.id) ? 'fas' : 'fa-regular'} fa-heart"></i> <span data-wish-label>${Store.wishlist.has(p.id) ? 'Saved' : 'Save'}</span></button>
                 </div>
 
                 <ul class="pd-perks">
@@ -210,6 +244,23 @@
         root.querySelectorAll('.thumbs button').forEach(b => b.addEventListener('click', () => show(Number(b.dataset.img))));
         let touchX = null;
         const gm = root.querySelector('.gallery-main');
+        // Magnifier: move the mouse over the photo to zoom in on that spot
+        const mainImg = $('mainImage');
+        const canHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+        gm.addEventListener('mousemove', e => {
+            if (!canHover || e.target.closest('button')) { gm.classList.remove('zooming'); return; }
+            const r = gm.getBoundingClientRect();
+            const x = Math.min(100, Math.max(0, (e.clientX - r.left) / r.width * 100));
+            const y = Math.min(100, Math.max(0, (e.clientY - r.top) / r.height * 100));
+            mainImg.style.transformOrigin = `${x}% ${y}%`;
+            gm.classList.add('zooming');
+        });
+        gm.addEventListener('mouseleave', () => gm.classList.remove('zooming'));
+        // Click / tap: full-screen photo viewer
+        gm.addEventListener('click', e => {
+            if (e.target.closest('button')) return;
+            openLightbox(imageIndex);
+        });
         gm.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; }, { passive: true });
         gm.addEventListener('touchend', e => {
             if (touchX === null || images.length < 2) return;
@@ -228,6 +279,8 @@
             $('shareMore').addEventListener('click', () => navigator.share({ title: shareText, text: shareText, url: link }).catch(() => {}));
         }
 
+        Store.setHelpMessage(`Hi JENZY THRIFTS! I have a question about ${shareText.replace(' at JENZY THRIFTS', '')}\n${link}`);
+        bindNotify(p);
         renderBuyBar(sold);
         if (sold) return;
 
@@ -257,6 +310,114 @@
         $('bbCart').addEventListener('click', addToCart);
         $('bbBuy').addEventListener('click', buyNow);
     }
+
+    // ---------- "Notify me when my size arrives" ----------
+    function notifyBox(p, sizes, sold) {
+        const mine = notified().filter(k => k.startsWith(p.id + '|')).map(k => k.split('|')[1]);
+        const options = ALL_SIZES.filter(s => !(!sold && sizes.includes(s)));
+        return `
+            <div class="notify-box" id="notifyBox">
+                <h4><i class="fas fa-bell"></i> ${sold ? 'Want this shoe in your size?' : 'Need a different size?'}</h4>
+                <p>Tell us your size. We'll email you as soon as a pair in that size arrives.${mine.length ? ` <strong style="color:var(--accent)">You're on the list for US ${esc(mine.join(', '))}.</strong>` : ''}</p>
+                <div class="notify-form" id="notifyForm">
+                    <select class="select" id="nfSize" aria-label="Your US size">
+                        <option value="">Your size</option>
+                        ${options.map(s => `<option value="${s}">US ${s}</option>`).join('')}
+                    </select>
+                    <input class="input" id="nfPhone" type="tel" inputmode="tel" autocomplete="tel" maxlength="16" placeholder="WhatsApp (optional)" aria-label="WhatsApp number (optional)">
+                    <button class="btn btn-primary" id="nfBtn" type="button"><i class="fas fa-bell"></i> Notify me</button>
+                </div>
+                <div class="alert" id="nfAlert"></div>
+            </div>`;
+    }
+    function bindNotify(p) {
+        $('notifyToggle')?.addEventListener('click', () => {
+            notifyOpen = !notifyOpen;
+            $('notifyWrap').hidden = !notifyOpen;
+            $('notifyToggle').setAttribute('aria-expanded', String(notifyOpen));
+            if (notifyOpen) $('nfSize').focus({ preventScroll: true });
+        });
+        const btn = $('nfBtn');
+        if (!btn) return;
+        btn.addEventListener('click', async () => {
+            const alertBox = $('nfAlert');
+            alertBox.className = 'alert';
+            const size = $('nfSize').value;
+            if (!size) { alertBox.textContent = 'Please choose your size.'; alertBox.className = 'alert show'; return; }
+            try {
+                await Store.requireLogin('Log in so we can email you when your size arrives.');
+            } catch { return; }
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving…';
+            try {
+                const res = await Store.api('/api/orders?action=notify', { method: 'POST', auth: true, body: { product_id: p.id, size, phone: $('nfPhone').value.trim() } });
+                const list = notified();
+                if (!list.includes(p.id + '|' + size)) { list.push(p.id + '|' + size); localStorage.setItem(NOTIFY_KEY, JSON.stringify(list.slice(-100))); }
+                $('notifyForm').outerHTML = `<div class="notify-done"><i class="fas fa-circle-check"></i><span>${res.already ? 'You were already on the list' : "Done! You're on the list"} for <strong>US ${esc(size)}</strong>. We'll email <strong>${esc(Store.user?.email || 'you')}</strong> as soon as it arrives.</span></div>`;
+                Store.toast('We will tell you when your size arrives');
+            } catch (e) {
+                alertBox.textContent = e.message;
+                alertBox.className = 'alert show';
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-bell"></i> Notify me';
+            }
+        });
+    }
+
+    // ---------- Full-screen photo viewer ----------
+    let lbIndex = 0;
+    function showLightbox(i) {
+        lbIndex = (i + images.length) % images.length;
+        const img = $('lbImg');
+        img.classList.remove('zoomed');
+        img.src = images[lbIndex];
+        img.alt = product ? product.name : '';
+        $('lbCount').textContent = images.length > 1 ? `${lbIndex + 1} / ${images.length}` : '';
+        $('lbPrev').hidden = $('lbNext').hidden = images.length < 2;
+    }
+    function openLightbox(i) {
+        showLightbox(i);
+        $('lightbox').classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeLightbox() {
+        $('lightbox').classList.remove('open');
+        document.body.style.overflow = '';
+    }
+    $('lbClose').addEventListener('click', closeLightbox);
+    $('lbPrev').addEventListener('click', () => showLightbox(lbIndex - 1));
+    $('lbNext').addEventListener('click', () => showLightbox(lbIndex + 1));
+    $('lightbox').addEventListener('click', e => { if (e.target.id === 'lightbox') closeLightbox(); });
+    $('lbImg').addEventListener('click', e => {
+        const img = e.currentTarget;
+        const r = img.getBoundingClientRect();
+        img.style.transformOrigin = `${(e.clientX - r.left) / r.width * 100}% ${(e.clientY - r.top) / r.height * 100}%`;
+        img.classList.toggle('zoomed');
+    });
+    document.addEventListener('keydown', e => {
+        if (!$('lightbox').classList.contains('open')) return;
+        if (e.key === 'Escape') closeLightbox();
+        if (e.key === 'ArrowLeft') showLightbox(lbIndex - 1);
+        if (e.key === 'ArrowRight') showLightbox(lbIndex + 1);
+    });
+    let lbTouchX = null;
+    $('lightbox').addEventListener('touchstart', e => { lbTouchX = e.touches.length === 1 ? e.touches[0].clientX : null; }, { passive: true });
+    $('lightbox').addEventListener('touchend', e => {
+        if (lbTouchX === null || images.length < 2 || $('lbImg').classList.contains('zoomed')) return;
+        const dx = e.changedTouches[0].clientX - lbTouchX;
+        if (Math.abs(dx) > 50) showLightbox(lbIndex + (dx < 0 ? 1 : -1));
+        lbTouchX = null;
+    });
+
+    // ---------- Recently viewed ----------
+    async function loadRecent() {
+        if (!recentBefore.length) return;
+        const list = await Store.loadProductsByIds(recentBefore);
+        if (!list.length) return;
+        $('recentGrid').innerHTML = list.map(productCard).join('');
+        $('recentSection').hidden = false;
+    }
+    loadRecent();
 
     // Sticky bar at the bottom of the screen on phones
     function renderBuyBar(sold) {

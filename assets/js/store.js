@@ -54,6 +54,7 @@
             </nav>
             <div class="header-actions">
                 <div id="accountSlot" style="min-width:42px"></div>
+                <a class="icon-btn wish-link" id="wishLink" href="wishlist.html" aria-label="Wishlist"><i class="fa-regular fa-heart"></i><span class="cart-count zero" id="wishCount">0</span></a>
                 <button class="icon-btn" id="cartBtn" aria-label="Open cart"><i class="fas fa-bag-shopping"></i><span class="cart-count zero" id="cartCount">0</span></button>
             </div>
         </div>
@@ -68,6 +69,7 @@
         <a class="m-link" href="index.html#shop"><i class="fas fa-store"></i>Shop All</a>
         <a class="m-link" href="index.html?gender=Men#shop"><i class="fas fa-person"></i>Men</a>
         <a class="m-link" href="index.html?gender=Women#shop"><i class="fas fa-person-dress"></i>Women</a>
+        <a class="m-link" href="wishlist.html"><i class="fas fa-heart"></i>Wishlist<span class="m-count" id="wishCountM"></span></a>
         <a class="m-link" href="orders.html"><i class="fas fa-box"></i>My Orders</a>
         <a class="m-link" href="index.html#about"><i class="fas fa-circle-info"></i>About</a>
         <a class="m-link" href="index.html#contact"><i class="fas fa-envelope"></i>Contact</a>
@@ -122,6 +124,7 @@
                     <h5>Help</h5>
                     <ul>
                         <li><a href="orders.html">My Orders</a></li>
+                        <li><a href="wishlist.html">Wishlist</a></li>
                         <li><a href="index.html#how">How to Order</a></li>
                         <li><a href="index.html#about">About Us</a></li>
                         <li><a href="index.html#contact">Contact</a></li>
@@ -145,6 +148,28 @@
 
     const $ = (id) => document.getElementById(id);
     const overlay = $('overlay');
+
+    // ---------- Floating WhatsApp help button (questions only — orders go through the website) ----------
+    const WA_DEFAULT = 'Hi JENZY THRIFTS! I have a question.';
+    let waMessage = WA_DEFAULT;
+    if (SITE.whatsapp && page !== 'checkout') {
+        document.body.insertAdjacentHTML('beforeend', `
+            <a class="wa-float" id="waFloat" href="#" target="_blank" rel="noopener" aria-label="Questions? Chat with us on WhatsApp">
+                <i class="fab fa-whatsapp"></i><span>Questions? Chat with us</span>
+            </a>`);
+    }
+    function setHelpMessage(text) {
+        waMessage = text || WA_DEFAULT;
+        const a = $('waFloat');
+        if (a) a.href = `https://wa.me/${encodeURIComponent(SITE.whatsapp)}?text=${encodeURIComponent(waMessage)}`;
+    }
+    setHelpMessage(WA_DEFAULT);
+
+    // ---------- Top bar: add the coupon you choose to advertise (admin → Promotions) ----------
+    function setAnnouncement(text) {
+        const track = document.querySelector('#announceBar .announce-track');
+        if (track) track.innerHTML = `<span>${esc(text)}</span><span aria-hidden="true">${esc(text)}</span>`;
+    }
 
     function openPanel(el) { el.classList.add('open'); overlay.classList.add('show'); document.body.style.overflow = 'hidden'; }
     function closePanels() {
@@ -423,6 +448,94 @@
         }
     });
 
+    // ---------- Wishlist ❤️ (saved on this device) ----------
+    const WISH_KEY = 'jenzyWishlist.v1';
+    let wishlist = [];
+    try { wishlist = JSON.parse(localStorage.getItem(WISH_KEY)) || []; } catch { wishlist = []; }
+    wishlist = wishlist.filter(id => typeof id === 'string').slice(0, 100);
+    const wishListeners = [];
+    function renderWishCount() {
+        const n = wishlist.length;
+        $('wishCount').textContent = n;
+        $('wishCount').classList.toggle('zero', n === 0);
+        $('wishCountM').textContent = n ? n : '';
+    }
+    function syncWishButtons(id) {
+        const on = wishlist.includes(id);
+        document.querySelectorAll(`[data-wish="${CSS.escape(id)}"]`).forEach(b => {
+            b.classList.toggle('on', on);
+            b.setAttribute('aria-pressed', on ? 'true' : 'false');
+            b.setAttribute('aria-label', on ? 'Remove from wishlist' : 'Save to wishlist');
+            const i = b.querySelector('i');
+            if (i) i.className = (on ? 'fas' : 'fa-regular') + ' fa-heart';
+            const label = b.querySelector('[data-wish-label]');
+            if (label) label.textContent = on ? 'Saved' : 'Save';
+        });
+    }
+    function saveWishlist(changedId) {
+        try { localStorage.setItem(WISH_KEY, JSON.stringify(wishlist)); } catch { /* storage full / private mode */ }
+        renderWishCount();
+        if (changedId) syncWishButtons(changedId);
+        wishListeners.forEach(fn => fn(wishlist));
+    }
+    function toggleWish(id) {
+        if (!id) return false;
+        const on = !wishlist.includes(id);
+        wishlist = on ? [id, ...wishlist].slice(0, 100) : wishlist.filter(x => x !== id);
+        saveWishlist(id);
+        toast(on ? 'Saved to your wishlist' : 'Removed from your wishlist');
+        return on;
+    }
+    // Heart buttons anywhere on the page (cards sit inside links, so stop the link opening)
+    document.addEventListener('click', e => {
+        const b = e.target.closest('[data-wish]');
+        if (!b) return;
+        e.preventDefault();
+        e.stopPropagation();
+        toggleWish(b.dataset.wish);
+    });
+    renderWishCount();
+    window.addEventListener('storage', e => {
+        if (e.key !== WISH_KEY) return;
+        try { wishlist = JSON.parse(e.newValue) || []; } catch { wishlist = []; }
+        renderWishCount();
+        document.querySelectorAll('[data-wish]').forEach(b => syncWishButtons(b.dataset.wish));
+    });
+    const wishButton = (id, extraClass = '') => {
+        const on = wishlist.includes(id);
+        return `<button type="button" class="wish-btn ${extraClass} ${on ? 'on' : ''}" data-wish="${esc(id)}" aria-pressed="${on}" aria-label="${on ? 'Remove from wishlist' : 'Save to wishlist'}"><i class="${on ? 'fas' : 'fa-regular'} fa-heart"></i></button>`;
+    };
+
+    // ---------- Recently viewed (saved on this device) ----------
+    const RECENT_KEY = 'jenzyRecent.v1';
+    function recentIds() {
+        try { return (JSON.parse(localStorage.getItem(RECENT_KEY)) || []).filter(id => typeof id === 'string').slice(0, 12); } catch { return []; }
+    }
+    function addRecent(id) {
+        if (!id) return;
+        const list = [id, ...recentIds().filter(x => x !== id)].slice(0, 12);
+        try { localStorage.setItem(RECENT_KEY, JSON.stringify(list)); } catch { /* ignore */ }
+    }
+    // Loads saved products (keeps the saved order; drafts/deleted ones drop out)
+    async function loadProductsByIds(ids) {
+        if (!ids.length) return [];
+        const { data, error } = await db.from('products').select('*').in('id', ids).in('status', ['Active', 'Sold']);
+        if (error) { console.warn(error); return []; }
+        const byId = new Map((data || []).map(p => [p.id, p]));
+        return ids.map(id => byId.get(id)).filter(Boolean);
+    }
+
+    // ---------- Coupon banner ----------
+    (async () => {
+        try {
+            const { data, error } = await db.from('coupons').select('code, percent, min_order, expires_at').limit(1);
+            const c = !error && data && data[0];
+            if (!c) return;
+            const min = c.min_order > 0 ? ` on orders above ${pkr(c.min_order)}` : '';
+            setAnnouncement(`${SITE.announcement}  •  Use code ${c.code} for ${c.percent}% off${min}`);
+        } catch { /* coupons table not set up yet */ }
+    })();
+
     // ---------- Live product updates (Supabase Realtime) ----------
     function onProductsChange(callback) {
         try {
@@ -454,6 +567,7 @@
                     ${!sold && off >= 5 ? `<span class="badge badge-off">-${off}%</span>` : ''}
                 </div>
                 <span class="p-view">View details</span>
+                ${wishButton(p.id)}
             </div>
             <div class="p-body">
                 <span class="p-brand">${esc(p.brand || '')}</span>
@@ -480,6 +594,15 @@
             add: addToCart, remove: removeFromCart, clear: clearCart, refresh: refreshCart,
             open: openCart, onChange: (fn) => cartListeners.push(fn)
         },
-        onProductsChange, productCard
+        onProductsChange, productCard,
+        wishlist: {
+            get ids() { return wishlist.slice(); },
+            has: (id) => wishlist.includes(id),
+            toggle: toggleWish,
+            button: wishButton,
+            onChange: (fn) => wishListeners.push(fn)
+        },
+        recent: { ids: recentIds, add: addRecent },
+        loadProductsByIds, setHelpMessage, setAnnouncement
     };
 })();

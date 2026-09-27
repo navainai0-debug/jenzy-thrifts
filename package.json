@@ -3,9 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "JENZY THRIFTS store \u2014 static pages + Vercel serverless API",
+  "description": "JENZY THRIFTS store — static pages + Vercel serverless API",
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",
-    "jose": "^5.9.0"
+    "jose": "^5.9.0",
+    "nodemailer": "^6.10.1"
   }
 }

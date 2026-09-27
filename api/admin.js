@@ -8,7 +8,11 @@
 //   POST ?action=uploadUrl           { ext } -> signed upload for one image
 //   POST ?action=deleteImages        { urls }
 //   GET  ?action=orders&status=      all orders
-//   POST ?action=orderStatus         { id, status }
+//   POST ?action=orderStatus         { id, status, courier?, tracking_no?, tracking_url? }
+//   POST ?action=orderTracking       { id, courier, tracking_no, tracking_url }
+//   GET  ?action=notifyStatus        Telegram / email alert setup
+//   POST ?action=telegramConnect     link the owner's Telegram chat
+//   POST ?action=testNotify          send a test alert
 //   GET  ?action=messages
 //   POST ?action=messageRead         { id, read }
 //   POST ?action=deleteMessage       { id }
@@ -16,6 +20,9 @@ import { route, getBody, getQuery, HttpError, requireMethod } from './_lib/http.
 import { getDb, BUCKET } from './_lib/db.js';
 import { getAdmin } from './_lib/auth.js';
 import { isUuid } from './_lib/shop.js';
+import {
+    COURIERS, notifyStatusChange, notifyStatus, connectTelegram, sendTestAlert, siteUrl
+} from './_lib/notify.js';
 
 const STATUSES = ['Pending', 'Confirmed', 'Shipped', 'Delivered', 'Cancelled'];
 const PRODUCT_STATUSES = ['Active', 'Draft', 'Sold'];
@@ -34,6 +41,35 @@ function str(v, max) {
 function toInt(v) {
     const n = parseInt(v, 10);
     return Number.isFinite(n) && n >= 0 ? n : 0;
+}
+
+// Courier + tracking number typed in the order window
+function sanitizeTracking(b = {}) {
+    const courier = Object.prototype.hasOwnProperty.call(COURIERS, b.courier) ? b.courier : '';
+    const tracking_no = str(b.tracking_no, 60).replace(/[^A-Za-z0-9 \-\/]/g, '');
+    const tracking_url = str(b.tracking_url, 500);
+    if (tracking_url && !/^https?:\/\/[^\s]+$/i.test(tracking_url)) {
+        throw new HttpError(400, 'The tracking link must start with https://');
+    }
+    return { courier: courier || null, tracking_no: tracking_no || null, tracking_url: tracking_url || null };
+}
+
+function hasTracking(b = {}) {
+    return ['courier', 'tracking_no', 'tracking_url'].some(k => Object.prototype.hasOwnProperty.call(b, k));
+}
+
+async function saveTracking(db, id, tracking) {
+    const { data, error } = await db.from('orders')
+        .update({ ...tracking, updated_at: new Date().toISOString() })
+        .eq('id', id).select('*').maybeSingle();
+    if (error) {
+        if (/courier|tracking_/.test(error.message || '')) {
+            throw new HttpError(400, 'Run the latest supabase-setup.sql in Supabase (SQL Editor) to enable tracking numbers.');
+        }
+        throw error;
+    }
+    if (!data) throw new HttpError(404, 'Order not found.');
+    return data;
 }
 
 function sanitizeProduct(p = {}) {
@@ -216,9 +252,14 @@ export default route(async (req, res) => {
 
         case 'orderStatus': {
             requireMethod(req, 'POST');
-            const { id, status: newStatus } = getBody(req);
+            const body = getBody(req);
+            const { id, status: newStatus } = body;
             if (!isUuid(id)) throw new HttpError(400, 'Invalid order id.');
             if (!STATUSES.includes(newStatus)) throw new HttpError(400, 'Invalid status.');
+            const { data: before, error: beforeError } = await db.from('orders').select('id, status').eq('id', id).maybeSingle();
+            if (beforeError) throw beforeError;
+            if (!before) throw new HttpError(404, 'Order not found.');
+            if (hasTracking(body) && before.status !== 'Cancelled') await saveTracking(db, id, sanitizeTracking(body));
             const { data, error } = await db.rpc('set_order_status', {
                 p_order_id: id, p_status: newStatus, p_by: admin.email
             });
@@ -229,8 +270,49 @@ export default route(async (req, res) => {
                 if ((error.message || '').includes('ORDER_NOT_FOUND')) throw new HttpError(404, 'Order not found.');
                 throw error;
             }
-            return res.status(200).json({ order: Array.isArray(data) ? data[0] : data });
+            const order = Array.isArray(data) ? data[0] : data;
+            // Email the customer when the status really changed
+            if (order && before.status !== order.status) await notifyStatusChange(order, siteUrl(req));
+            return res.status(200).json({ order });
         }
+
+        case 'orderTracking': {
+            requireMethod(req, 'POST');
+            const body = getBody(req);
+            if (!isUuid(body.id)) throw new HttpError(400, 'Invalid order id.');
+            const { data: before, error: beforeError } = await db.from('orders').select('id, status, courier, tracking_no, tracking_url').eq('id', body.id).maybeSingle();
+            if (beforeError) {
+                if (/courier|tracking_/.test(beforeError.message || '')) throw new HttpError(400, 'Run the latest supabase-setup.sql in Supabase (SQL Editor) to enable tracking numbers.');
+                throw beforeError;
+            }
+            if (!before) throw new HttpError(404, 'Order not found.');
+            if (before.status === 'Cancelled') throw new HttpError(400, 'This order is cancelled.');
+            const tracking = sanitizeTracking(body);
+            const order = await saveTracking(db, body.id, tracking);
+            const changed = (before.tracking_no || null) !== tracking.tracking_no || (before.courier || null) !== tracking.courier;
+            let emailed = false;
+            if (order.status === 'Shipped' && changed && tracking.tracking_no) {
+                await notifyStatusChange(order, siteUrl(req));
+                emailed = !!order.user_email;
+            }
+            return res.status(200).json({ order, emailed });
+        }
+
+        case 'notifyStatus':
+            requireMethod(req, 'GET');
+            return res.status(200).json(await notifyStatus());
+
+        case 'telegramConnect':
+            requireMethod(req, 'POST');
+            try {
+                return res.status(200).json(await connectTelegram());
+            } catch (e) {
+                throw new HttpError(e.status || 400, e.message);
+            }
+
+        case 'testNotify':
+            requireMethod(req, 'POST');
+            return res.status(200).json(await sendTestAlert(siteUrl(req), admin.email));
 
         case 'messages': {
             requireMethod(req, 'GET');

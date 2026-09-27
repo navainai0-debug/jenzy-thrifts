@@ -49,6 +49,9 @@
         </div>
     </section>
 
+    <!-- DROP COUNTDOWN (set in admin → Promotions) -->
+    <section class="drop-banner" id="dropBanner" hidden aria-live="polite"></section>
+
     <!-- TRUST STRIP -->
     <section class="trust">
         <div class="container trust-grid">
@@ -88,10 +91,11 @@
         <div class="container">
             <div class="section-head">
                 <span class="eyebrow">Shop</span>
-                <h2 class="section-title">Latest <span class="grad">Arrivals</span></h2>
+                <h2 class="section-title" id="shopTitle">Latest <span class="grad">Arrivals</span></h2>
                 <p class="section-sub">Every pair is one of a kind. When it's gone, it's gone.</p>
             </div>
 
+            <div class="brand-chips" id="brandChips" hidden aria-label="Shop by brand"></div>
             <div class="shop-toolbar">
                 <div class="segmented" id="genderTabs" role="tablist">
                     <button class="active" data-gender="All">All</button>
@@ -102,6 +106,18 @@
                     <label class="field-inline"><i class="fas fa-magnifying-glass"></i><input class="input" id="searchInput" type="search" placeholder="Search shoes or brands" aria-label="Search"></label>
                     <select class="select" id="brandFilter" aria-label="Brand"><option value="">All brands</option></select>
                     <select class="select" id="sizeFilter" aria-label="Size"><option value="">All sizes</option></select>
+                    <select class="select" id="priceFilter" aria-label="Price">
+                        <option value="">Price</option>
+                        <option value="u5">Under 5,000</option>
+                        <option value="5-10">5,000 – 10,000</option>
+                        <option value="o10">Over 10,000</option>
+                    </select>
+                    <select class="select" id="condFilter" aria-label="Condition">
+                        <option value="">Condition</option>
+                        <option value="Excellent">Excellent</option>
+                        <option value="Good">Good</option>
+                        <option value="Fair">Fair</option>
+                    </select>
                     <select class="select" id="sortSelect" aria-label="Sort">
                         <option value="new">Newest</option>
                         <option value="low">Price: Low to High</option>
@@ -111,13 +127,25 @@
                 </div>
             </div>
             <div class="results-bar">
-                <span id="resultCount">Loading…</span>
+                <span><span id="resultCount">Loading…</span><button class="clear-link" id="clearLink" type="button" hidden>Clear filters</button></span>
                 <span class="live-dot">Live stock</span>
             </div>
             <div class="p-grid" id="productGrid">
                 <div class="skeleton sk-card"></div><div class="skeleton sk-card"></div><div class="skeleton sk-card"></div><div class="skeleton sk-card"></div>
             </div>
         </div>
+    </section>
+
+    <!-- RECENTLY VIEWED -->
+    <section class="recent-section container" id="recentSection" hidden>
+        <div class="related-head">
+            <div>
+                <span class="eyebrow">Your history</span>
+                <h2 class="section-title">Recently <span class="grad">viewed</span></h2>
+            </div>
+            <a href="wishlist.html" class="btn btn-outline btn-sm"><i class="fa-regular fa-heart"></i> My wishlist</a>
+        </div>
+        <div class="p-grid" id="recentGrid"></div>
     </section>
 
     <!-- WHY US -->
@@ -214,10 +242,29 @@
     const $ = (id) => document.getElementById(id);
 
     let products = [];
+    const homeTitle = document.title;
+    const PRICE_RANGES = {
+        u5: (p) => p < 5000,
+        '5-10': (p) => p >= 5000 && p <= 10000,
+        o10: (p) => p > 10000
+    };
+    const CONDITIONS = ['Excellent', 'Good', 'Fair'];
     const state = {
         gender: ['Men', 'Women'].includes(Store.qs('gender')) ? Store.qs('gender') : 'All',
-        search: '', brand: '', size: '', sort: 'new'
+        search: '', brand: Store.qs('brand') || '', size: '', sort: 'new',
+        price: PRICE_RANGES[Store.qs('price')] ? Store.qs('price') : '',
+        cond: CONDITIONS.includes(Store.qs('cond')) ? Store.qs('cond') : ''
     };
+    $('priceFilter').value = state.price;
+    $('condFilter').value = state.cond;
+    // Keep the filters in the address bar, so a brand page like ?brand=Nike can be shared
+    function syncUrl() {
+        const url = new URL(location.href);
+        [['brand', state.brand], ['price', state.price], ['cond', state.cond]].forEach(([k, v]) => {
+            if (v) url.searchParams.set(k, v); else url.searchParams.delete(k);
+        });
+        history.replaceState(null, '', url);
+    }
 
     // ---------- Load products (only real data from the database) ----------
     async function loadProducts() {
@@ -239,11 +286,20 @@
     function buildFilters() {
         const active = products.filter(p => p.status === 'Active');
         const brands = [...new Set(active.map(p => (p.brand || '').trim()).filter(Boolean))].sort();
+        // A brand link (?brand=nike) matches regardless of capital letters
+        const allBrands = [...new Set(products.map(p => (p.brand || '').trim()).filter(Boolean))];
+        if (state.brand) state.brand = allBrands.find(b => b.toLowerCase() === state.brand.toLowerCase()) || '';
         const sizes = sortSizes([...new Set(active.flatMap(p => p.sizes || []))]);
         const keep = (sel, val) => { sel.value = [...sel.options].some(o => o.value === val) ? val : ''; };
         $('brandFilter').innerHTML = '<option value="">All brands</option>' + brands.map(b => `<option>${esc(b)}</option>`).join('');
         $('sizeFilter').innerHTML = '<option value="">All sizes</option>' + sizes.map(s => `<option value="${esc(s)}">US ${esc(s)}</option>`).join('');
+        if (state.brand && !brands.includes(state.brand)) $('brandFilter').insertAdjacentHTML('beforeend', `<option>${esc(state.brand)}</option>`);
         keep($('brandFilter'), state.brand); state.brand = $('brandFilter').value;
+        // Shop by brand chips
+        const counts = brands.map(b => [b, active.filter(p => (p.brand || '').trim() === b).length]);
+        $('brandChips').hidden = brands.length < 2;
+        $('brandChips').innerHTML = `<button class="brand-chip ${state.brand ? '' : 'active'}" data-brand="">All brands</button>` +
+            counts.map(([b, n]) => `<button class="brand-chip ${state.brand === b ? 'active' : ''}" data-brand="${esc(b)}">${esc(b)} <small>${n}</small></button>`).join('');
         keep($('sizeFilter'), state.size); state.size = $('sizeFilter').value;
     }
 
@@ -268,6 +324,8 @@
             if (state.gender !== 'All' && !(p.gender === state.gender || p.gender === 'Unisex')) return false;
             if (state.brand && (p.brand || '').trim() !== state.brand) return false;
             if (state.size && !(p.sizes || []).includes(state.size)) return false;
+            if (state.price && !PRICE_RANGES[state.price](p.price)) return false;
+            if (state.cond && p.condition !== state.cond) return false;
             if (q && !`${p.name} ${p.brand || ''} ${p.category || ''} ${p.color || ''}`.toLowerCase().includes(q)) return false;
             return true;
         });
@@ -282,9 +340,14 @@
 
         const available = list.filter(p => p.status === 'Active').length;
         $('resultCount').textContent = `${available} ${available === 1 ? 'pair' : 'pairs'} available`;
+        const filtered = state.gender !== 'All' || state.brand || state.size || state.price || state.cond || q;
+        $('clearLink').hidden = !filtered;
+        // Brand page title
+        $('shopTitle').innerHTML = state.brand ? `${esc(state.brand)} <span class="grad">shoes</span>` : 'Latest <span class="grad">Arrivals</span>';
+        document.title = state.brand ? `${state.brand} shoes | JENZY THRIFTS` : homeTitle;
+        document.querySelectorAll('#brandChips .brand-chip').forEach(c => c.classList.toggle('active', c.dataset.brand === state.brand));
 
         if (!list.length) {
-            const filtered = state.gender !== 'All' || state.brand || state.size || q;
             $('productGrid').innerHTML = `<div class="empty-state"><i class="fas fa-shoe-prints"></i><p>${filtered ? 'No shoes match your filters.' : 'New stock is coming soon. Check back shortly!'}</p>${filtered ? '<button class="btn btn-outline btn-sm" id="clearFilters" style="margin-top:14px">Clear filters</button>' : ''}</div>`;
             $('clearFilters')?.addEventListener('click', clearFilters);
             return;
@@ -293,9 +356,17 @@
     }
 
     function clearFilters() {
-        state.search = state.brand = state.size = '';
+        state.search = state.brand = state.size = state.price = state.cond = '';
         $('searchInput').value = ''; $('brandFilter').value = ''; $('sizeFilter').value = '';
+        $('priceFilter').value = ''; $('condFilter').value = '';
+        syncUrl();
         setGender('All', true);
+    }
+    function setBrand(b) {
+        state.brand = b;
+        $('brandFilter').value = b;
+        syncUrl();
+        render();
     }
 
     function setGender(g, updateUrl) {
@@ -326,12 +397,80 @@
     });
     let searchTimer;
     $('searchInput').addEventListener('input', e => { clearTimeout(searchTimer); searchTimer = setTimeout(() => { state.search = e.target.value; render(); }, 150); });
-    $('brandFilter').addEventListener('change', e => { state.brand = e.target.value; render(); });
+    $('brandFilter').addEventListener('change', e => setBrand(e.target.value));
+    $('brandChips').addEventListener('click', e => {
+        const chip = e.target.closest('[data-brand]');
+        if (chip) setBrand(chip.dataset.brand);
+    });
+    $('priceFilter').addEventListener('change', e => { state.price = e.target.value; syncUrl(); render(); });
+    $('condFilter').addEventListener('change', e => { state.cond = e.target.value; syncUrl(); render(); });
+    $('clearLink').addEventListener('click', clearFilters);
     $('sizeFilter').addEventListener('change', e => { state.size = e.target.value; render(); });
     $('sortSelect').addEventListener('change', e => { state.sort = e.target.value; render(); });
 
     setGender(state.gender, false);
     loadProducts();
+
+    // ---------- Recently viewed ----------
+    (async () => {
+        const ids = Store.recent.ids().slice(0, 4);
+        if (!ids.length) return;
+        const list = await Store.loadProductsByIds(ids);
+        if (!list.length) return;
+        $('recentGrid').innerHTML = list.map(productCard).join('');
+        $('recentSection').hidden = false;
+    })();
+
+    // ---------- Drop countdown (admin → Promotions) ----------
+    let dropTimer = null;
+    async function loadDrop() {
+        const { data, error } = await db.from('shop_settings').select('value').eq('key', 'drop').maybeSingle();
+        const drop = !error && data && data.value;
+        clearInterval(dropTimer);
+        const box = $('dropBanner');
+        if (!drop || !drop.active || !drop.at || isNaN(new Date(drop.at))) { box.hidden = true; return; }
+        const at = new Date(drop.at);
+        const when = at.toLocaleString('en-PK', { weekday: 'long', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
+        const pad = (n) => String(n).padStart(2, '0');
+        const tick = () => {
+            const left = at - Date.now();
+            if (left <= -48 * 3600 * 1000) { box.hidden = true; clearInterval(dropTimer); return; }
+            if (left <= 0) {
+                if (!box.classList.contains('live')) {
+                    box.classList.add('live');
+                    box.innerHTML = `<div class="container drop-inner">
+                        <div class="drop-text"><small>Live now</small><h2>${esc(drop.title)} is live 🔥</h2><p>${esc(drop.note || 'Fresh pairs just landed. One of each, so be quick.')}</p></div>
+                        <div class="drop-actions"><a href="#shop" class="btn btn-primary"><i class="fas fa-bolt"></i> Shop the drop</a></div>
+                    </div>`;
+                }
+                return;
+            }
+            const d = Math.floor(left / 86400000), h = Math.floor(left / 3600000) % 24, m = Math.floor(left / 60000) % 60, sec = Math.floor(left / 1000) % 60;
+            if (!box.querySelector('.drop-clock')) {
+                box.classList.remove('live');
+                box.innerHTML = `<div class="container drop-inner">
+                    <div class="drop-text"><small>Coming soon</small><h2>${esc(drop.title)} ⏳</h2><p>${esc(when)}${drop.note ? ' • ' + esc(drop.note) : ''}</p></div>
+                    <div class="drop-clock" role="timer" aria-label="Time left until the drop">
+                        <div><strong data-u="d"></strong><span>Days</span></div>
+                        <div><strong data-u="h"></strong><span>Hours</span></div>
+                        <div><strong data-u="m"></strong><span>Mins</span></div>
+                        <div><strong data-u="s"></strong><span>Secs</span></div>
+                    </div>
+                    ${site.instagram ? `<div class="drop-actions"><a href="${esc(site.instagram)}" target="_blank" rel="noopener" class="btn btn-outline"><i class="fab fa-instagram"></i> Follow for the drop</a></div>` : ''}
+                </div>`;
+            }
+            box.querySelector('[data-u="d"]').textContent = d;
+            box.querySelector('[data-u="h"]').textContent = pad(h);
+            box.querySelector('[data-u="m"]').textContent = pad(m);
+            box.querySelector('[data-u="s"]').textContent = pad(sec);
+        };
+        box.classList.remove('live');
+        box.innerHTML = '';
+        box.hidden = false;
+        tick();
+        dropTimer = setInterval(tick, 1000);
+    }
+    loadDrop().catch(() => {});
 
     // Live updates: when you add/sell a product in admin, the shop updates by itself
     let reloadTimer;
@@ -387,3 +526,5 @@
 </script>
 </body>
 </html>
+
+

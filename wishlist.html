@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0a0a0b">
+    <title>My Wishlist | JENZY THRIFTS</title>
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/img/icon-192.png">
+    <link rel="apple-touch-icon" href="assets/img/icon-180.png">
+    <meta name="robots" content="noindex">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/store.css">
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="assets/js/config.js"></script>
+</head>
+<body data-page="wishlist">
+
+<main class="container" style="padding-bottom:88px;min-height:60vh">
+    <div class="page-head">
+        <h1>My Wishlist <i class="fas fa-heart" style="color:var(--pink);font-size:.8em"></i></h1>
+        <p>Shoes you saved for later. Tap the heart on any shoe to add or remove it.</p>
+    </div>
+    <div class="wish-page-actions" id="wishActions" hidden>
+        <span id="wishSummary"></span>
+        <button class="btn btn-outline btn-sm" id="clearWish" type="button"><i class="fas fa-trash-can"></i> Clear all</button>
+    </div>
+    <div class="p-grid" id="wishGrid"><div class="loading-state"><i class="fas fa-spinner fa-spin"></i><p>Loading your wishlist…</p></div></div>
+</main>
+
+<script src="assets/js/store.js"></script>
+<script>
+(function () {
+    const { productCard } = Store;
+    const $ = (id) => document.getElementById(id);
+    let products = [];
+
+    function render() {
+        const ids = Store.wishlist.ids;
+        const list = ids.map(id => products.find(p => p.id === id)).filter(Boolean);
+        if (!list.length) {
+            $('wishActions').hidden = true;
+            $('wishGrid').innerHTML = `
+                <div class="empty-state">
+                    <i class="fa-regular fa-heart"></i>
+                    <p>Your wishlist is empty.<br>Tap the <i class="fa-regular fa-heart" style="display:inline;font-size:inherit;margin:0;color:var(--pink)"></i> on any shoe to save it here.</p>
+                    <a href="index.html#shop" class="btn btn-primary" style="margin-top:18px"><i class="fas fa-bag-shopping"></i> Browse shoes</a>
+                </div>`;
+            return;
+        }
+        const available = list.filter(p => p.status === 'Active').length;
+        $('wishSummary').textContent = `${list.length} saved • ${available} available now`;
+        $('wishActions').hidden = false;
+        $('wishGrid').innerHTML = list.map(productCard).join('');
+    }
+
+    async function load() {
+        products = await Store.loadProductsByIds(Store.wishlist.ids);
+        render();
+    }
+
+    // Removing a heart on this page removes the card
+    Store.wishlist.onChange(() => render());
+    $('clearWish').addEventListener('click', () => {
+        if (!confirm('Remove all shoes from your wishlist?')) return;
+        Store.wishlist.ids.forEach(id => { if (Store.wishlist.has(id)) Store.wishlist.toggle(id); });
+        Store.toast('Wishlist cleared');
+    });
+
+    load();
+    let t;
+    Store.onProductsChange(() => { clearTimeout(t); t = setTimeout(load, 400); });
+    window.addEventListener('storage', e => { if (e.key === 'jenzyWishlist.v1') load(); });
+})();
+</script>
+</body>
+</html>

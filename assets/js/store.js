@@ -16,10 +16,20 @@
     const pkr = (n) => 'PKR ' + Number(n || 0).toLocaleString('en-PK');
     const orderNo = (n) => 'JT-' + n;
     const discountPct = (p) => (p.original_price && p.original_price > p.price) ? Math.round((1 - p.price / p.original_price) * 100) : 0;
-    const productUrl = (p) => 'product.html?id=' + encodeURIComponent(p.id || p);
+    // Short, shareable product links (/shoe/<id>) — they show a photo preview on WhatsApp / Instagram
+    const productUrl = (p) => '/shoe/' + encodeURIComponent(p.id || p);
+    const shareUrl = (p) => location.origin + productUrl(p);
     const firstImage = (p) => (p.images && p.images[0]) || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800';
     const sortSizes = (sizes) => [...(sizes || [])].sort((a, b) => (parseFloat(a) || 999) - (parseFloat(b) || 999));
     const qs = (name) => new URLSearchParams(location.search).get(name);
+    async function copyText(text, okMessage = 'Link copied') {
+        try {
+            await navigator.clipboard.writeText(text);
+            toast(okMessage);
+        } catch {
+            window.prompt('Copy this link:', text);
+        }
+    }
     const GOOGLE_SVG = '<svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>';
 
     // ---------- Layout (header, drawers, modal, footer) ----------
@@ -462,7 +472,7 @@
 
     window.Store = {
         config: CFG, site: SITE, db, auth,
-        esc, pkr, orderNo, discountPct, productUrl, firstImage, sortSizes, qs, toast,
+        esc, pkr, orderNo, discountPct, productUrl, shareUrl, copyText, firstImage, sortSizes, qs, toast,
         onAuth, requireLogin, openLogin, get user() { return currentUser; },
         api,
         cart: {

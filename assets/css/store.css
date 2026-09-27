@@ -748,3 +748,159 @@ a.contact-card:hover { border-color: var(--border-2); }
     }
     .toast.show, body.has-buybar .toast.show { transform: translate(-50%, 0); }
 }
+
+/* =====================================================================
+   Wishlist, magnifier, notify-me, drop countdown, filters, WhatsApp help
+   ===================================================================== */
+
+/* Wishlist hearts */
+.wish-link { position: relative; }
+.wish-btn {
+    position: absolute; top: 10px; right: 10px; z-index: 3;
+    width: 38px; height: 38px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, .14);
+    background: rgba(10, 10, 11, .72); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    color: #fff; display: flex; align-items: center; justify-content: center; font-size: 15px;
+    cursor: pointer; transition: transform .15s, color .2s, border-color .2s, background .2s;
+}
+.wish-btn:hover { border-color: var(--pink); color: var(--pink); transform: scale(1.06); }
+.wish-btn.on { color: var(--pink); border-color: rgba(255, 45, 149, .5); background: rgba(255, 45, 149, .14); }
+.wish-btn.on i { animation: wish-pop .3s ease; }
+@keyframes wish-pop { 0% { transform: scale(.6); } 60% { transform: scale(1.25); } 100% { transform: scale(1); } }
+.wish-btn.wish-lg { width: 46px; height: 46px; font-size: 18px; top: 14px; right: 14px; }
+.m-count { margin-left: auto; min-width: 22px; height: 22px; padding: 0 7px; border-radius: 11px; background: var(--pink); color: #fff; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
+.m-count:empty { display: none; }
+
+/* Product photo magnifier */
+.gallery-main.zoomable { cursor: zoom-in; }
+.gallery-main.zoomable img#mainImage { transition: transform .18s ease-out; will-change: transform; }
+.gallery-main.zooming img#mainImage { transform: scale(2.4); }
+.gallery-main.zooming .p-badges, .gallery-main.zooming .zoom-hint, .gallery-main.zooming .gallery-count { opacity: 0; }
+.zoom-hint {
+    position: absolute; left: 14px; bottom: 14px; z-index: 2; padding: 5px 11px; border-radius: 8px;
+    background: rgba(0, 0, 0, .7); font-size: 12px; color: var(--text-2); pointer-events: none; transition: opacity .2s;
+}
+.zoom-hint i { color: var(--accent); margin-right: 5px; }
+.zoom-hint .touch-only { display: none; }
+@media (hover: none), (pointer: coarse) {
+    .zoom-hint .mouse-only { display: none; }
+    .zoom-hint .touch-only { display: inline; }
+}
+.lightbox {
+    position: fixed; inset: 0; z-index: 3000; background: rgba(0, 0, 0, .94);
+    display: none; align-items: center; justify-content: center; touch-action: pinch-zoom;
+}
+.lightbox.open { display: flex; }
+.lightbox img { max-width: 94vw; max-height: 86vh; object-fit: contain; border-radius: 10px; user-select: none; -webkit-user-drag: none; cursor: zoom-in; transition: transform .2s ease-out; }
+.lightbox img.zoomed { transform: scale(2.2); cursor: zoom-out; }
+.lightbox .lb-close { position: absolute; top: calc(14px + env(safe-area-inset-top)); right: 14px; }
+.lightbox .lb-nav { position: absolute; top: 50%; transform: translateY(-50%); width: 46px; height: 46px; border-radius: 50%; border: 1px solid var(--border-2); background: rgba(20, 20, 23, .8); color: #fff; font-size: 16px; }
+.lightbox .lb-nav.prev { left: 14px; }
+.lightbox .lb-nav.next { right: 14px; }
+.lightbox .lb-count { position: absolute; bottom: calc(18px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); font-size: 13px; color: var(--text-2); }
+
+/* Notify me when my size arrives */
+.link-btn { background: none; border: none; color: var(--accent-2); font-size: 13.5px; font-weight: 500; padding: 10px 0 0; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; }
+.link-btn:hover { color: var(--accent); }
+.notify-box { margin-top: 16px; padding: 16px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--border); }
+.notify-box h4 { font-size: 15px; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+.notify-box h4 i { color: var(--yellow); }
+.notify-box > p { font-size: 13.5px; color: var(--text-2); margin-bottom: 12px; }
+.notify-form { display: grid; grid-template-columns: 120px 1fr auto; gap: 10px; }
+.notify-form .select, .notify-form .input { width: 100%; min-width: 0; }
+.notify-done { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; color: var(--text); }
+.notify-done i { color: var(--accent); margin-top: 3px; }
+.notify-box .alert { margin-top: 10px; }
+
+/* Drop countdown (home page) */
+.drop-banner { position: relative; overflow: hidden; border-bottom: 1px solid var(--border); background:
+    radial-gradient(900px 260px at 15% 0%, rgba(57, 255, 20, .12), transparent 70%),
+    radial-gradient(700px 260px at 90% 100%, rgba(255, 45, 149, .12), transparent 70%), var(--bg-2); }
+.drop-inner { display: flex; align-items: center; justify-content: space-between; gap: 22px; padding-top: 26px; padding-bottom: 26px; flex-wrap: wrap; }
+.drop-text small { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--pink); }
+.drop-text small::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--pink); animation: pulse-pink 1.6s infinite; }
+@keyframes pulse-pink { 0% { box-shadow: 0 0 0 0 rgba(255, 45, 149, .6); } 70% { box-shadow: 0 0 0 9px rgba(255, 45, 149, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 45, 149, 0); } }
+.drop-text h2 { font-family: var(--font-display); font-size: 26px; font-weight: 800; margin: 6px 0 2px; }
+.drop-text p { color: var(--text-2); font-size: 14px; }
+.drop-clock { display: flex; gap: 10px; }
+.drop-clock div { min-width: 72px; padding: 10px 8px; border-radius: 14px; background: var(--surface); border: 1px solid var(--border-2); text-align: center; }
+.drop-clock strong { display: block; font-family: var(--font-display); font-size: 28px; font-weight: 800; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.drop-clock span { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-3); }
+.drop-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.drop-banner.live .drop-text small { color: var(--accent); }
+.drop-banner.live .drop-text small::before { background: var(--accent); animation: pulse 1.6s infinite; }
+
+/* Shop by brand + extra filters */
+.brand-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.brand-chip {
+    display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px; border-radius: 999px;
+    border: 1px solid var(--border); background: var(--surface); color: var(--text-2); font-size: 13.5px; font-weight: 500; cursor: pointer; white-space: nowrap;
+    transition: border-color .2s, color .2s, background .2s;
+}
+.brand-chip small { color: var(--text-3); font-size: 12px; }
+.brand-chip:hover { border-color: var(--border-2); color: var(--text); }
+.brand-chip.active { border-color: var(--accent); color: var(--accent); background: rgba(57, 255, 20, .07); }
+.brand-chip.active small { color: var(--accent); }
+.results-bar .clear-link { background: none; border: none; color: var(--accent-2); font-size: 13px; cursor: pointer; margin-left: 10px; padding: 0; }
+
+/* Recently viewed */
+.recent-section { padding: 56px 0 72px; border-top: 1px solid var(--border); }
+.recent-section .related-head .section-title { font-size: 24px; }
+
+/* Wishlist page */
+.wish-page-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: space-between; margin-bottom: 18px; color: var(--text-3); font-size: 13.5px; }
+
+/* Floating WhatsApp help button */
+.wa-float {
+    position: fixed; right: 20px; bottom: calc(20px + env(safe-area-inset-bottom)); z-index: 850;
+    display: inline-flex; align-items: center; gap: 10px; height: 54px; padding: 0 20px 0 16px; border-radius: 27px;
+    background: #25d366; color: #0a2e14; font-weight: 600; font-size: 14.5px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, .45), 0 0 0 0 rgba(37, 211, 102, .5); transition: transform .2s, box-shadow .2s;
+}
+.wa-float i { font-size: 26px; color: #fff; }
+.wa-float:hover { transform: translateY(-2px); box-shadow: 0 16px 34px rgba(0, 0, 0, .5); }
+body.has-buybar .wa-float { bottom: calc(20px + env(safe-area-inset-bottom)); }
+
+@media (max-width: 900px) {
+    body.has-buybar .wa-float { bottom: calc(92px + env(safe-area-inset-bottom)); }
+    .drop-inner { justify-content: flex-start; }
+}
+@media (max-width: 640px) {
+    .wa-float { width: 54px; padding: 0; justify-content: center; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom)); }
+    .wa-float span { display: none; }
+    body.has-buybar .wa-float { bottom: calc(88px + env(safe-area-inset-bottom)); }
+    .wish-btn { width: 34px; height: 34px; font-size: 14px; top: 8px; right: 8px; }
+    .wish-btn.wish-lg { width: 42px; height: 42px; font-size: 17px; top: 12px; right: 12px; }
+    .notify-form { grid-template-columns: 1fr 1fr; }
+    .notify-form .btn { grid-column: 1 / -1; }
+    .drop-inner { padding-top: 20px; padding-bottom: 22px; gap: 16px; }
+    .drop-text h2 { font-size: 21px; }
+    .drop-clock { width: 100%; gap: 8px; }
+    .drop-clock div { flex: 1; min-width: 0; padding: 9px 4px; }
+    .drop-clock strong { font-size: 22px; }
+    .drop-clock span { font-size: 10px; letter-spacing: 1px; }
+    .drop-actions { width: 100%; }
+    .drop-actions .btn { flex: 1; }
+    .brand-chips { flex-wrap: nowrap; overflow-x: auto; margin: 0 -16px 12px; padding: 0 16px 4px; scrollbar-width: none; }
+    .brand-chips::-webkit-scrollbar { display: none; }
+    .lightbox .lb-nav { width: 40px; height: 40px; }
+    .lightbox .lb-nav.prev { left: 8px; }
+    .lightbox .lb-nav.next { right: 8px; }
+    .recent-section { padding: 40px 0 56px; }
+    .recent-section .related-head .section-title { font-size: 21px; }
+}
+@media (max-width: 359px) {
+    .wish-link { display: none; }
+}
+@media (max-width: 900px) {
+    .toolbar-right .select:last-child { grid-column: 1 / -1; }
+}
+.wish-share.on { border-color: rgba(255, 45, 149, .5); color: var(--text); }
+.wish-share.on i { color: var(--pink); }
+
+/* Small phones: stack the notify form; hide the chat button while typing */
+@media (max-width: 420px) {
+    .notify-form { grid-template-columns: 1fr; }
+}
+@media (max-width: 900px) {
+    body:has(input:focus, select:focus, textarea:focus) .wa-float { opacity: 0; pointer-events: none; }
+}

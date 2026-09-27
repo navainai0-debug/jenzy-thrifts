@@ -13,15 +13,25 @@
 //   GET  ?action=notifyStatus        Telegram / email alert setup
 //   POST ?action=telegramConnect     link the owner's Telegram chat
 //   POST ?action=testNotify          send a test alert
+//   GET  ?action=coupons             coupon codes
+//   POST ?action=saveCoupon          { coupon, isNew }
+//   POST ?action=deleteCoupon        { code }
+//   GET  ?action=drop                drop countdown settings
+//   POST ?action=saveDrop            { drop }
+//   GET  ?action=waitlist            "notify me when my size arrives" requests
+//   POST ?action=waitlistNotify      { ids }  email them that the size is here
+//   POST ?action=waitlistMark        { ids, status }
+//   POST ?action=waitlistDelete      { ids }
 //   GET  ?action=messages
 //   POST ?action=messageRead         { id, read }
 //   POST ?action=deleteMessage       { id }
 import { route, getBody, getQuery, HttpError, requireMethod } from './_lib/http.js';
 import { getDb, BUCKET } from './_lib/db.js';
 import { getAdmin } from './_lib/auth.js';
-import { isUuid } from './_lib/shop.js';
+import { isUuid, COUPON_RE } from './_lib/shop.js';
 import {
-    COURIERS, notifyStatusChange, notifyStatus, connectTelegram, sendTestAlert, siteUrl
+    COURIERS, notifyStatusChange, notifyStatus, connectTelegram, sendTestAlert, siteUrl,
+    readSetting, writeSetting, notifyRestock
 } from './_lib/notify.js';
 
 const STATUSES = ['Pending', 'Confirmed', 'Shipped', 'Delivered', 'Cancelled'];
@@ -103,19 +113,65 @@ function sanitizeProduct(p = {}) {
     };
 }
 
+const SETUP_SQL_MSG = 'Run the latest supabase-setup.sql in Supabase (SQL Editor) first, then try again.';
+function missingTable(error, table) {
+    return new RegExp(table).test(error?.message || '') ? new HttpError(400, SETUP_SQL_MSG) : error;
+}
+
+function sanitizeCoupon(c = {}) {
+    const code = str(c.code, 20).toUpperCase().replace(/\s+/g, '');
+    if (!COUPON_RE.test(code)) throw new HttpError(400, 'Code must be 3–20 letters or numbers (A–Z, 0–9, - or _), e.g. EID15.');
+    const percent = parseInt(c.percent, 10);
+    if (!(percent >= 1 && percent <= 90)) throw new HttpError(400, 'Discount must be between 1% and 90%.');
+    const maxUses = c.max_uses === '' || c.max_uses == null ? null : parseInt(c.max_uses, 10);
+    if (maxUses !== null && !(maxUses >= 1 && maxUses <= 100000)) throw new HttpError(400, 'Max uses must be a number above 0 — or leave it empty for unlimited.');
+    let expires = null;
+    if (c.expires_at) {
+        const d = new Date(c.expires_at);
+        if (isNaN(d)) throw new HttpError(400, 'Invalid expiry date.');
+        expires = d.toISOString();
+    }
+    return {
+        code, percent,
+        min_order: toInt(c.min_order),
+        max_uses: maxUses,
+        expires_at: expires,
+        active: c.active !== false,
+        show_banner: !!c.show_banner
+    };
+}
+
+function sanitizeDrop(d = {}) {
+    const at = d.at ? new Date(d.at) : null;
+    if (d.active && (!at || isNaN(at))) throw new HttpError(400, 'Pick the date and time of the drop.');
+    return {
+        active: !!d.active,
+        title: str(d.title, 60) || 'New drop',
+        note: str(d.note, 140),
+        at: at && !isNaN(at) ? at.toISOString() : null
+    };
+}
+
+function cleanIds(ids) {
+    const list = (Array.isArray(ids) ? ids : []).filter(isUuid).slice(0, 500);
+    if (!list.length) throw new HttpError(400, 'Nothing selected.');
+    return list;
+}
+
 function storagePath(url) {
     const m = String(url || '').match(new RegExp(`/${BUCKET}/(shoes/[^?#]+)`));
     return m ? decodeURIComponent(m[1]) : null;
 }
 
 async function dashboard(db) {
-    const [productsRes, ordersRes, messagesRes] = await Promise.all([
+    const [productsRes, ordersRes, messagesRes, waitRes] = await Promise.all([
         db.from('products').select('id, name, brand, price, sizes, status, images, created_at').order('created_at', { ascending: false }),
         db.from('orders')
             .select('id, order_no, created_at, customer_name, phone, city, total, status, user_uid, items')
             .order('created_at', { ascending: false })
             .limit(5000),
-        db.from('messages').select('id', { count: 'exact', head: true }).eq('is_read', false)
+        db.from('messages').select('id', { count: 'exact', head: true }).eq('is_read', false),
+        db.from('restock_requests').select('id', { count: 'exact', head: true }).eq('status', 'Waiting')
     ]);
     if (productsRes.error) throw productsRes.error;
     if (ordersRes.error) throw ordersRes.error;
@@ -160,7 +216,8 @@ async function dashboard(db) {
             activeProducts: products.filter(p => p.status === 'Active').length,
             soldProducts: products.filter(p => p.status === 'Sold').length,
             draftProducts: products.filter(p => p.status === 'Draft').length,
-            unreadMessages: messagesRes.count || 0
+            unreadMessages: messagesRes.count || 0,
+            waitingRequests: waitRes.error ? 0 : (waitRes.count || 0)
         },
         salesChart: days,
         recentOrders: orders.slice(0, 8).map(({ user_uid, ...o }) => ({ ...o, itemCount: o.items?.length || 0, items: undefined })),
@@ -313,6 +370,115 @@ export default route(async (req, res) => {
         case 'testNotify':
             requireMethod(req, 'POST');
             return res.status(200).json(await sendTestAlert(siteUrl(req), admin.email));
+
+        case 'coupons': {
+            requireMethod(req, 'GET');
+            const { data, error } = await db.from('coupons').select('*').order('created_at', { ascending: false });
+            if (error) throw missingTable(error, 'coupons');
+            return res.status(200).json({ coupons: data || [] });
+        }
+
+        case 'saveCoupon': {
+            requireMethod(req, 'POST');
+            const { coupon, isNew } = getBody(req);
+            const clean = sanitizeCoupon(coupon);
+            if (clean.show_banner && clean.active) {
+                // Only one code can be advertised in the top bar at a time
+                const { error: offError } = await db.from('coupons').update({ show_banner: false }).neq('code', clean.code);
+                if (offError) throw missingTable(offError, 'coupons');
+            }
+            let result;
+            if (isNew) {
+                result = await db.from('coupons').insert(clean).select('*').single();
+                if (result.error?.code === '23505') throw new HttpError(400, `The code ${clean.code} already exists.`);
+            } else {
+                const { code, ...changes } = clean;
+                result = await db.from('coupons').update(changes).eq('code', code).select('*').maybeSingle();
+                if (!result.error && !result.data) throw new HttpError(404, 'Coupon not found.');
+            }
+            if (result.error) throw missingTable(result.error, 'coupons');
+            return res.status(200).json({ coupon: result.data });
+        }
+
+        case 'deleteCoupon': {
+            requireMethod(req, 'POST');
+            const code = str(getBody(req).code, 20).toUpperCase();
+            if (!COUPON_RE.test(code)) throw new HttpError(400, 'Invalid code.');
+            const { error } = await db.from('coupons').delete().eq('code', code);
+            if (error) throw missingTable(error, 'coupons');
+            return res.status(200).json({ ok: true });
+        }
+
+        case 'drop':
+            requireMethod(req, 'GET');
+            return res.status(200).json({ drop: (await readSetting('drop')) || { active: false, title: 'New drop', note: '', at: null } });
+
+        case 'saveDrop': {
+            requireMethod(req, 'POST');
+            const drop = sanitizeDrop(getBody(req).drop);
+            try {
+                await writeSetting('drop', drop);
+            } catch (e) {
+                throw new HttpError(400, e.message);
+            }
+            return res.status(200).json({ drop });
+        }
+
+        case 'waitlist': {
+            requireMethod(req, 'GET');
+            const { data, error } = await db.from('restock_requests').select('*').order('created_at', { ascending: false }).limit(1000);
+            if (error) throw missingTable(error, 'restock_requests');
+            const ids = [...new Set((data || []).map(r => r.product_id).filter(Boolean))];
+            let products = [];
+            if (ids.length) {
+                const pr = await db.from('products').select('id, name, brand, price, sizes, status, images').in('id', ids);
+                if (pr.error) throw pr.error;
+                products = pr.data || [];
+            }
+            return res.status(200).json({ requests: data || [], products, emailReady: !!(process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) });
+        }
+
+        case 'waitlistNotify': {
+            requireMethod(req, 'POST');
+            const ids = cleanIds(getBody(req).ids);
+            const { data, error } = await db.from('restock_requests').select('*').in('id', ids);
+            if (error) throw missingTable(error, 'restock_requests');
+            const productIds = [...new Set((data || []).map(r => r.product_id).filter(Boolean))];
+            const pr = productIds.length
+                ? await db.from('products').select('id, name, brand, price, sizes, status, images').in('id', productIds)
+                : { data: [] };
+            if (pr.error) throw pr.error;
+            const result = await notifyRestock(data || [], new Map((pr.data || []).map(p => [p.id, p])), siteUrl(req));
+            if (result.sent.length) {
+                const { error: upError } = await db.from('restock_requests')
+                    .update({ status: 'Notified', notified_at: new Date().toISOString() }).in('id', result.sent);
+                if (upError) throw upError;
+            }
+            if (!result.sent.length && result.error) throw new HttpError(400, result.error);
+            return res.status(200).json({ sent: result.sent.length, failed: result.failed.length, skipped: result.skipped.length, error: result.error });
+        }
+
+        case 'waitlistMark': {
+            requireMethod(req, 'POST');
+            const body = getBody(req);
+            const ids = cleanIds(body.ids);
+            const status = body.status === 'Waiting' ? 'Waiting' : 'Notified';
+            const { error } = await db.from('restock_requests')
+                .update({ status, notified_at: status === 'Notified' ? new Date().toISOString() : null }).in('id', ids);
+            if (error) {
+                if (error.code === '23505') throw new HttpError(400, 'This customer is already waiting for that size.');
+                throw missingTable(error, 'restock_requests');
+            }
+            return res.status(200).json({ ok: true });
+        }
+
+        case 'waitlistDelete': {
+            requireMethod(req, 'POST');
+            const ids = cleanIds(getBody(req).ids);
+            const { error } = await db.from('restock_requests').delete().in('id', ids);
+            if (error) throw missingTable(error, 'restock_requests');
+            return res.status(200).json({ ok: true });
+        }
 
         case 'messages': {
             requireMethod(req, 'GET');

@@ -61,7 +61,7 @@ async function telegramCall(method, payload) {
     return data.result;
 }
 
-async function readSetting(key) {
+export async function readSetting(key) {
     try {
         const { data } = await getDb().from('shop_settings').select('value').eq('key', key).maybeSingle();
         return data?.value || null;
@@ -70,7 +70,7 @@ async function readSetting(key) {
     }
 }
 
-async function writeSetting(key, value) {
+export async function writeSetting(key, value) {
     const { error } = await getDb().from('shop_settings').upsert({ key, value, updated_at: new Date().toISOString() });
     if (error) {
         if (/shop_settings/.test(error.message || '')) {
@@ -374,4 +374,52 @@ export async function sendTestAlert(site, adminEmail) {
         });
     } catch (e) { out.email = 'error: ' + e.message; }
     return out;
+}
+
+// "Your size is back" emails for the waiting list. Returns { sent, failed, skipped, error }.
+export async function notifyRestock(requests, productsById, site) {
+    if (!emailReady()) {
+        return { sent: [], failed: [], skipped: requests.map(r => r.id), error: 'Gmail is not set up yet (admin → Order Alerts).' };
+    }
+    const sent = [], failed = [], skipped = [];
+    let error = null;
+    for (const r of requests) {
+        if (!r.email) { skipped.push(r.id); continue; }
+        const p = productsById.get(r.product_id);
+        const link = r.product_id ? `${site}/shoe/${r.product_id}` : `${site}/index.html#shop`;
+        const available = p && p.status === 'Active' && (p.sizes || []).includes(r.size);
+        const first = String(r.name || '').trim().split(/\s+/)[0] || 'there';
+        const image = p?.images?.[0];
+        const card = `
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 6px;border:1px solid #eee;border-radius:10px">
+                <tr>
+                    <td style="padding:12px;width:84px">${image ? `<img src="${esc(image)}" width="72" height="72" style="border-radius:8px;object-fit:cover;display:block" alt="">` : ''}</td>
+                    <td style="padding:12px 12px 12px 0;font-size:14px;color:#111"><strong>${esc(r.product_name)}</strong><br>
+                        <span style="color:#777;font-size:12px">${esc(r.brand || '')} • Size US ${esc(r.size)}</span>
+                        ${p ? `<br><strong style="font-size:15px">${pkr(p.price)}</strong>` : ''}</td>
+                </tr>
+            </table>`;
+        try {
+            await sendEmail({
+                to: r.email,
+                subject: available ? `Size ${r.size} is here: ${r.product_name} 👟` : `Update on your size ${r.size} request — ${r.product_name}`,
+                html: emailLayout({
+                    heading: available ? `Good news, your size is here!` : `New pairs just landed`,
+                    intro: available
+                        ? `Hi ${esc(first)}, you asked us to tell you when <strong>size ${esc(r.size)}</strong> arrives. It's in stock right now. Every pair is one of a kind, so grab it before someone else does.`
+                        : `Hi ${esc(first)}, you asked about <strong>size ${esc(r.size)}</strong>. We've just added new pairs that may interest you. Take a look.`,
+                    extra: card,
+                    button: { href: link, label: available ? 'Buy it now' : 'See the shoes' },
+                    site
+                }),
+                text: `Hi ${first}, size ${r.size} of ${r.product_name} ${available ? 'is in stock now' : 'update'}: ${link}`
+            });
+            sent.push(r.id);
+        } catch (e) {
+            console.error('[notify:restock]', e.message);
+            error = e.message;
+            failed.push(r.id);
+        }
+    }
+    return { sent, failed, skipped, error };
 }

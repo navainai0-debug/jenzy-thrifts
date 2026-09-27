@@ -1,6 +1,7 @@
 {
   "rewrites": [
-    { "source": "/shoe/:id", "destination": "/api/shoe?id=:id" }
+    { "source": "/shoe/:id", "destination": "/api/shoe?id=:id" },
+    { "source": "/assets/img/:img", "destination": "/api/shoe?img=:img" }
   ],
   "functions": {
     "api/shoe.js": { "includeFiles": "product.html" }

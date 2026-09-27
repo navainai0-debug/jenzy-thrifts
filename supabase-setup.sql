@@ -108,6 +108,60 @@ create table if not exists public.shop_settings (
 );
 alter table public.shop_settings enable row level security;
 revoke all on public.shop_settings from anon, authenticated;
+-- The website may read ONLY the public "drop" countdown row (never the Telegram settings)
+grant select on public.shop_settings to anon, authenticated;
+drop policy if exists "Public can read public settings" on public.shop_settings;
+create policy "Public can read public settings"
+  on public.shop_settings for select
+  to anon, authenticated
+  using (key in ('drop'));
+
+
+-- Coupon codes — created and removed in the admin panel (Promotions).
+create table if not exists public.coupons (
+  code text primary key check (code ~ '^[A-Z0-9_-]{3,20}$'),
+  percent integer not null check (percent between 1 and 90),
+  active boolean not null default true,
+  show_banner boolean not null default false,   -- show "Use code …" in the website's top bar
+  min_order integer not null default 0 check (min_order >= 0),
+  max_uses integer check (max_uses is null or max_uses > 0),
+  used_count integer not null default 0,
+  expires_at timestamptz,
+  created_at timestamptz not null default now()
+);
+alter table public.coupons enable row level security;
+revoke all on public.coupons from anon, authenticated;
+-- The website can only see the ONE code you choose to advertise in the top bar
+grant select (code, percent, min_order, expires_at) on public.coupons to anon, authenticated;
+drop policy if exists "Public can see banner coupons" on public.coupons;
+create policy "Public can see banner coupons"
+  on public.coupons for select
+  to anon, authenticated
+  using (active and show_banner
+         and (expires_at is null or expires_at > now())
+         and (max_uses is null or used_count < max_uses));
+
+
+-- "Notify me when my size arrives" requests (private — admin panel only)
+create table if not exists public.restock_requests (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  product_id uuid references public.products(id) on delete set null,
+  product_name text not null,
+  brand text,
+  size text not null,
+  user_uid text not null,
+  email text,
+  name text,
+  phone text,
+  status text not null default 'Waiting' check (status in ('Waiting', 'Notified')),
+  notified_at timestamptz
+);
+create unique index if not exists restock_requests_one_per_user
+  on public.restock_requests (user_uid, product_id, size) where status = 'Waiting';
+create index if not exists restock_requests_created_idx on public.restock_requests (created_at desc);
+alter table public.restock_requests enable row level security;   -- no policies = no browser access
+revoke all on public.restock_requests from anon, authenticated;
 
 
 -- ---------------------------------------------------------------------
@@ -172,9 +226,27 @@ declare
   v_after integer;
   v_fee integer;
   v_order public.orders;
+  v_coupon public.coupons%rowtype;
+  v_code text := upper(nullif(trim(coalesce(p_coupon, '')), ''));
+  v_pct integer := 0;
 begin
   if p_items is null or jsonb_typeof(p_items) <> 'array' or jsonb_array_length(p_items) = 0 then
     raise exception 'EMPTY_CART';
+  end if;
+
+  -- Coupon: must exist, be switched on, not expired and not used up
+  if v_code is not null then
+    select * into v_coupon from public.coupons where code = v_code for update;
+    if not found or not v_coupon.active then
+      raise exception 'COUPON:Coupon "%" is not valid.', v_code;
+    end if;
+    if v_coupon.expires_at is not null and v_coupon.expires_at <= now() then
+      raise exception 'COUPON:Coupon "%" has expired.', v_code;
+    end if;
+    if v_coupon.max_uses is not null and v_coupon.used_count >= v_coupon.max_uses then
+      raise exception 'COUPON:Coupon "%" has been fully used.', v_code;
+    end if;
+    v_pct := v_coupon.percent;
   end if;
 
   for v_item in select * from jsonb_array_elements(p_items)
@@ -213,7 +285,14 @@ begin
     v_subtotal := v_subtotal + v_product.price;
   end loop;
 
-  v_discount := (v_subtotal * greatest(least(coalesce(p_discount_percent, 0), 100), 0)) / 100;
+  if v_code is not null then
+    if v_subtotal < v_coupon.min_order then
+      raise exception 'COUPON:Coupon "%" needs an order of at least PKR %.', v_code, v_coupon.min_order;
+    end if;
+    update public.coupons set used_count = used_count + 1 where code = v_code;
+  end if;
+
+  v_discount := (v_subtotal * greatest(least(v_pct, 100), 0)) / 100;
   v_after := v_subtotal - v_discount;
   v_fee := case when v_after >= coalesce(p_free_delivery_min, 0) then 0 else greatest(coalesce(p_delivery_fee, 0), 0) end;
 
@@ -222,7 +301,7 @@ begin
     items, subtotal, discount, coupon, delivery_fee, total, status, status_history
   ) values (
     p_user_uid, p_user_email, p_customer_name, p_phone, p_address, p_city, nullif(p_notes, ''),
-    v_items, v_subtotal, v_discount, nullif(p_coupon, ''), v_fee, v_after + v_fee, 'Pending',
+    v_items, v_subtotal, v_discount, v_code, v_fee, v_after + v_fee, 'Pending',
     jsonb_build_array(jsonb_build_object('status', 'Pending', 'at', now(), 'by', 'customer'))
   )
   returning * into v_order;
@@ -276,6 +355,10 @@ begin
              updated_at = now()
        where id = (v_item->>'product_id')::uuid;
     end loop;
+    -- …and gives the coupon use back
+    if v_order.coupon is not null then
+      update public.coupons set used_count = greatest(used_count - 1, 0) where code = v_order.coupon;
+    end if;
   end if;
 
   update public.orders

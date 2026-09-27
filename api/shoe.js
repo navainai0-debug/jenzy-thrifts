@@ -101,6 +101,19 @@ export default async function handler(req, res) {
     const url = new URL(req.url, origin);
     const id = (req.query && req.query.id) || url.searchParams.get('id') || '';
 
+    // Pictures: /assets/img/<name> is rewritten here when the image file itself
+    // was not uploaded (vercel.json). Cached for a year at the edge.
+    const img = (req.query && req.query.img) || url.searchParams.get('img');
+    if (img) {
+        const { IMAGES } = await import('./_lib/images.js');
+        const file = Object.prototype.hasOwnProperty.call(IMAGES, img) ? IMAGES[img] : null;
+        if (!file) { res.statusCode = 404; return res.end('Not found'); }
+        res.statusCode = 200;
+        res.setHeader('Content-Type', file.type);
+        res.setHeader('Cache-Control', 'public, max-age=604800, s-maxage=31536000, immutable');
+        return res.end(Buffer.from(file.data, 'base64'));
+    }
+
     let html;
     try {
         html = await loadTemplate(origin);

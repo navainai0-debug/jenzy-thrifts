@@ -11,9 +11,10 @@ import {
     shopConfig, computeTotals, couponPercent, validateItems, validateCustomer,
     isUuid, orderErrorMessage
 } from './_lib/shop.js';
+import { notifyNewOrder, notifyCustomerCancelled, siteUrl, trackingLink } from './_lib/notify.js';
 
 const PUBLIC_ORDER_FIELDS =
-    'id, order_no, created_at, updated_at, customer_name, phone, address, city, notes, payment_method, items, subtotal, discount, coupon, delivery_fee, total, status, status_history';
+    'id, order_no, created_at, updated_at, customer_name, phone, address, city, notes, payment_method, items, subtotal, discount, coupon, delivery_fee, total, status, status_history, courier, tracking_no, tracking_url';
 
 async function quote(body) {
     const cfg = shopConfig();
@@ -114,6 +115,8 @@ export default route(async (req, res) => {
             throw error;
         }
         const order = Array.isArray(data) ? data[0] : data;
+        // Telegram / email alerts (never block or break the order)
+        await notifyNewOrder({ ...order, user_email: order.user_email || user.email || null }, siteUrl(req));
         return res.status(201).json({
             order: { id: order.id, order_no: order.order_no, total: order.total, status: order.status }
         });
@@ -129,7 +132,8 @@ export default route(async (req, res) => {
             .order('created_at', { ascending: false })
             .limit(50);
         if (error) throw error;
-        return res.status(200).json({ orders: data || [] });
+        const orders = (data || []).map(o => ({ ...o, tracking_link: trackingLink(o) }));
+        return res.status(200).json({ orders });
     }
 
     if (action === 'cancel') {
@@ -153,6 +157,7 @@ export default route(async (req, res) => {
         });
         if (rpcError) throw rpcError;
         const row = Array.isArray(updated) ? updated[0] : updated;
+        await notifyCustomerCancelled(row, siteUrl(req));
         return res.status(200).json({ order: { id: row.id, status: row.status } });
     }
 

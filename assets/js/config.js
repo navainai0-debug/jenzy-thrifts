@@ -25,6 +25,6 @@ window.JENZY_CONFIG = {
         email: "info@jenzythrifts.com",
         instagram: "https://www.instagram.com/jenzythrift/",   // leave empty "" to hide
         city: "Pakistan",
-        announcement: "Free delivery on orders above PKR 5,000  •  Use code JENZY20 for 20% off  •  100% authentic branded shoes"
+        announcement: "Free delivery on orders above PKR 5,000  •  100% authentic branded shoes  •  Cash on delivery across Pakistan"
     }
 };

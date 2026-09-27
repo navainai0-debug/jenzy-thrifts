@@ -256,6 +256,36 @@
         .toast strong { display: block; font-size: 14px; }
         .toast span { font-size: 12.5px; color: var(--text-3); }
 
+        /* Promotions + waiting list */
+        .coupon-form { display: grid; grid-template-columns: 1.2fr .8fr 1fr .8fr 1fr; gap: 14px 14px; align-items: end; }
+        .coupon-form .full { grid-column: 1 / -1; }
+        .coupon-form #cCode { text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+        .check { display: flex; align-items: center; gap: 10px; font-size: 13.5px; color: var(--text-2); cursor: pointer; user-select: none; }
+        .check input { width: 18px; height: 18px; accent-color: var(--accent); flex-shrink: 0; }
+        .code-chip { font-family: ui-monospace, Menlo, Consolas, monospace; font-weight: 700; letter-spacing: 1px; padding: 4px 10px; border-radius: 8px; background: var(--bg); border: 1px dashed var(--border-2); color: var(--text); }
+        .st-Off, .st-Expired, .st-Used { background: rgba(124,124,134,.12); color: var(--text-2); border-color: var(--border-2); }
+        .st-Waiting { background: rgba(255,214,10,.1); color: var(--yellow); border-color: rgba(255,214,10,.3); }
+        .st-Notified { background: rgba(57,255,20,.1); color: var(--accent); border-color: rgba(57,255,20,.3); }
+        .row-actions { display: flex; gap: 6px; justify-content: flex-end; }
+        .btn-xs { padding: 6px 10px; font-size: 12px; border-radius: 8px; }
+        .banner-on { color: var(--accent); font-weight: 600; font-size: 12.5px; display: inline-flex; gap: 6px; align-items: center; }
+        .form-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+        .wl-group { border: 1px solid var(--border); border-radius: 12px; background: var(--bg); overflow: hidden; }
+        .wl-group + .wl-group { margin-top: 12px; }
+        .wl-head { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+        .wl-head img { width: 52px; height: 52px; border-radius: 10px; object-fit: cover; background: var(--surface-2); flex-shrink: 0; }
+        .wl-head .wl-title { flex: 1; min-width: 160px; }
+        .wl-head h5 { font-size: 14px; font-weight: 600; }
+        .wl-head p { font-size: 12.5px; color: var(--text-3); }
+        .wl-size { font-family: var(--font-display, inherit); font-weight: 800; font-size: 15px; padding: 6px 12px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--border-2); white-space: nowrap; }
+        .instock { color: var(--accent); font-size: 12px; font-weight: 600; }
+        .notstock { color: var(--text-3); font-size: 12px; }
+        .wl-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px; font-size: 13.5px; flex-wrap: wrap; }
+        .wl-row + .wl-row { border-top: 1px solid var(--border); }
+        .wl-row .who { flex: 1; min-width: 180px; }
+        .wl-row .who small { display: block; color: var(--text-3); font-size: 12px; }
+        .wl-row a { color: var(--accent-2); }
+
         @media (max-width: 1200px) { .stats { grid-template-columns: repeat(2, 1fr); } .grid-2 { grid-template-columns: 1fr; } }
         @media (max-width: 900px) {
             .sidebar { transform: translateX(-100%); }
@@ -274,8 +304,14 @@
             .modal-card.sm { border-radius: 18px; margin: auto 16px; }
             .toast { left: 16px; right: 16px; top: 12px; min-width: 0; }
         }
+        @media (max-width: 900px) {
+            .coupon-form { grid-template-columns: 1fr 1fr; }
+            .coupon-form > div:first-child { grid-column: 1 / -1; }
+        }
         @media (max-width: 520px) {
             .ship-grid { grid-template-columns: 1fr; }
+            .wl-head .btn { width: 100%; }
+            .wl-row .row-actions { width: 100%; justify-content: flex-start; }
             .stats { grid-template-columns: 1fr 1fr; gap: 10px; }
             .stat { padding: 14px; }
             .stat-value { font-size: 19px; }
@@ -323,11 +359,13 @@
             <a href="#dashboard" data-view="dashboard"><i class="fas fa-chart-line"></i>Dashboard</a>
             <div class="sec">Sales</div>
             <a href="#orders" data-view="orders"><i class="fas fa-receipt"></i>Orders<span class="nav-badge zero" id="badgePending">0</span></a>
+            <a href="#promotions" data-view="promotions"><i class="fas fa-tags"></i>Promotions</a>
             <div class="sec">Catalog</div>
             <a href="#products" data-view="products"><i class="fas fa-shoe-prints"></i>Products<span class="nav-badge zero" id="badgeProducts" style="background:var(--surface-2);color:var(--text-2)">0</span></a>
             <a href="#add" data-view="add"><i class="fas fa-circle-plus"></i>Add Product</a>
             <div class="sec">Customers</div>
             <a href="#messages" data-view="messages"><i class="fas fa-envelope"></i>Messages<span class="nav-badge zero" id="badgeMessages">0</span></a>
+            <a href="#waitlist" data-view="waitlist"><i class="fas fa-user-clock"></i>Waiting list<span class="nav-badge zero" id="badgeWaitlist">0</span></a>
             <div class="sec">Settings</div>
             <a href="#alerts" data-view="alerts"><i class="fas fa-bell"></i>Order Alerts</a>
         </nav>
@@ -453,6 +491,55 @@
                 </div>
             </section>
 
+            <!-- PROMOTIONS -->
+            <section class="view" id="view-promotions">
+                <div class="panel">
+                    <div class="panel-head"><h3><i class="fas fa-ticket"></i> Coupon codes</h3><span class="muted" id="couponCount" style="font-size:13px"></span></div>
+                    <div class="panel-body">
+                        <p class="alert-lead">Customers type the code at checkout to get the discount. Only the codes listed here work. Turn a code off or delete it at any time.</p>
+                        <div class="alert" id="couponAlert"></div>
+                        <form id="couponForm" class="coupon-form" novalidate>
+                            <div><label class="lbl" for="cCode">Code <span class="req">*</span></label><input class="input" id="cCode" maxlength="20" placeholder="EID15" autocomplete="off" autocapitalize="characters" spellcheck="false"></div>
+                            <div><label class="lbl" for="cPercent">% off <span class="req">*</span></label><input class="input" id="cPercent" type="number" min="1" max="90" step="1" inputmode="numeric" placeholder="15"></div>
+                            <div><label class="lbl" for="cMin">Min. order (PKR)</label><input class="input" id="cMin" type="number" min="0" step="1" inputmode="numeric" placeholder="Optional"></div>
+                            <div><label class="lbl" for="cMax">Max uses</label><input class="input" id="cMax" type="number" min="1" step="1" inputmode="numeric" placeholder="Unlimited"></div>
+                            <div><label class="lbl" for="cExpires">Last day</label><input class="input" id="cExpires" type="date"></div>
+                            <label class="check full"><input type="checkbox" id="cBanner"> Show this code in the website's top bar (e.g. "Use code EID15 for 15% off")</label>
+                            <div class="full"><button class="btn btn-primary" id="cSave" type="submit"><i class="fas fa-plus"></i> Create coupon</button></div>
+                        </form>
+                    </div>
+                    <div class="table-wrap"><table class="tbl"><thead><tr><th>Code</th><th>Discount</th><th>Rules</th><th>Used</th><th>Top bar</th><th>Status</th><th style="text-align:right">Actions</th></tr></thead><tbody id="couponsTable"></tbody></table></div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-head"><h3><i class="fas fa-hourglass-half"></i> Drop countdown</h3><span id="dropState"></span></div>
+                    <div class="panel-body">
+                        <p class="alert-lead">Shows a live countdown on the home page, e.g. <strong>"New drop ⏳ Friday 9:00 PM"</strong>. Post it on Instagram to build hype. When the time comes it changes to <strong>"The drop is live"</strong> for 48 hours, then hides itself.</p>
+                        <div class="alert" id="dropAlert"></div>
+                        <div class="form-grid">
+                            <div><label class="lbl" for="dTitle">Title</label><input class="input" id="dTitle" maxlength="60" placeholder="New drop"></div>
+                            <div><label class="lbl" for="dAt">Date &amp; time</label><input class="input" id="dAt" type="datetime-local"></div>
+                            <div class="full"><label class="lbl" for="dNote">Short note (optional)</label><input class="input" id="dNote" maxlength="140" placeholder="e.g. 12 fresh pairs: Jordans, Dunks & Sambas"></div>
+                            <label class="check full"><input type="checkbox" id="dActive"> Show the countdown on the home page</label>
+                            <div class="full form-actions"><button class="btn btn-primary" id="dSave" type="button"><i class="fas fa-floppy-disk"></i> Save countdown</button><span class="muted" id="dPreview" style="font-size:13px"></span></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- WAITING LIST -->
+            <section class="view" id="view-waitlist">
+                <p class="alert-lead">Real buyers waiting for a size. When you add that size to the shoe, press <strong>Email them</strong>: each customer gets an email with a link to buy it. You can also message them on WhatsApp.</p>
+                <div class="panel">
+                    <div class="tabs" id="waitTabs"></div>
+                    <div class="toolbar" style="margin-top:14px">
+                        <span class="muted" id="waitSummary" style="font-size:13px"></span>
+                        <button class="btn btn-outline btn-sm" id="refreshWait" style="margin-left:auto"><i class="fas fa-rotate"></i> Refresh</button>
+                    </div>
+                    <div id="waitList" style="padding:16px 20px 20px"></div>
+                </div>
+            </section>
+
             <!-- MESSAGES -->
             <section class="view" id="view-messages">
                 <div class="panel">
@@ -498,7 +585,7 @@
     const COURIER_NAMES = ['TCS', 'Leopards', 'PostEx', 'Trax', 'M&P', 'Call Courier', 'BlueEx', 'Pakistan Post', 'Other'];
     const STATUS_COLORS = { Pending: 'var(--yellow)', Confirmed: 'var(--accent-2)', Shipped: 'var(--purple)', Delivered: 'var(--accent)', Cancelled: 'var(--danger)' };
     const DEFAULT_SIZES = ['5', '6', '6.5', '7', '7.5', '8', '8.5', '9', '9.5', '10', '10.5', '11', '12', '13'];
-    const VIEW_TITLES = { dashboard: 'Dashboard', orders: 'Orders', products: 'Products', add: 'Add Product', messages: 'Messages', alerts: 'Order Alerts' };
+    const VIEW_TITLES = { dashboard: 'Dashboard', orders: 'Orders', promotions: 'Promotions', products: 'Products', add: 'Add Product', messages: 'Messages', waitlist: 'Waiting list', alerts: 'Order Alerts' };
 
     const $ = (id) => document.getElementById(id);
     const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -678,6 +765,8 @@
         if (view === 'messages') loadMessages();
         if (view === 'dashboard') loadDashboard();
         if (view === 'alerts') loadAlerts();
+        if (view === 'promotions') { loadCoupons(); loadDrop(); }
+        if (view === 'waitlist') loadWaitlist();
     }
     window.addEventListener('hashchange', route);
     const closeSidebar = () => { $('sidebar').classList.remove('open'); $('scrim').classList.remove('show'); };
@@ -722,6 +811,7 @@
         setBadge('badgePending', s.pendingOrders);
         setBadge('badgeMessages', s.unreadMessages);
         setBadge('badgeProducts', s.totalProducts);
+        setBadge('badgeWaitlist', s.waitingRequests || 0);
         document.title = (s.pendingOrders ? `(${s.pendingOrders}) ` : '') + 'Admin | JENZY THRIFTS';
         renderDashboard();
     }
@@ -1006,6 +1096,283 @@
         btn.disabled = false;
     });
 
+    // ---------- Promotions: coupon codes ----------
+    let coupons = [];
+    const shortDate = (d) => new Date(d).toLocaleDateString('en-PK', { day: 'numeric', month: 'short', year: 'numeric' });
+    function couponStatus(c) {
+        if (!c.active) return 'Off';
+        if (c.expires_at && new Date(c.expires_at) <= new Date()) return 'Expired';
+        if (c.max_uses && c.used_count >= c.max_uses) return 'Used';
+        return 'Active';
+    }
+    async function loadCoupons() {
+        try {
+            coupons = (await api('coupons')).coupons;
+            $('couponAlert').className = 'alert';
+            renderCoupons();
+        } catch (e) {
+            $('couponAlert').textContent = e.message;
+            $('couponAlert').className = 'alert show';
+            $('couponsTable').innerHTML = '';
+        }
+    }
+    function renderCoupons() {
+        const live = coupons.filter(c => couponStatus(c) === 'Active').length;
+        $('couponCount').textContent = coupons.length ? `${live} active • ${coupons.length} total` : '';
+        if (!coupons.length) {
+            $('couponsTable').innerHTML = `<tr><td colspan="7"><div class="empty"><i class="fas fa-ticket"></i>No coupon codes yet. Create one above. Until then, no discount codes work at checkout.</div></td></tr>`;
+            return;
+        }
+        $('couponsTable').innerHTML = coupons.map(c => {
+            const st = couponStatus(c);
+            const rules = [
+                c.min_order ? `Min ${pkr(c.min_order)}` : '',
+                c.expires_at ? `Until ${shortDate(new Date(new Date(c.expires_at) - 1))}` : '',
+                c.max_uses ? `Max ${c.max_uses} uses` : ''
+            ].filter(Boolean).join(' • ') || '<span class="muted">No limits</span>';
+            return `<tr>
+                <td><span class="code-chip">${esc(c.code)}</span></td>
+                <td class="price">${c.percent}% off</td>
+                <td style="white-space:normal;min-width:160px;font-size:13px">${rules}</td>
+                <td>${c.used_count}${c.max_uses ? ' / ' + c.max_uses : ''}</td>
+                <td>${c.show_banner ? '<span class="banner-on"><i class="fas fa-bullhorn"></i> Showing</span>' : `<button class="btn btn-outline btn-xs" data-cbanner="${esc(c.code)}" ${st === 'Active' ? '' : 'disabled'}>Show</button>`}</td>
+                <td><span class="pill st-${st}">${st === 'Used' ? 'Used up' : st}</span></td>
+                <td><div class="row-actions">
+                    ${c.show_banner ? `<button class="btn btn-outline btn-xs" data-cunbanner="${esc(c.code)}" title="Remove from the top bar"><i class="fas fa-bullhorn"></i> Hide</button>` : ''}
+                    <button class="btn btn-outline btn-xs" data-ctoggle="${esc(c.code)}">${c.active ? '<i class="fas fa-pause"></i> Turn off' : '<i class="fas fa-play"></i> Turn on'}</button>
+                    <button class="btn btn-danger btn-xs" data-cdelete="${esc(c.code)}" aria-label="Delete ${esc(c.code)}"><i class="fas fa-trash"></i></button>
+                </div></td>
+            </tr>`;
+        }).join('');
+    }
+    async function updateCoupon(code, changes, message) {
+        const c = coupons.find(x => x.code === code);
+        if (!c) return;
+        try {
+            await api('saveCoupon', { method: 'POST', body: { coupon: { ...c, ...changes }, isNew: false } });
+            toast(message, code);
+            loadCoupons();
+        } catch (e) {
+            toast('Could not update coupon', e.message, 'error');
+        }
+    }
+    $('couponsTable').addEventListener('click', e => {
+        const b = e.target.closest('button');
+        if (!b) return;
+        if (b.dataset.ctoggle) {
+            const c = coupons.find(x => x.code === b.dataset.ctoggle);
+            updateCoupon(c.code, { active: !c.active, show_banner: c.active ? false : c.show_banner }, c.active ? 'Coupon turned off' : 'Coupon turned on');
+        }
+        if (b.dataset.cbanner) updateCoupon(b.dataset.cbanner, { show_banner: true }, 'Now showing in the top bar');
+        if (b.dataset.cunbanner) updateCoupon(b.dataset.cunbanner, { show_banner: false }, 'Removed from the top bar');
+        if (b.dataset.cdelete) {
+            const code = b.dataset.cdelete;
+            askConfirm(`Delete ${code}?`, `Customers will no longer be able to use ${code}. Orders that already used it keep their discount.`, 'Delete coupon', async () => {
+                await api('deleteCoupon', { method: 'POST', body: { code } });
+                toast('Coupon deleted', code);
+                loadCoupons();
+            });
+        }
+    });
+    $('cCode').addEventListener('input', e => {
+        const pos = e.target.selectionStart;
+        e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, '');
+        try { e.target.setSelectionRange(pos, pos); } catch { /* number inputs */ }
+    });
+    $('couponForm').addEventListener('submit', async e => {
+        e.preventDefault();
+        const alertBox = $('couponAlert');
+        alertBox.className = 'alert';
+        const code = $('cCode').value.trim().toUpperCase();
+        const percent = parseInt($('cPercent').value, 10);
+        if (!/^[A-Z0-9_-]{3,20}$/.test(code)) { alertBox.textContent = 'Code must be 3–20 letters or numbers, e.g. EID15.'; alertBox.className = 'alert show'; return; }
+        if (!(percent >= 1 && percent <= 90)) { alertBox.textContent = 'Discount must be between 1% and 90%.'; alertBox.className = 'alert show'; return; }
+        // "Last day" = the code works until the end of that day (Pakistan time on your device)
+        const exp = $('cExpires').value ? new Date($('cExpires').value + 'T23:59:59') : null;
+        if (exp && exp < new Date()) { alertBox.textContent = 'The last day is already in the past.'; alertBox.className = 'alert show'; return; }
+        const btn = $('cSave');
+        btn.disabled = true;
+        try {
+            await api('saveCoupon', { method: 'POST', body: { isNew: true, coupon: {
+                code, percent,
+                min_order: $('cMin').value || 0,
+                max_uses: $('cMax').value || null,
+                expires_at: exp ? new Date(exp.getTime() + 1000).toISOString() : null,
+                active: true,
+                show_banner: $('cBanner').checked
+            } } });
+            toast('Coupon created', `${code} — ${percent}% off`);
+            $('couponForm').reset();
+            loadCoupons();
+        } catch (err) {
+            alertBox.textContent = err.message;
+            alertBox.className = 'alert show';
+        } finally {
+            btn.disabled = false;
+        }
+    });
+
+    // ---------- Promotions: drop countdown ----------
+    const toLocalInput = (iso) => {
+        if (!iso) return '';
+        const d = new Date(iso);
+        const pad = (n) => String(n).padStart(2, '0');
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    };
+    function dropPreview() {
+        const v = $('dAt').value;
+        if (!v) { $('dPreview').textContent = ''; return; }
+        const at = new Date(v);
+        const left = at - Date.now();
+        const when = at.toLocaleString('en-PK', { weekday: 'long', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
+        if (left <= 0) { $('dPreview').textContent = `${when} (already passed — shows "live" for 48 hours)`; return; }
+        const d = Math.floor(left / 86400000), h = Math.floor(left / 3600000) % 24;
+        $('dPreview').textContent = `${when} • in ${d ? d + 'd ' : ''}${h}h`;
+    }
+    function renderDropState(drop) {
+        const on = drop.active && drop.at && (new Date(drop.at) - Date.now() > -48 * 3600000);
+        $('dropState').innerHTML = on ? state(true, new Date(drop.at) > new Date() ? 'Counting down' : 'Live now') : state(false, 'Hidden');
+    }
+    async function loadDrop() {
+        try {
+            const { drop } = await api('drop');
+            $('dTitle').value = drop.title || '';
+            $('dAt').value = toLocalInput(drop.at);
+            $('dNote').value = drop.note || '';
+            $('dActive').checked = !!drop.active;
+            renderDropState(drop);
+            dropPreview();
+        } catch (e) {
+            $('dropAlert').textContent = e.message;
+            $('dropAlert').className = 'alert show';
+        }
+    }
+    $('dAt').addEventListener('input', dropPreview);
+    $('dSave').addEventListener('click', async () => {
+        const alertBox = $('dropAlert');
+        alertBox.className = 'alert';
+        if ($('dActive').checked && !$('dAt').value) { alertBox.textContent = 'Pick the date and time of the drop.'; alertBox.className = 'alert show'; return; }
+        const btn = $('dSave');
+        btn.disabled = true;
+        try {
+            const { drop } = await api('saveDrop', { method: 'POST', body: { drop: {
+                title: $('dTitle').value.trim(),
+                note: $('dNote').value.trim(),
+                at: $('dAt').value ? new Date($('dAt').value).toISOString() : null,
+                active: $('dActive').checked
+            } } });
+            renderDropState(drop);
+            toast(drop.active ? 'Countdown is on the home page' : 'Countdown hidden', drop.active ? new Date(drop.at).toLocaleString('en-PK', { weekday: 'short', hour: 'numeric', minute: '2-digit' }) : '');
+        } catch (e) {
+            alertBox.textContent = e.message;
+            alertBox.className = 'alert show';
+        } finally {
+            btn.disabled = false;
+        }
+    });
+
+    // ---------- Waiting list ("notify me when my size arrives") ----------
+    let waitData = { requests: [], products: [] };
+    let waitFilter = 'Waiting';
+    async function loadWaitlist() {
+        if (!waitData.loaded) $('waitList').innerHTML = '<div class="empty"><div class="spinner" style="margin:0 auto"></div></div>';
+        try {
+            waitData = { ...(await api('waitlist')), loaded: true };
+            renderWaitlist();
+        } catch (e) {
+            $('waitList').innerHTML = `<div class="alert show">${esc(e.message)}</div>`;
+        }
+    }
+    function renderWaitlist() {
+        const reqs = waitData.requests;
+        const counts = { Waiting: reqs.filter(r => r.status === 'Waiting').length, Notified: reqs.filter(r => r.status === 'Notified').length, All: reqs.length };
+        setBadge('badgeWaitlist', counts.Waiting);
+        $('waitTabs').innerHTML = ['Waiting', 'Notified', 'All'].map(t => `<button class="tab ${waitFilter === t ? 'active' : ''}" data-wtab="${t}">${t}<span class="c">${counts[t]}</span></button>`).join('');
+        const list = reqs.filter(r => waitFilter === 'All' || r.status === waitFilter);
+        const byId = new Map(waitData.products.map(p => [p.id, p]));
+        // Group by shoe + size
+        const groups = new Map();
+        list.forEach(r => {
+            const key = (r.product_id || r.product_name) + '|' + r.size;
+            if (!groups.has(key)) groups.set(key, { product: byId.get(r.product_id), r, items: [] });
+            groups.get(key).items.push(r);
+        });
+        const inStock = (g) => !!(g.product && g.product.status === 'Active' && (g.product.sizes || []).includes(g.r.size));
+        const sorted = [...groups.values()].sort((a, b) => inStock(b) - inStock(a) || b.items.length - a.items.length);
+        $('waitSummary').textContent = list.length ? `${list.length} ${list.length === 1 ? 'request' : 'requests'} • ${sorted.filter(inStock).length} with the size in stock now` : '';
+        if (!waitData.emailReady && counts.Waiting) {
+            $('waitSummary').innerHTML += ' • <span style="color:var(--yellow)">Set up Gmail (Order Alerts) to email customers</span>';
+        }
+        if (!sorted.length) {
+            $('waitList').innerHTML = `<div class="empty"><i class="fas fa-user-clock"></i>${waitFilter === 'Waiting' ? 'Nobody is waiting right now. When a customer taps "Notify me" on a shoe, they appear here.' : 'Nothing here yet.'}</div>`;
+            return;
+        }
+        $('waitList').innerHTML = sorted.map(g => {
+            const p = g.product;
+            const waiting = g.items.filter(r => r.status === 'Waiting');
+            const img = p?.images?.[0];
+            return `<div class="wl-group">
+                <div class="wl-head">
+                    ${img ? `<img src="${esc(img)}" alt="">` : '<img alt="">'}
+                    <div class="wl-title">
+                        <h5>${esc(g.r.product_name)}</h5>
+                        <p>${esc(g.r.brand || '')}${p ? ' • ' + pkr(p.price) : ' • shoe deleted'}${p && p.status !== 'Active' ? ' • ' + esc(p.status) : ''}</p>
+                        ${inStock(g) ? '<span class="instock"><i class="fas fa-circle-check"></i> This size is in stock now</span>' : '<span class="notstock">Size not in stock yet. Add it to the shoe, then email them</span>'}
+                    </div>
+                    <span class="wl-size">US ${esc(g.r.size)}</span>
+                    ${waiting.length ? `<button class="btn ${inStock(g) ? 'btn-primary' : 'btn-outline'} btn-sm" data-wemail="${esc(waiting.map(r => r.id).join(','))}"><i class="fas fa-envelope"></i> Email ${waiting.length === 1 ? 'them' : 'all ' + waiting.length}</button>` : ''}
+                </div>
+                ${g.items.map(r => {
+                    const wa = r.phone ? String(r.phone).replace(/\D/g, '').replace(/^0/, '92') : '';
+                    const waText = encodeURIComponent(`Hi ${String(r.name || '').split(' ')[0] || ''}! Good news from JENZY THRIFTS: ${r.product_name} is available in size US ${r.size}. ${r.product_id ? location.origin + '/shoe/' + r.product_id : ''}`);
+                    return `<div class="wl-row">
+                        <div class="who"><strong>${esc(r.name || 'Customer')}</strong>
+                            <small>${esc(r.email || 'no email')}${r.phone ? ' • ' + esc(r.phone) : ''} • asked ${fmtDate(r.created_at)}${r.notified_at && r.status === 'Notified' ? ' • told ' + fmtDate(r.notified_at) : ''}</small></div>
+                        ${pill(r.status)}
+                        <div class="row-actions">
+                            ${wa ? `<a class="btn btn-outline btn-xs" href="https://wa.me/${wa}?text=${waText}" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> WhatsApp</a>` : ''}
+                            ${r.status === 'Waiting'
+                                ? `<button class="btn btn-outline btn-xs" data-wmark="${esc(r.id)}" title="Mark as told"><i class="fas fa-check"></i> Done</button>`
+                                : `<button class="btn btn-outline btn-xs" data-wunmark="${esc(r.id)}" title="Move back to waiting"><i class="fas fa-rotate-left"></i></button>`}
+                            <button class="btn btn-danger btn-xs" data-wdelete="${esc(r.id)}" aria-label="Delete request"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>`;
+                }).join('')}
+            </div>`;
+        }).join('');
+    }
+    $('waitTabs').addEventListener('click', e => {
+        const t = e.target.closest('[data-wtab]');
+        if (t) { waitFilter = t.dataset.wtab; renderWaitlist(); }
+    });
+    $('refreshWait').addEventListener('click', loadWaitlist);
+    $('waitList').addEventListener('click', async e => {
+        const b = e.target.closest('button');
+        if (!b) return;
+        try {
+            if (b.dataset.wemail) {
+                const ids = b.dataset.wemail.split(',');
+                b.disabled = true;
+                b.innerHTML = '<span class="spinner" style="width:14px;height:14px;border-width:2px"></span> Sending…';
+                const r = await api('waitlistNotify', { method: 'POST', body: { ids } });
+                toast(`Emailed ${r.sent} ${r.sent === 1 ? 'customer' : 'customers'}`, [r.skipped ? `${r.skipped} had no email` : '', r.failed ? `${r.failed} failed: ${r.error}` : ''].filter(Boolean).join(' • '), r.failed && !r.sent ? 'error' : 'ok');
+            } else if (b.dataset.wmark || b.dataset.wunmark) {
+                await api('waitlistMark', { method: 'POST', body: { ids: [b.dataset.wmark || b.dataset.wunmark], status: b.dataset.wmark ? 'Notified' : 'Waiting' } });
+            } else if (b.dataset.wdelete) {
+                const id = b.dataset.wdelete;
+                return askConfirm('Delete this request?', 'The customer will not be notified about this size.', 'Delete', async () => {
+                    await api('waitlistDelete', { method: 'POST', body: { ids: [id] } });
+                    toast('Request deleted');
+                    loadWaitlist();
+                });
+            } else return;
+            loadWaitlist();
+        } catch (err) {
+            toast('Something went wrong', err.message, 'error');
+            loadWaitlist();
+        }
+    });
+
     // ---------- Products ----------
     let productsLoaded = false;
     async function loadProducts(silent) {
@@ -1050,11 +1417,39 @@
     let deleteId = null;
     function askDelete(id) {
         const p = products.find(x => x.id === id);
+        pendingConfirm = null;
+        $('confirmOk').innerHTML = '<i class="fas fa-trash"></i> Delete';
         deleteId = id;
         $('confirmTitle').textContent = 'Delete product?';
         $('confirmText').textContent = `"${p ? p.name : ''}" and its photos will be permanently removed. Existing orders keep their details.`;
         $('confirmModal').classList.add('open');
     }
+    // Generic "Are you sure?" window (coupons, waiting list)
+    let pendingConfirm = null;
+    function askConfirm(title, text, okLabel, action) {
+        deleteId = null;
+        pendingConfirm = action;
+        $('confirmTitle').textContent = title;
+        $('confirmText').textContent = text;
+        $('confirmOk').innerHTML = `<i class="fas fa-trash"></i> ${esc(okLabel)}`;
+        $('confirmModal').classList.add('open');
+    }
+    $('confirmOk').addEventListener('click', async () => {
+        if (!pendingConfirm) return;
+        const action = pendingConfirm;
+        const btn = $('confirmOk');
+        btn.disabled = true;
+        try {
+            await action();
+            $('confirmModal').classList.remove('open');
+        } catch (e) {
+            toast('Something went wrong', e.message, 'error');
+        } finally {
+            btn.disabled = false;
+            pendingConfirm = null;
+            btn.innerHTML = '<i class="fas fa-trash"></i> Delete';
+        }
+    });
     $('confirmOk').addEventListener('click', async () => {
         if (!deleteId) return;
         const btn = $('confirmOk');

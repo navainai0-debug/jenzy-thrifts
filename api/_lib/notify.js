@@ -131,7 +131,7 @@ export async function connectTelegram() {
 // ---------------------------------------------------------------------
 const gmailUser = () => (process.env.GMAIL_USER || '').trim();
 const gmailPass = () => (process.env.GMAIL_APP_PASSWORD || '').replace(/\s+/g, '');
-const emailReady = () => !!(gmailUser() && gmailPass());
+export const emailReady = () => !!(gmailUser() && gmailPass());
 
 function ownerEmails() {
     const list = (process.env.NOTIFY_EMAIL || process.env.ADMIN_EMAILS || '')
@@ -175,6 +175,15 @@ function itemsText(order) {
     return (order.items || []).map(i => `• ${i.name}${i.brand ? ' (' + i.brand + ')' : ''} — US ${i.size} — ${pkr(i.price)}`).join('\n');
 }
 
+// "Coupon ABC", "Buy 2+ deal", "Invite code ALIKH123", "Invite credit"
+export function discountName(order) {
+    const t = order?.discount_type || (order?.coupon ? 'coupon' : null);
+    if (t === 'bundle') return 'Bundle deal';
+    if (t === 'referral') return `Invite code ${order.coupon || ''}`.trim();
+    if (t === 'credit') return 'Invite credit';
+    return order?.coupon ? `Coupon ${order.coupon}` : 'Discount';
+}
+
 function telegramNewOrder(order, site) {
     const lines = [
         `🛍️ <b>New order ${orderNo(order.order_no)}</b>`,
@@ -186,7 +195,7 @@ function telegramNewOrder(order, site) {
         '',
         esc(itemsText(order))
     ];
-    if (order.discount) lines.push(`🏷️ Coupon ${esc(order.coupon || '')}: −${pkr(order.discount)}`);
+    if (order.discount) lines.push(`🏷️ ${esc(discountName(order))}: −${pkr(order.discount)}`);
     lines.push(`🚚 Delivery: ${order.delivery_fee ? pkr(order.delivery_fee) : 'Free'}`);
     if (order.notes) lines.push('', `📝 ${esc(order.notes)}`);
     lines.push('', `<a href="${esc(site)}/admin.html#orders">Open admin panel</a>`);
@@ -203,7 +212,7 @@ function emailLayout({ heading, intro, order, extra = '', button, site }) {
     const totals = order ? `
         <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px;font-size:14px;color:#444">
             <tr><td style="padding:3px 0">Subtotal</td><td align="right">${pkr(order.subtotal)}</td></tr>
-            ${order.discount ? `<tr><td style="padding:3px 0">Discount${order.coupon ? ' (' + esc(order.coupon) + ')' : ''}</td><td align="right">− ${pkr(order.discount)}</td></tr>` : ''}
+            ${order.discount ? `<tr><td style="padding:3px 0">Discount (${esc(discountName(order))})</td><td align="right">− ${pkr(order.discount)}</td></tr>` : ''}
             <tr><td style="padding:3px 0">Delivery</td><td align="right">${order.delivery_fee ? pkr(order.delivery_fee) : 'Free'}</td></tr>
             <tr><td style="padding:8px 0 0;font-size:16px;color:#111"><strong>Total (Cash on Delivery)</strong></td><td align="right" style="padding-top:8px;font-size:16px;color:#111"><strong>${pkr(order.total)}</strong></td></tr>
         </table>
@@ -262,7 +271,7 @@ function firstName(o) {
     return String(o.customer_name || 'there').trim().split(/\s+/)[0];
 }
 
-const customerEmailsOn = () => (process.env.CUSTOMER_EMAILS || 'on').toLowerCase() !== 'off';
+export const customerEmailsOn = () => (process.env.CUSTOMER_EMAILS || 'on').toLowerCase() !== 'off';
 
 // ---------------------------------------------------------------------
 // Public events (always resolve — never throw)
@@ -422,4 +431,100 @@ export async function notifyRestock(requests, productsById, site) {
         }
     }
     return { sent, failed, skipped, error };
+}
+
+// ---------------------------------------------------------------------
+// Short alerts to the owner (new review, new "sell us your sneakers" request)
+// ---------------------------------------------------------------------
+export function notifyOwner({ telegram, subject, heading, intro, site, link }) {
+    return settle([
+        () => telegramSend(telegram + (link ? `\n\n<a href="${esc(link)}">Open admin panel</a>` : '')),
+        () => sendEmail({
+            to: ownerEmails(), subject,
+            html: emailLayout({ heading: esc(heading), intro, site, button: link ? { href: link, label: 'Open admin panel' } : null }),
+            text: `${heading}\n${String(intro).replace(/<[^>]+>/g, '')}${link ? '\n' + link : ''}`
+        })
+    ], 'owner');
+}
+
+function shoeCard(p, { price, oldPrice } = {}) {
+    const image = p.thumbs?.[0] || p.images?.[0];
+    return `
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 8px;border:1px solid #eee;border-radius:10px">
+            <tr>
+                <td style="padding:12px;width:84px">${image ? `<img src="${esc(image)}" width="72" height="72" style="border-radius:8px;object-fit:cover;display:block" alt="">` : ''}</td>
+                <td style="padding:12px 12px 12px 0;font-size:14px;color:#111"><strong>${esc(p.name)}</strong><br>
+                    <span style="color:#777;font-size:12px">${esc(p.brand || '')}${p.size ? ' • Size US ' + esc(p.size) : ''}</span><br>
+                    ${oldPrice ? `<span style="color:#999;text-decoration:line-through;font-size:13px">${pkr(oldPrice)}</span> ` : ''}<strong style="font-size:15px;color:${oldPrice ? '#15803d' : '#111'}">${pkr(price ?? p.price)}</strong></td>
+            </tr>
+        </table>`;
+}
+
+const firstOf = (name) => String(name || '').trim().split(/\s+/)[0] || 'there';
+
+// "The shoe on your wishlist is now cheaper" — rows: [{user_uid, email, name}]
+export async function emailPriceDrop(rows, product, oldPrice, site) {
+    const sent = [], failed = [];
+    let error = null;
+    if (!emailReady()) return { sent, failed, error: 'Gmail is not set up yet (admin → Order Alerts).' };
+    const link = `${site}/shoe/${product.id}`;
+    const saved = oldPrice - product.price;
+    for (const r of rows) {
+        if (!r.email) continue;
+        try {
+            await sendEmail({
+                to: r.email,
+                subject: `Price drop 🔻 ${product.name} is now ${pkr(product.price)}`,
+                html: emailLayout({
+                    heading: 'A shoe on your wishlist just got cheaper',
+                    intro: `Hi ${esc(firstOf(r.name))}, good news: <strong>${esc(product.name)}</strong> dropped by <strong>${pkr(saved)}</strong>. Every pair is one of a kind, so it won't wait long.`,
+                    extra: shoeCard(product, { price: product.price, oldPrice }),
+                    button: { href: link, label: 'Buy it now' },
+                    site
+                }),
+                text: `${product.name} is now ${pkr(product.price)} (was ${pkr(oldPrice)}): ${link}`
+            });
+            sent.push(r.user_uid);
+        } catch (e) {
+            console.error('[notify:price-drop]', e.message);
+            error = e.message;
+            failed.push(r.user_uid);
+        }
+    }
+    return { sent, failed, error };
+}
+
+// "You left something in your cart" — items: [{...product, size}]
+export async function emailCartReminder(cart, items, site) {
+    if (!emailReady()) throw new Error('Gmail is not set up yet (admin → Order Alerts).');
+    const total = items.reduce((s, p) => s + (p.price || 0), 0);
+    await sendEmail({
+        to: cart.email,
+        subject: items.length > 1 ? `Your ${items.length} pairs are still waiting 👟` : `Still thinking about the ${items[0].name}? 👟`,
+        html: emailLayout({
+            heading: 'You left something in your cart',
+            intro: `Hi ${esc(firstOf(cart.name))}, the ${items.length > 1 ? 'shoes' : 'shoe'} you picked ${items.length > 1 ? 'are' : 'is'} still available, but every pair is one of a kind and someone else could buy ${items.length > 1 ? 'them' : 'it'} first. Cash on delivery, no advance payment.`,
+            extra: items.map(p => shoeCard(p)).join('') + `<p style="font-size:14px;color:#444;margin:10px 0 0">Total: <strong>${pkr(total)}</strong></p>`,
+            button: { href: `${site}/checkout.html`, label: 'Finish my order' },
+            site
+        }),
+        text: `Hi ${firstOf(cart.name)}, your cart is still waiting: ${items.map(p => p.name + ' (US ' + p.size + ')').join(', ')}. Finish your order: ${site}/checkout.html`
+    });
+}
+
+// Our offer for a "sell us your sneakers" request
+export async function emailSellOffer(req, site) {
+    if (!emailReady()) throw new Error('Gmail is not set up yet (admin → Order Alerts).');
+    if (!req.email) throw new Error('This customer has no email address.');
+    await sendEmail({
+        to: req.email,
+        subject: `Our offer for your ${req.brand} ${req.model}: ${pkr(req.offer_price)}`,
+        html: emailLayout({
+            heading: `We'd like to buy your ${esc(req.brand)} ${esc(req.model)}`,
+            intro: `Hi ${esc(firstOf(req.name))}, thanks for sending us your pair (size ${esc(req.size)}). Our offer is <strong style="font-size:17px">${pkr(req.offer_price)}</strong>.${req.offer_note ? `<br><br>${esc(req.offer_note)}` : ''}<br><br>Open your requests page to accept or decline. We'll then contact you about pickup and payment.`,
+            button: { href: `${site}/sell.html`, label: 'Accept or decline' },
+            site
+        }),
+        text: `Our offer for your ${req.brand} ${req.model}: ${pkr(req.offer_price)}. Accept or decline at ${site}/sell.html`
+    });
 }

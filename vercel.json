@@ -1,7 +1,13 @@
 {
   "rewrites": [
     { "source": "/shoe/:id", "destination": "/api/shoe?id=:id" },
-    { "source": "/assets/img/:img", "destination": "/api/shoe?img=:img" }
+    { "source": "/assets/img/:img", "destination": "/api/shoe?img=:img" },
+    { "source": "/admin", "destination": "/admin.html" },
+    { "source": "/orders", "destination": "/orders.html" },
+    { "source": "/wishlist", "destination": "/wishlist.html" },
+    { "source": "/checkout", "destination": "/checkout.html" },
+    { "source": "/sell", "destination": "/sell.html" },
+    { "source": "/product", "destination": "/product.html" }
   ],
   "functions": {
     "api/shoe.js": { "includeFiles": "product.html" }

@@ -2,6 +2,8 @@
   "rewrites": [
     { "source": "/shoe/:id", "destination": "/api/shoe?id=:id" },
     { "source": "/assets/img/:img", "destination": "/api/shoe?img=:img" },
+    { "source": "/sitemap.xml", "destination": "/api/sitemap" },
+    { "source": "/:file(google[a-zA-Z0-9]+\\.html)", "destination": "/api/sitemap?gsv=:file" },
     { "source": "/admin", "destination": "/admin.html" },
     { "source": "/orders", "destination": "/orders.html" },
     { "source": "/wishlist", "destination": "/wishlist.html" },

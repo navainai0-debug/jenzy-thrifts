@@ -26,3 +26,9 @@ export function getDb() {
 }
 
 export const BUCKET = 'product-images';
+
+// "https://…/product-images/shoes/123.jpg" -> "shoes/123.jpg" (only our own folders)
+export function storagePath(url) {
+    const m = String(url || '').match(new RegExp(`/${BUCKET}/((?:shoes|reviews|sell)/[^?#]+)`));
+    return m ? decodeURIComponent(m[1]) : null;
+}

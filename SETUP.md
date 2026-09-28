@@ -2,7 +2,7 @@
 
 The website has two parts:
 
-- **Store pages:** `index.html`, `product.html`, `checkout.html`, `orders.html` and `wishlist.html`.
+- **Store pages:** `index.html`, `product.html`, `checkout.html`, `orders.html`, `wishlist.html` and `sell.html`.
 - **Secure server:** the `api/` folder. Vercel runs it automatically.
 
 Orders are saved in your Supabase database. The server checks prices and stock, so nobody can change a price or buy a pair that is already sold.
@@ -25,7 +25,7 @@ The admin panel is at **https://jenzy-thrifts.vercel.app/admin.html**. It is **n
 1. In Supabase, open **SQL Editor → New query**.
 2. Paste the whole content of `supabase-setup.sql` and click **Run**.
 
-This is safe to run again, and **you must run it again after this update**: it adds the coupon codes, the "notify me" waiting list, the tracking-number columns and the settings table. It creates or updates:
+This is safe to run again, and **you must run it again after this update** (reviews, sell requests, invite codes, visitor stats, small photos and the fit label all need it). It creates or updates:
 
 - the orders table,
 - the stock-safe order function,
@@ -35,7 +35,9 @@ This is safe to run again, and **you must run it again after this update**: it a
 - courier and tracking-number columns on orders,
 - a private settings table (remembers your Telegram chat and the drop countdown),
 - the **coupons** table (discount codes you create in admin → Promotions),
-- the **restock_requests** table (customers waiting for a size).
+- the **restock_requests** table (customers waiting for a size),
+- **reviews**, **sell_requests**, **referral codes and credits**, saved **wishlists and carts** (for price-drop and cart emails), **page_views** (visitor stats),
+- the `thumbs` (small photos) and `fit` columns on products.
 
 ## 3. Add the secret keys in Vercel
 
@@ -58,6 +60,7 @@ Then go to **Deployments**, click **⋯** on the latest deployment and choose **
 | `FREE_DELIVERY_MIN` | `5000` | Orders at or above this amount (after discount) get free delivery |
 | `MAX_PENDING_ORDERS` | `5` | The most pending orders one customer can have at a time |
 | `SHOP_TIMEZONE` | `Asia/Karachi` | The time zone used for "today" in the dashboard |
+| `CRON_SECRET` | *(none)* | Any long random text, e.g. `jenzy-8f3k2q9x7w`. Protects the daily cart-reminder job so only Vercel can start it. Recommended. |
 
 ## 4. Firebase settings
 
@@ -157,12 +160,47 @@ On a sold-out shoe, or when their size is missing, customers can tap **Notify me
 
 These work by themselves, with nothing to set up:
 
-- **Wishlist:** the heart on every shoe saves it. Saved shoes are on `wishlist.html` (heart icon in the header). The list is kept on the customer's phone or computer.
+- **Wishlist:** the heart on every shoe saves it. Saved shoes are on `wishlist.html` (heart icon in the header). For logged-in customers it is also saved to your database, so they can get price-drop emails (step 12).
 - **Recently viewed:** the home page and product pages show the last shoes the customer opened.
 - **Filters:** price, condition and brand chips above the shoes.
 - **Brand pages:** links like `https://jenzy-thrifts.vercel.app/?brand=Nike#shop` show only that brand. Tap a brand name on any product page, or share the link on Instagram.
 - **Photo zoom:** on a computer, hovering over the photo magnifies it. Clicking (or tapping on a phone) opens full screen, with swipe and tap-to-zoom.
 - **WhatsApp help button:** the green button at the bottom corner opens a chat with your number from `config.js`. On a product page the message already names the shoe.
+
+## 12. Batch 2 features
+
+### Size guide and fit
+On a product page, **Size guide** opens a US / UK / EU / cm chart. Customers type their foot length in cm and it tells them their size and whether this shoe has it. In admin → Add product, set **Fit** (True to size / Runs small / Runs large); the page shows it and the size finder adjusts for it.
+
+### Small, fast photos
+Every new photo you upload also gets a small 480px version, used in the shop grid. This makes the shop much faster on mobile data and saves your Supabase bandwidth (5 GB/month free). For shoes added **before** this update, open **Products** and press **Optimize old photos** once.
+
+### Deals (admin → Promotions)
+- **Bundle deal:** buy 2 or more pairs, get 10% off. You can change the numbers or switch it off.
+- **Invite friends:** every logged-in customer gets an invite code on **My Orders**. Their friend gets 10% off the first order; when that order is **Delivered**, the customer gets PKR 300 credit, used automatically on their next order.
+- **Discounts never add up.** Each order gets only the biggest one: coupon, bundle, invite code or credit.
+
+### Reviews (admin → Reviews)
+Customers can rate an order (stars, text and up to 3 photos) once it is **Delivered**. Reviews show on the website only after you press **Approve**.
+
+### Sell your sneakers (admin → Sell requests)
+`sell.html` (linked in the menu and footer) lets customers send you 2–5 photos of shoes they want to sell. Type your offer and press **Send offer**: they get an email (if Gmail is set up) and can accept or decline on the Sell page. Then message them on WhatsApp to arrange pickup, and press **Mark as bought**.
+
+### Automatic emails (admin → Order Alerts), need Gmail from step 6
+- **Price drop:** when you lower a shoe's price, logged-in customers who saved it get one email.
+- **Cart reminder:** once a day (about 4 PM) customers who left shoes in their cart for a day get one reminder, only if the shoes are still available. It runs by itself through `vercel.json`. Set `CRON_SECRET` (step 3) to protect it, then Redeploy. **Send cart reminders now** runs it by hand.
+
+Both can be switched off in admin → Order Alerts.
+
+### Invoices, labels and courier export (admin → Orders)
+- Open an order and press **Print invoice** (A5) or **Print label** (100×150 mm, fits courier label stickers).
+- Tick orders (or leave all unticked to use the list you see) and press **Print labels** to print them all, or **Courier CSV** to download a file for PostEx, Leopards or TCS bulk booking. Match the columns once in the courier's upload page. If you open the file in Excel, set the phone column to *Text* so the leading 0 stays.
+
+### Instagram stories (admin → Products)
+Press the Instagram button on any shoe. It makes a 1080×1920 story picture with the photo, price and sizes. Download (or Share on a phone), post it, and add a **Link sticker** with the copied shoe link. Visits from these links show as Instagram in **Visitors**.
+
+### Visitors (admin → Visitors)
+Counts visitors, page views, where they came from (Instagram, WhatsApp, Google…), phone or computer, the most viewed shoes, and how many visitors ordered. It is anonymous and your own visits on the device you use for admin are not counted.
 
 ---
 
@@ -193,5 +231,7 @@ Every number on the dashboard (revenue, orders, customers and so on) is calculat
 | "Gmail refused the login" | Create a new App Password (step 6) and check `GMAIL_USER` is the same account, then redeploy |
 | "Run the latest supabase-setup.sql…" in Promotions or Waiting list | Do step 2 again |
 | Customers see "Size alerts are not switched on yet" | Do step 2 again |
+| "Run the latest supabase-setup.sql…" in Reviews, Sell requests, Visitors or Promotions | Do step 2 again |
+| Cart reminders never arrive | Check Gmail (step 6) is set up and cart reminders are on in Order Alerts. Vercel → your project → **Settings → Cron Jobs** shows the daily job. |
 | Shoe links (`/shoe/…`) show "404" | Make sure `vercel.json` and `api/shoe.js` were uploaded |
 | Google login fails inside Instagram or TikTok | Open the site in Chrome or Safari (tap ⋮ → Open in browser) |

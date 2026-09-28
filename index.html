@@ -93,6 +93,7 @@
                 <span class="eyebrow">Shop</span>
                 <h2 class="section-title" id="shopTitle">Latest <span class="grad">Arrivals</span></h2>
                 <p class="section-sub">Every pair is one of a kind. When it's gone, it's gone.</p>
+                <div class="deal-pill" id="dealPill" hidden></div>
             </div>
 
             <div class="brand-chips" id="brandChips" hidden aria-label="Shop by brand"></div>
@@ -166,6 +167,19 @@
         </div>
     </section>
 
+    <!-- CUSTOMER REVIEWS (only reviews you approve in the admin panel) -->
+    <section class="section section-alt reviews-section" id="reviews" hidden>
+        <div class="container">
+            <div class="section-head">
+                <span class="eyebrow">Verified buyers</span>
+                <h2 class="section-title">What our <span class="grad">customers say</span></h2>
+                <p class="section-sub" id="reviewSummary"></p>
+            </div>
+            <div class="review-grid" id="reviewGrid"></div>
+            <div class="review-more"><button class="btn btn-outline btn-sm" id="reviewMore" hidden>Show more reviews</button></div>
+        </div>
+    </section>
+
     <!-- HOW TO ORDER -->
     <section class="section section-alt" id="how">
         <div class="container">
@@ -178,6 +192,20 @@
                 <div class="step"><span class="step-no">STEP 02</span><h4>Log in</h4><p>Log in with your Google account in one tap — no passwords to remember.</p></div>
                 <div class="step"><span class="step-no">STEP 03</span><h4>Place your order</h4><p>Enter your delivery address and confirm. Your order number appears instantly.</p></div>
                 <div class="step"><span class="step-no">STEP 04</span><h4>Pay on delivery</h4><p>We confirm and ship your order. Track it in My Orders and pay cash on arrival.</p></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SELL TO US -->
+    <section class="section sell-cta-section">
+        <div class="container">
+            <div class="sell-cta">
+                <div class="sell-cta-icon"><i class="fas fa-hand-holding-dollar"></i></div>
+                <div class="sell-cta-text">
+                    <h3>Got sneakers you don't wear anymore?</h3>
+                    <p>Sell them to us. Send a few photos, we reply with a cash offer, and we arrange pickup. Original branded shoes only.</p>
+                </div>
+                <a href="sell.html" class="btn btn-primary btn-lg"><i class="fas fa-camera"></i> Sell your sneakers</a>
             </div>
         </div>
     </section>
@@ -423,6 +451,45 @@
 
     // ---------- Drop countdown (admin → Promotions) ----------
     let dropTimer = null;
+    // ---------- Customer reviews ----------
+    let reviews = [];
+    let reviewsShown = 6;
+    const reviewDate = (d) => new Date(d).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' });
+    function renderReviews() {
+        if (!reviews.length) { $('reviews').hidden = true; return; }
+        const avg = reviews.reduce((s, r) => s + r.rating, 0) / reviews.length;
+        $('reviewSummary').innerHTML = `<span class="stars">${Store.stars(avg)}</span> <strong>${avg.toFixed(1)} out of 5</strong> from ${reviews.length} verified buyer${reviews.length > 1 ? 's' : ''}`;
+        $('reviewGrid').innerHTML = reviews.slice(0, reviewsShown).map(r => `
+            <article class="review-card">
+                <div class="rc-top"><span class="stars">${Store.stars(r.rating)}</span><span class="rc-date">${esc(reviewDate(r.created_at))}</span></div>
+                ${r.text ? `<p class="rc-text">${esc(r.text)}</p>` : ''}
+                ${(r.images || []).length ? `<div class="rc-photos">${r.images.slice(0, 3).map(u => `<a href="${esc(u)}" target="_blank" rel="noopener"><img src="${esc(u)}" alt="Customer photo" loading="lazy"></a>`).join('')}</div>` : ''}
+                <div class="rc-who">
+                    <span class="rc-avatar">${esc((r.name || '?').charAt(0).toUpperCase())}</span>
+                    <div><strong>${esc(r.name)}</strong>${r.city ? `<span>${esc(r.city)}</span>` : ''}</div>
+                    <span class="rc-verified"><i class="fas fa-circle-check"></i> Verified buyer</span>
+                </div>
+                ${r.product_names ? `<div class="rc-product"><i class="fas fa-shoe-prints"></i> ${esc(r.product_names)}</div>` : ''}
+            </article>`).join('');
+        $('reviewMore').hidden = reviews.length <= reviewsShown;
+        $('reviews').hidden = false;
+    }
+    $('reviewMore').addEventListener('click', () => { reviewsShown += 6; renderReviews(); });
+    (async () => {
+        const { data, error } = await db.from('reviews').select('id, created_at, name, city, rating, text, images, product_names')
+            .eq('status', 'Approved').order('created_at', { ascending: false }).limit(60);
+        if (error) return;   // reviews table not created yet
+        reviews = data || [];
+        renderReviews();
+    })();
+
+    // ---------- Bundle deal pill ----------
+    Store.offers().then(o => {
+        if (!o.bundle.active) return;
+        $('dealPill').innerHTML = `<i class="fas fa-tags"></i> Buy ${o.bundle.min}+ pairs, get <strong>${o.bundle.percent}% off</strong>`;
+        $('dealPill').hidden = false;
+    });
+
     async function loadDrop() {
         const { data, error } = await db.from('shop_settings').select('value').eq('key', 'drop').maybeSingle();
         const drop = !error && data && data.value;
@@ -526,5 +593,3 @@
 </script>
 </body>
 </html>
-
-

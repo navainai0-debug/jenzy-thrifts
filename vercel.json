@@ -5,5 +5,8 @@
   ],
   "functions": {
     "api/shoe.js": { "includeFiles": "product.html" }
-  }
+  },
+  "crons": [
+    { "path": "/api/cron", "schedule": "0 11 * * *" }
+  ]
 }

@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0a0a0b">
+    <title>Sell your sneakers | JENZY THRIFTS</title>
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/img/icon-192.png">
+    <link rel="apple-touch-icon" href="assets/img/icon-180.png">
+    <meta name="description" content="Sell your original sneakers to JENZY THRIFTS. Send photos, get a cash offer, we arrange pickup.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/store.css">
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="assets/js/config.js"></script>
+</head>
+<body data-page="sell">
+
+<main class="container" style="padding-bottom:88px;min-height:60vh">
+    <div class="page-head">
+        <h1>Sell your sneakers</h1>
+        <p>Got original sneakers you don't wear anymore? Send us photos and get a cash offer.</p>
+    </div>
+
+    <div class="sell-steps">
+        <div class="sell-step"><span>1</span><div><strong>Send photos</strong><small>Sides, sole, inside label</small></div></div>
+        <div class="sell-step"><span>2</span><div><strong>Get our offer</strong><small>Usually within 24 hours</small></div></div>
+        <div class="sell-step"><span>3</span><div><strong>Get paid</strong><small>We arrange pickup and pay you</small></div></div>
+    </div>
+
+    <div id="sellGate" class="gate" hidden>
+        <div class="gate-icon"><i class="fas fa-user-lock"></i></div>
+        <h2>Log in to sell your shoes</h2>
+        <p>We send our offer to your email and show it on this page.</p>
+        <button class="btn btn-primary btn-lg" id="sellLogin"><i class="fa-regular fa-user"></i> Login</button>
+    </div>
+
+    <div class="sell-layout" id="sellLayout" hidden>
+        <form class="card sell-form" id="sellForm" novalidate>
+            <h3><i class="fas fa-shoe-prints"></i> About your shoes</h3>
+            <div class="form-grid">
+                <div class="field">
+                    <label for="sBrand">Brand <span class="req">*</span></label>
+                    <select class="select" id="sBrand" required>
+                        <option value="">Choose brand</option>
+                        <option>Nike</option><option>Jordan</option><option>Adidas</option><option>New Balance</option>
+                        <option>Puma</option><option>Asics</option><option>Converse</option><option>Vans</option>
+                        <option>Reebok</option><option>Skechers</option><option>Under Armour</option><option>Other</option>
+                    </select>
+                </div>
+                <div class="field"><label for="sModel">Model <span class="req">*</span></label><input class="input" id="sModel" maxlength="80" placeholder="e.g. Air Force 1 Low" required></div>
+                <div class="field"><label for="sSize">Size (US) <span class="req">*</span></label><input class="input" id="sSize" maxlength="10" inputmode="decimal" placeholder="e.g. 9.5" required></div>
+                <div class="field">
+                    <label for="sCondition">Condition</label>
+                    <select class="select" id="sCondition">
+                        <option value="">Choose</option>
+                        <option>New with box</option><option>Like new</option><option>Good</option><option>Fair</option>
+                    </select>
+                </div>
+                <div class="field"><label for="sAsking">Your asking price (PKR)</label><input class="input" id="sAsking" type="number" min="0" step="100" inputmode="numeric" placeholder="Optional"></div>
+                <div class="field full"><label for="sNotes">Anything else?</label><textarea id="sNotes" maxlength="600" style="min-height:70px" placeholder="Optional: box included, where you bought them, any flaws"></textarea></div>
+            </div>
+
+            <h3 style="margin-top:22px"><i class="fas fa-camera"></i> Photos <span class="muted" style="font-size:13px;font-weight:500">(2 to 5)</span></h3>
+            <div class="sell-photos" id="sellPhotos">
+                <label class="rv-add sell-add" id="sellAdd"><input type="file" id="sellFile" accept="image/*" multiple hidden><i class="fas fa-plus"></i><span>Add photos</span></label>
+            </div>
+            <p class="field-hint">Clear photos of both sides, the sole and the size label inside. Good light helps us make a better offer.</p>
+
+            <h3 style="margin-top:22px"><i class="fas fa-user"></i> Your details</h3>
+            <div class="form-grid">
+                <div class="field"><label for="sName">Name <span class="req">*</span></label><input class="input" id="sName" autocomplete="name" maxlength="80" required></div>
+                <div class="field"><label for="sPhone">WhatsApp number <span class="req">*</span></label><input class="input" id="sPhone" type="tel" autocomplete="tel" placeholder="03001234567" maxlength="20" required></div>
+                <div class="field full"><label for="sCity">City</label><input class="input" id="sCity" autocomplete="address-level2" maxlength="60"></div>
+            </div>
+
+            <div class="alert" id="sellAlert" style="margin-top:16px"></div>
+            <button class="btn btn-primary btn-lg btn-block" id="sellBtn" type="submit" style="margin-top:16px"><i class="fas fa-paper-plane"></i> Send to JENZY</button>
+            <p class="secure-note"><i class="fas fa-shield-halved"></i> We only buy original shoes. No obligation: you can decline our offer.</p>
+        </form>
+
+        <aside class="sell-side">
+            <h3>Your requests</h3>
+            <div id="myRequests"><div class="loading-state" style="padding:30px"><i class="fas fa-spinner fa-spin"></i></div></div>
+        </aside>
+    </div>
+</main>
+
+<script src="assets/js/store.js"></script>
+<script>
+(function () {
+    const { esc, pkr, api } = Store;
+    const $ = (id) => document.getElementById(id);
+    const files = [];
+    let sending = false;
+    const STATUS_TEXT = {
+        New: 'We are checking your photos. You will get our offer by email.',
+        Offered: 'We sent you an offer. Accept or decline below.',
+        Accepted: 'You accepted our offer. We will contact you on WhatsApp to arrange pickup.',
+        Declined: 'You declined our offer.',
+        Rejected: 'Sorry, we can\'t buy this pair right now.',
+        Bought: 'Done! Thank you for selling to us.'
+    };
+
+    // ---------- Photos ----------
+    function renderPhotos() {
+        const wrap = $('sellPhotos');
+        wrap.querySelectorAll('.rv-prev').forEach(el => el.remove());
+        files.forEach((f, i) => {
+            wrap.insertAdjacentHTML('beforeend', `<span class="rv-prev sell-prev"><img src="${URL.createObjectURL(f)}" alt=""><button type="button" data-rm="${i}" aria-label="Remove photo">&times;</button></span>`);
+        });
+        wrap.querySelectorAll('[data-rm]').forEach(b => b.addEventListener('click', () => { files.splice(Number(b.dataset.rm), 1); renderPhotos(); }));
+        $('sellAdd').hidden = files.length >= 5;
+    }
+    $('sellFile').addEventListener('change', () => {
+        [...$('sellFile').files].forEach(f => { if (files.length < 5 && /^image\//.test(f.type)) files.push(f); });
+        $('sellFile').value = '';
+        renderPhotos();
+    });
+
+    // ---------- Submit ----------
+    function validate() {
+        if (!$('sBrand').value) return ['sBrand', 'Please choose the brand.'];
+        if ($('sModel').value.trim().length < 2) return ['sModel', 'Please write the model name, e.g. Air Force 1.'];
+        if (!$('sSize').value.trim()) return ['sSize', 'Please enter the size.'];
+        if (files.length < 2) return ['sellAdd', 'Please add at least 2 clear photos.'];
+        if ($('sName').value.trim().length < 2) return ['sName', 'Please enter your name.'];
+        const digits = $('sPhone').value.replace(/\D/g, '');
+        if (digits.length < 10 || digits.length > 15) return ['sPhone', 'Please enter a valid WhatsApp number, e.g. 03001234567.'];
+        return null;
+    }
+    $('sellForm').addEventListener('submit', async e => {
+        e.preventDefault();
+        if (sending) return;
+        const alertBox = $('sellAlert');
+        alertBox.className = 'alert';
+        const invalid = validate();
+        if (invalid) {
+            alertBox.textContent = invalid[1];
+            alertBox.className = 'alert show';
+            $(invalid[0]).scrollIntoView({ behavior: 'smooth', block: 'center' });
+            if ($(invalid[0]).focus) $(invalid[0]).focus({ preventScroll: true });
+            return;
+        }
+        sending = true;
+        const btn = $('sellBtn');
+        btn.disabled = true;
+        try {
+            const images = [];
+            for (let i = 0; i < files.length; i++) {
+                btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Uploading photo ${i + 1} of ${files.length}…`;
+                images.push(await Store.uploadPhoto('sell', files[i]));
+            }
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending…';
+            await api('/api/orders?action=sell', {
+                method: 'POST', auth: true,
+                body: {
+                    brand: $('sBrand').value, model: $('sModel').value.trim(), size: $('sSize').value.trim(),
+                    condition: $('sCondition').value, asking_price: $('sAsking').value, notes: $('sNotes').value.trim(),
+                    name: $('sName').value.trim(), phone: $('sPhone').value.trim(), city: $('sCity').value.trim(), images
+                }
+            });
+            try { localStorage.setItem('jenzySeller.' + Store.user.uid, JSON.stringify({ name: $('sName').value.trim(), phone: $('sPhone').value.trim(), city: $('sCity').value.trim() })); } catch { /* ignore */ }
+            ['sBrand', 'sModel', 'sSize', 'sCondition', 'sAsking', 'sNotes'].forEach(id => { $(id).value = ''; });
+            files.length = 0;
+            renderPhotos();
+            Store.toast('Sent! We will email you our offer.');
+            await loadRequests();
+            $('myRequests').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } catch (err) {
+            alertBox.textContent = err.message;
+            alertBox.className = 'alert show';
+        } finally {
+            sending = false;
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send to JENZY';
+        }
+    });
+
+    // ---------- My requests ----------
+    function requestCard(r) {
+        return `
+            <div class="sell-req">
+                <img src="${esc((r.images || [])[0] || Store.firstImage({}))}" alt="">
+                <div class="sr-body">
+                    <div class="sr-top"><strong>${esc(r.brand)} ${esc(r.model)}</strong><span class="status-pill sr-${esc(r.status)}">${esc(r.status === 'New' ? 'Checking' : r.status)}</span></div>
+                    <small>US ${esc(r.size)}${r.condition ? ' • ' + esc(r.condition) : ''}${r.asking_price ? ' • You asked ' + pkr(r.asking_price) : ''}</small>
+                    ${r.offer_price && r.status !== 'New' ? `<div class="sr-offer">Our offer: <strong>${pkr(r.offer_price)}</strong></div>` : ''}
+                    ${r.offer_note && r.status === 'Offered' ? `<p class="sr-note">${esc(r.offer_note)}</p>` : ''}
+                    <p class="sr-status">${esc(STATUS_TEXT[r.status] || '')}</p>
+                    ${r.status === 'Offered' ? `
+                        <div class="sr-actions">
+                            <button class="btn btn-primary btn-sm" data-accept="${esc(r.id)}"><i class="fas fa-check"></i> Accept offer</button>
+                            <button class="btn btn-outline btn-sm" data-decline="${esc(r.id)}">Decline</button>
+                        </div>` : ''}
+                </div>
+            </div>`;
+    }
+    async function loadRequests() {
+        try {
+            const { requests } = await api('/api/orders?action=sellMine', { auth: true });
+            $('myRequests').innerHTML = requests.length ? requests.map(requestCard).join('') : '<p class="muted sell-empty">No requests yet. Your requests and our offers will show here.</p>';
+            $('myRequests').querySelectorAll('[data-accept],[data-decline]').forEach(b => b.addEventListener('click', () => respond(b)));
+        } catch (e) {
+            $('myRequests').innerHTML = `<div class="alert show">${esc(e.message)}</div>`;
+        }
+    }
+    async function respond(btn) {
+        const accept = !!btn.dataset.accept;
+        if (!accept && !confirm('Decline our offer?')) return;
+        btn.disabled = true;
+        try {
+            await api('/api/orders?action=sellRespond', { method: 'POST', auth: true, body: { id: btn.dataset.accept || btn.dataset.decline, accept } });
+            Store.toast(accept ? 'Offer accepted! We will contact you on WhatsApp.' : 'Offer declined');
+            loadRequests();
+        } catch (e) {
+            Store.toast(e.message, 'error');
+            btn.disabled = false;
+        }
+    }
+
+    Store.onAuth(user => {
+        $('sellGate').hidden = !!user;
+        $('sellLayout').hidden = !user;
+        if (!user) return;
+        let saved = {};
+        try { saved = JSON.parse(localStorage.getItem('jenzySeller.' + user.uid)) || JSON.parse(localStorage.getItem('jenzyCheckout.' + user.uid)) || {}; } catch { saved = {}; }
+        const fill = (id, v) => { if (!$(id).value && v) $(id).value = v; };
+        fill('sName', saved.name || user.displayName);
+        fill('sPhone', saved.phone);
+        fill('sCity', saved.city);
+        loadRequests();
+    });
+    $('sellLogin').addEventListener('click', () => Store.requireLogin('Log in to sell your sneakers.').catch(() => {}));
+})();
+</script>
+</body>
+</html>

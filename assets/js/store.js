@@ -18,8 +18,16 @@
     const discountPct = (p) => (p.original_price && p.original_price > p.price) ? Math.round((1 - p.price / p.original_price) * 100) : 0;
     // Short, shareable product links (/shoe/<id>) — they show a photo preview on WhatsApp / Instagram
     const productUrl = (p) => '/shoe/' + encodeURIComponent(p.id || p);
-    const shareUrl = (p) => location.origin + productUrl(p);
+    // src = where the link is shared ('wa' = WhatsApp) — shows up in admin → Visitors
+    const shareUrl = (p, src) => location.origin + productUrl(p) + (src ? '?s=' + encodeURIComponent(src) : '');
     const firstImage = (p) => (p.images && p.images[0]) || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800';
+    // Small, fast photo for grids and lists (falls back to the full photo)
+    const thumb = (p, i = 0) => (p && p.thumbs && p.thumbs[i]) || (p && p.images && p.images[i]) || (i === 0 ? firstImage(p || {}) : '');
+    // ★★★★½ as icons
+    const stars = (n) => {
+        const v = Math.round((Number(n) || 0) * 2) / 2;
+        return [1, 2, 3, 4, 5].map(i => `<i class="${v >= i ? 'fas fa-star' : v >= i - 0.5 ? 'fas fa-star-half-stroke' : 'fa-regular fa-star'}"></i>`).join('');
+    };
     const sortSizes = (sizes) => [...(sizes || [])].sort((a, b) => (parseFloat(a) || 999) - (parseFloat(b) || 999));
     const qs = (name) => new URLSearchParams(location.search).get(name);
     async function copyText(text, okMessage = 'Link copied') {
@@ -71,6 +79,8 @@
         <a class="m-link" href="index.html?gender=Women#shop"><i class="fas fa-person-dress"></i>Women</a>
         <a class="m-link" href="wishlist.html"><i class="fas fa-heart"></i>Wishlist<span class="m-count" id="wishCountM"></span></a>
         <a class="m-link" href="orders.html"><i class="fas fa-box"></i>My Orders</a>
+        <a class="m-link" href="orders.html#invite"><i class="fas fa-gift"></i>Invite friends</a>
+        <a class="m-link" href="sell.html"><i class="fas fa-hand-holding-dollar"></i>Sell your sneakers</a>
         <a class="m-link" href="index.html#about"><i class="fas fa-circle-info"></i>About</a>
         <a class="m-link" href="index.html#contact"><i class="fas fa-envelope"></i>Contact</a>
     </aside>
@@ -118,6 +128,8 @@
                         <li><a href="index.html#shop">All Shoes</a></li>
                         <li><a href="index.html?gender=Men#shop">Men</a></li>
                         <li><a href="index.html?gender=Women#shop">Women</a></li>
+                        <li><a href="sell.html">Sell your sneakers</a></li>
+                        <li><a href="orders.html#invite">Invite friends</a></li>
                     </ul>
                 </div>
                 <div>
@@ -247,6 +259,8 @@
                 <div class="account-menu" id="accountMenu">
                     <div class="am-head"><strong>${esc(name)}</strong><span>${esc(currentUser.email || '')}</span></div>
                     <a href="orders.html"><i class="fas fa-box"></i>My Orders</a>
+                    <a href="orders.html#invite"><i class="fas fa-gift"></i>Invite friends</a>
+                    <a href="sell.html"><i class="fas fa-hand-holding-dollar"></i>Sell your sneakers</a>
                     <button id="logoutBtn"><i class="fas fa-arrow-right-from-bracket"></i>Log out</button>
                 </div>
             </div>`;
@@ -364,6 +378,26 @@
         localStorage.setItem(CART_KEY, JSON.stringify(cart));
         renderCartCount();
         cartListeners.forEach(fn => fn(cart));
+        scheduleCartSync();
+    }
+
+    // Logged-in customers: remember the cart on the server so we can send
+    // one friendly "you left something" email the next day.
+    const CART_SYNC_KEY = 'jenzyCartSync';
+    let cartSyncTimer = null;
+    const cartSignature = () => cart.map(i => i.id + '|' + i.size).sort().join(',');
+    function scheduleCartSync(delay = 3000) {
+        clearTimeout(cartSyncTimer);
+        cartSyncTimer = setTimeout(syncCart, delay);
+    }
+    async function syncCart() {
+        if (!currentUser) return;
+        const sig = currentUser.uid + ':' + cartSignature();
+        if (localStorage.getItem(CART_SYNC_KEY) === sig) return;
+        try {
+            await api('/api/orders?action=cart', { method: 'POST', body: { items: cart.map(i => ({ product_id: i.id, size: i.size })) } });
+            localStorage.setItem(CART_SYNC_KEY, sig);
+        } catch { /* try again next time */ }
     }
     function renderCartCount() {
         const n = cart.length;
@@ -375,7 +409,7 @@
             toast('This pair is already in your cart');
             return false;
         }
-        cart.push({ id: product.id, size, name: product.name, brand: product.brand || '', price: product.price, image: firstImage(product) });
+        cart.push({ id: product.id, size, name: product.name, brand: product.brand || '', price: product.price, image: thumb(product) });
         saveCart();
         toast(`Added to cart: ${product.name} (US ${size})`);
         return true;
@@ -390,13 +424,13 @@
     async function refreshCart() {
         if (!cart.length) return cart;
         const ids = [...new Set(cart.map(i => i.id))];
-        const { data, error } = await db.from('products').select('id, name, brand, price, sizes, status, images').in('id', ids);
+        const { data, error } = await db.from('products').select('*').in('id', ids);
         if (error) return cart;
         const byId = new Map((data || []).map(p => [p.id, p]));
         cart = cart.map(i => {
             const p = byId.get(i.id);
             const available = !!p && p.status === 'Active' && (p.sizes || []).includes(i.size);
-            return p ? { ...i, name: p.name, brand: p.brand || '', price: p.price, image: firstImage(p), unavailable: !available } : { ...i, unavailable: true };
+            return p ? { ...i, name: p.name, brand: p.brand || '', price: p.price, image: thumb(p), unavailable: !available } : { ...i, unavailable: true };
         });
         saveCart();
         return cart;
@@ -424,7 +458,15 @@
                 </div>
                 <button class="cl-remove" data-remove="${esc(i.id)}" data-size="${esc(i.size)}" aria-label="Remove"><i class="fas fa-trash-can"></i></button>
             </div>`).join('');
+        const b = offersCache && offersCache.bundle;
+        let dealNote = '';
+        if (b && b.active && available.length) {
+            dealNote = available.length >= b.min
+                ? `<div class="deal-note on"><i class="fas fa-tags"></i> Bundle deal: ${b.percent}% off is applied at checkout</div>`
+                : `<div class="deal-note"><i class="fas fa-tags"></i> Add ${b.min - available.length} more pair${b.min - available.length > 1 ? 's' : ''} and get ${b.percent}% off</div>`;
+        }
         foot.innerHTML = `
+            ${dealNote}
             <div class="sum-row total"><span>Subtotal</span><span>${pkr(subtotal)}</span></div>
             <p class="drawer-note">Delivery and discount codes are applied at checkout. Pay cash on delivery.</p>
             <a href="checkout.html" class="btn btn-primary btn-block btn-lg ${available.length ? '' : 'disabled'}" ${available.length ? '' : 'aria-disabled="true" style="pointer-events:none;opacity:.5"'}><i class="fas fa-lock"></i> Checkout</a>`;
@@ -434,6 +476,7 @@
         }));
     }
     async function openCart() {
+        if (!offersCache) loadOffers().then(() => renderCartDrawer());
         renderCartDrawer();
         openPanel($('cartDrawer'));
         await refreshCart();
@@ -483,8 +526,29 @@
         const on = !wishlist.includes(id);
         wishlist = on ? [id, ...wishlist].slice(0, 100) : wishlist.filter(x => x !== id);
         saveWishlist(id);
-        toast(on ? 'Saved to your wishlist' : 'Removed from your wishlist');
+        if (currentUser) {
+            toast(on ? "Saved! We'll email you if the price drops" : 'Removed from your wishlist');
+            api('/api/orders?action=wish', { method: 'POST', body: { product_id: id, on } }).catch(() => {});
+        } else {
+            toast(on ? 'Saved to your wishlist' : 'Removed from your wishlist');
+        }
         return on;
+    }
+    // After login: save this device's wishlist to the account (for price-drop
+    // emails) and bring back hearts saved on other devices.
+    async function syncWishlist(user) {
+        const key = 'jenzyWishSync:' + user.uid;
+        if (sessionStorage.getItem(key)) return;
+        try {
+            const res = await api('/api/orders?action=wishSync', { method: 'POST', body: { ids: wishlist } });
+            sessionStorage.setItem(key, '1');
+            const merged = [...new Set([...wishlist, ...(res.ids || [])])].slice(0, 100);
+            if (merged.length !== wishlist.length) {
+                wishlist = merged;
+                saveWishlist();
+                document.querySelectorAll('[data-wish]').forEach(b => syncWishButtons(b.dataset.wish));
+            }
+        } catch { /* not important */ }
     }
     // Heart buttons anywhere on the page (cards sit inside links, so stop the link opening)
     document.addEventListener('click', e => {
@@ -555,11 +619,11 @@
         const tag = (p.tag || '').toLowerCase();
         const sold = p.status === 'Sold';
         const sizes = sortSizes(p.sizes);
-        const alt = p.images && p.images[1];
+        const alt = p.images && p.images[1] ? thumb(p, 1) : '';
         return `
         <a class="p-card" href="${productUrl(p)}">
             <div class="p-media">
-                <img class="main ${alt ? '' : 'main-only'}" src="${esc(firstImage(p))}" alt="${esc(p.name)}" loading="lazy">
+                <img class="main ${alt ? '' : 'main-only'}" src="${esc(thumb(p))}" alt="${esc(p.name)}" loading="lazy">
                 ${alt ? `<img class="alt" src="${esc(alt)}" alt="" loading="lazy">` : ''}
                 <div class="p-badges">
                     ${sold ? '<span class="badge badge-sold">Sold out</span>' : ''}
@@ -584,9 +648,115 @@
         </a>`;
     }
 
+    // ---------- Customer photo uploads (reviews, sell requests) ----------
+    // Shrinks the photo in the browser (fast uploads, small storage), then
+    // uploads it with a one-time link from our server. Returns the public URL.
+    function resizeImage(file, max = 1280, quality = 0.82) {
+        return new Promise((resolve, reject) => {
+            if (!/^image\//.test(file.type || '')) return reject(new Error('Please choose a photo (JPG or PNG).'));
+            const url = URL.createObjectURL(file);
+            const img = new Image();
+            img.onload = () => {
+                const scale = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+                const c = document.createElement('canvas');
+                c.width = Math.round(img.naturalWidth * scale);
+                c.height = Math.round(img.naturalHeight * scale);
+                c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+                URL.revokeObjectURL(url);
+                c.toBlob(b => b ? resolve(b) : reject(new Error('Could not read this photo.')), 'image/jpeg', quality);
+            };
+            img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Could not read this photo. Try a JPG or PNG.')); };
+            img.src = url;
+        });
+    }
+    async function uploadPhoto(kind, file) {
+        const blob = await resizeImage(file);
+        const signed = await api('/api/orders?action=uploadUrl', { method: 'POST', auth: true, body: { kind, ext: 'jpg' } });
+        const { error } = await db.storage.from('product-images').uploadToSignedUrl(signed.path, signed.token, blob, { contentType: 'image/jpeg' });
+        if (error) throw new Error('Photo upload failed. Please try again.');
+        return signed.publicUrl;
+    }
+
+    // ---------- Shop offers (bundle deal, invite friends) ----------
+    let offersCache = null;
+    let offersPromise = null;
+    function loadOffers() {
+        if (!offersPromise) {
+            offersPromise = (async () => {
+                const out = { bundle: { active: true, min: 2, percent: 10 }, referral: { active: true, percent: 10, reward: 300 } };
+                try {
+                    const { data, error } = await db.from('shop_settings').select('key, value').in('key', ['bundle', 'referral']);
+                    if (!error) (data || []).forEach(r => { out[r.key] = { ...out[r.key], ...r.value }; });
+                } catch { /* defaults */ }
+                offersCache = out;
+                return out;
+            })();
+        }
+        return offersPromise;
+    }
+
+    // ---------- Invite links (?ref=CODE) ----------
+    const REF_KEY = 'jenzyRef';
+    const refParam = (qs('ref') || '').trim().toUpperCase();
+    if (/^[A-Z0-9]{4,20}$/.test(refParam)) {
+        const had = localStorage.getItem(REF_KEY);
+        try { localStorage.setItem(REF_KEY, refParam); } catch { /* ignore */ }
+        if (had !== refParam) {
+            loadOffers().then(o => {
+                if (o.referral.active) setTimeout(() => toast(`Invite code ${refParam} saved: ${o.referral.percent}% off your first order at checkout`), 900);
+            });
+        }
+    }
+    const referralCode = () => localStorage.getItem(REF_KEY) || '';
+
+    // ---------- Visitor stats (anonymous: a random id, the page, where they came from) ----------
+    (function trackView() {
+        try {
+            if (/bot|crawl|spider|slurp|facebookexternalhit|WhatsApp\/|Lighthouse|preview|HeadlessChromeBot/i.test(UA)) return;
+            if (localStorage.getItem('jenzyNoTrack')) return;   // set on the shop owner's devices by the admin panel
+            let vid = localStorage.getItem('jenzyVid');
+            if (!/^[a-z0-9]{8,32}$/.test(vid || '')) {
+                vid = (Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)).replace(/[^a-z0-9]/g, '').slice(0, 20).padEnd(10, '0');
+                localStorage.setItem('jenzyVid', vid);
+            }
+            let src = sessionStorage.getItem('jenzySrc');
+            if (!src) {
+                const q = new URLSearchParams(location.search);
+                const hint = (q.get('s') || q.get('utm_source') || '').toLowerCase();
+                const ref = document.referrer ? (() => { try { return new URL(document.referrer).hostname; } catch { return ''; } })() : '';
+                const MAP = { wa: 'whatsapp', whatsapp: 'whatsapp', ig: 'instagram', instagram: 'instagram', story: 'instagram', fb: 'facebook', facebook: 'facebook', tt: 'tiktok', tiktok: 'tiktok', yt: 'youtube', youtube: 'youtube', google: 'google' };
+                if (MAP[hint]) src = MAP[hint];
+                else if (q.get('igshid') || /Instagram/i.test(UA) || /instagram\.com$/.test(ref)) src = 'instagram';
+                else if (q.get('fbclid') || /FBAN|FBAV|FB_IAB|FBIOS/i.test(UA) || /(facebook\.com|fb\.me|fb\.com)$/.test(ref)) src = 'facebook';
+                else if (/TikTok|musical_ly|Bytedance/i.test(UA) || /tiktok\.com$/.test(ref)) src = 'tiktok';
+                else if (q.get('gclid') || /(^|\.)google\./.test(ref)) src = 'google';
+                else if (/whatsapp|wa\.me$/.test(ref)) src = 'whatsapp';
+                else if (/youtube\.com$|youtu\.be$/.test(ref)) src = 'youtube';
+                else if (hint || (ref && ref !== location.hostname)) src = 'other';
+                else src = 'direct';
+                sessionStorage.setItem('jenzySrc', src);
+            }
+            const device = /iPad|Tablet/i.test(UA) || (/Android/i.test(UA) && !/Mobile/i.test(UA)) ? 'tablet' : /Mobi|Android|iPhone|iPod/i.test(UA) ? 'mobile' : 'desktop';
+            let path = location.pathname.replace(/\/index\.html$/, '/').replace(/\.html$/, '') || '/';
+            let productId = null;
+            const m = location.pathname.match(/^\/shoe\/([0-9a-f-]{36})/i);
+            if (m || page === 'product') { path = '/shoe'; productId = m ? m[1] : qs('id'); }
+            if (productId && !/^[0-9a-f-]{36}$/i.test(productId)) productId = null;
+            db.from('page_views').insert({ visitor: vid, path: path.slice(0, 120), product_id: productId, source: src, device }).then(() => {}, () => {});
+        } catch { /* never break the page */ }
+    })();
+
+    // Logged-in: sync wishlist + cart
+    onAuth(user => {
+        if (!user) return;
+        syncWishlist(user);
+        scheduleCartSync(1500);
+    });
+
     window.Store = {
         config: CFG, site: SITE, db, auth,
-        esc, pkr, orderNo, discountPct, productUrl, shareUrl, copyText, firstImage, sortSizes, qs, toast,
+        esc, pkr, orderNo, discountPct, productUrl, shareUrl, copyText, firstImage, thumb, stars, sortSizes, qs, toast,
+        offers: loadOffers, uploadPhoto, referralCode, clearReferralCode: () => localStorage.removeItem(REF_KEY),
         onAuth, requireLogin, openLogin, get user() { return currentUser; },
         api,
         cart: {

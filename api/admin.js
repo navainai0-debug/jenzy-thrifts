@@ -25,17 +25,33 @@
 //   GET  ?action=messages
 //   POST ?action=messageRead         { id, read }
 //   POST ?action=deleteMessage       { id }
+//   POST ?action=setThumbs           { id, thumbs }  small photos for old products
+//   GET  ?action=offers              bundle deal + invite-friends settings and stats
+//   POST ?action=saveOffers          { bundle, referral }
+//   POST ?action=saveEmailSettings   { priceDrop, cartReminder }
+//   POST ?action=runReminders        send cart reminder emails now
+//   GET  ?action=reviews
+//   POST ?action=reviewStatus        { id, status }
+//   POST ?action=deleteReview        { id }
+//   GET  ?action=sellRequests
+//   POST ?action=sellOffer           { id, offer_price, offer_note }
+//   POST ?action=sellStatus          { id, status }
+//   POST ?action=deleteSell          { id }
+//   GET  ?action=visitors&days=7     visitor stats
 import { route, getBody, getQuery, HttpError, requireMethod } from './_lib/http.js';
-import { getDb, BUCKET } from './_lib/db.js';
+import { getDb, BUCKET, storagePath } from './_lib/db.js';
 import { getAdmin } from './_lib/auth.js';
-import { isUuid, COUPON_RE } from './_lib/shop.js';
+import { isUuid, COUPON_RE, normalizeOffers } from './_lib/shop.js';
 import {
     COURIERS, notifyStatusChange, notifyStatus, connectTelegram, sendTestAlert, siteUrl,
-    readSetting, writeSetting, notifyRestock
+    readSetting, writeSetting, notifyRestock, emailPriceDrop, emailSellOffer, emailReady
 } from './_lib/notify.js';
+import { runCartReminders } from './_lib/reminders.js';
 
 const STATUSES = ['Pending', 'Confirmed', 'Shipped', 'Delivered', 'Cancelled'];
 const PRODUCT_STATUSES = ['Active', 'Draft', 'Sold'];
+const REVIEW_STATUSES = ['Pending', 'Approved', 'Hidden'];
+const SELL_STATUSES = ['New', 'Offered', 'Accepted', 'Declined', 'Rejected', 'Bought'];
 const TIMEZONE = process.env.SHOP_TIMEZONE || 'Asia/Karachi';
 
 function dayKey(date) {
@@ -95,6 +111,13 @@ function sanitizeProduct(p = {}) {
         .filter(u => /^https:\/\//.test(u))
         .slice(0, 8);
     if (images.length === 0) throw new HttpError(400, 'Upload at least one image.');
+    // Small grid photos, same order as images ('' = none yet)
+    const thumbIn = Array.isArray(p.thumbs) ? p.thumbs : [];
+    const thumbs = images.map((_, i) => {
+        const t = str(thumbIn[i], 500);
+        return /^https:\/\//.test(t) ? t : '';
+    });
+    const fit = FITS.includes(p.fit) ? p.fit : null;
     return {
         name,
         brand: str(p.brand, 60),
@@ -109,9 +132,13 @@ function sanitizeProduct(p = {}) {
         tag: str(p.tag, 20) || null,
         description: str(p.description, 3000),
         images,
+        thumbs: thumbs.some(Boolean) ? thumbs : [],
+        fit,
         updated_at: new Date().toISOString()
     };
 }
+
+const FITS = ['True to size', 'Runs small', 'Runs large'];
 
 const SETUP_SQL_MSG = 'Run the latest supabase-setup.sql in Supabase (SQL Editor) first, then try again.';
 function missingTable(error, table) {
@@ -158,20 +185,62 @@ function cleanIds(ids) {
     return list;
 }
 
-function storagePath(url) {
-    const m = String(url || '').match(new RegExp(`/${BUCKET}/(shoes/[^?#]+)`));
-    return m ? decodeURIComponent(m[1]) : null;
+
+async function sendPriceDrop(db, product, oldPrice, site) {
+    const settings = (await readSetting('emails')) || {};
+    if (settings.priceDrop === false) return { sent: 0, off: true };
+    const { data: rows, error } = await db.from('wishlist_items').select('user_uid, email, name, alerted_price').eq('product_id', product.id);
+    if (error || !rows?.length) return { sent: 0 };
+    // Only people we have not already told about this (or a lower) price
+    const due = rows.filter(r => r.email && (r.alerted_price == null || product.price < r.alerted_price));
+    if (!due.length) return { sent: 0 };
+    if (!emailReady()) return { sent: 0, error: 'Gmail is not set up, so price-drop emails were not sent.' };
+    const result = await emailPriceDrop(due, product, oldPrice, site);
+    if (result.sent.length) {
+        await db.from('wishlist_items').update({ alerted_price: product.price })
+            .eq('product_id', product.id).in('user_uid', result.sent);
+    }
+    return { sent: result.sent.length, failed: result.failed.length, error: result.error };
+}
+
+function sanitizeOffers(b = {}, r = {}) {
+    const bp = parseInt(b.percent, 10), rp = parseInt(r.percent, 10), rw = parseInt(r.reward, 10), bm = parseInt(b.min, 10);
+    if (!(bm >= 2 && bm <= 10)) throw new HttpError(400, 'Bundle: minimum pairs must be between 2 and 10.');
+    if (!(bp >= 1 && bp <= 50)) throw new HttpError(400, 'Bundle: discount must be between 1% and 50%.');
+    if (!(rp >= 1 && rp <= 50)) throw new HttpError(400, "Invite: the friend's discount must be between 1% and 50%.");
+    if (!(rw >= 50 && rw <= 20000)) throw new HttpError(400, 'Invite: the reward must be between PKR 50 and PKR 20,000.');
+    return normalizeOffers({ active: !!b.active, min: bm, percent: bp }, { active: !!r.active, percent: rp, reward: rw });
+}
+
+async function referralStats(db) {
+    const [codes, orders, credits] = await Promise.all([
+        db.from('referral_codes').select('code', { count: 'exact', head: true }),
+        db.from('orders').select('id, status, total, referrer_uid').not('referrer_uid', 'is', null).limit(5000),
+        db.from('credits').select('amount, used_order_id').limit(5000)
+    ]);
+    const live = (orders.data || []).filter(o => o.status !== 'Cancelled');
+    const cr = credits.data || [];
+    return {
+        codes: codes.count || 0,
+        orders: live.length,
+        delivered: live.filter(o => o.status === 'Delivered').length,
+        sales: live.reduce((s, o) => s + o.total, 0),
+        creditsGiven: cr.reduce((s, c) => s + c.amount, 0),
+        creditsUsed: cr.filter(c => c.used_order_id).reduce((s, c) => s + c.amount, 0)
+    };
 }
 
 async function dashboard(db) {
-    const [productsRes, ordersRes, messagesRes, waitRes] = await Promise.all([
+    const [productsRes, ordersRes, messagesRes, waitRes, reviewRes, sellRes] = await Promise.all([
         db.from('products').select('id, name, brand, price, sizes, status, images, created_at').order('created_at', { ascending: false }),
         db.from('orders')
             .select('id, order_no, created_at, customer_name, phone, city, total, status, user_uid, items')
             .order('created_at', { ascending: false })
             .limit(5000),
         db.from('messages').select('id', { count: 'exact', head: true }).eq('is_read', false),
-        db.from('restock_requests').select('id', { count: 'exact', head: true }).eq('status', 'Waiting')
+        db.from('restock_requests').select('id', { count: 'exact', head: true }).eq('status', 'Waiting'),
+        db.from('reviews').select('id', { count: 'exact', head: true }).eq('status', 'Pending'),
+        db.from('sell_requests').select('id', { count: 'exact', head: true }).in('status', ['New', 'Accepted'])
     ]);
     if (productsRes.error) throw productsRes.error;
     if (ordersRes.error) throw ordersRes.error;
@@ -217,7 +286,9 @@ async function dashboard(db) {
             soldProducts: products.filter(p => p.status === 'Sold').length,
             draftProducts: products.filter(p => p.status === 'Draft').length,
             unreadMessages: messagesRes.count || 0,
-            waitingRequests: waitRes.error ? 0 : (waitRes.count || 0)
+            waitingRequests: waitRes.error ? 0 : (waitRes.count || 0),
+            pendingReviews: reviewRes.error ? 0 : (reviewRes.count || 0),
+            newSellRequests: sellRes.error ? 0 : (sellRes.count || 0)
         },
         salesChart: days,
         recentOrders: orders.slice(0, 8).map(({ user_uid, ...o }) => ({ ...o, itemCount: o.items?.length || 0, items: undefined })),
@@ -252,24 +323,40 @@ export default route(async (req, res) => {
             const { id, product } = getBody(req);
             const clean = sanitizeProduct(product);
             let result;
+            let before = null;
+            const save = (row) => id
+                ? db.from('products').update(row).eq('id', id).select().single()
+                : db.from('products').insert([row]).select().single();
             if (id) {
                 if (!isUuid(id)) throw new HttpError(400, 'Invalid product id.');
-                result = await db.from('products').update(clean).eq('id', id).select().single();
-            } else {
-                result = await db.from('products').insert([clean]).select().single();
+                const b = await db.from('products').select('id, price, status').eq('id', id).maybeSingle();
+                before = b.data || null;
+            }
+            result = await save(clean);
+            if (result.error && /thumbs|fit/.test(result.error.message || '')) {
+                // supabase-setup.sql not re-run yet: save without the new columns
+                const { thumbs, fit, ...old } = clean;
+                result = await save(old);
             }
             if (result.error) throw result.error;
-            return res.status(200).json({ product: result.data });
+            const saved = result.data;
+
+            // Price went down -> email everyone who saved this shoe
+            let priceDrop = null;
+            if (before && saved.status === 'Active' && saved.price < before.price) {
+                priceDrop = await sendPriceDrop(db, saved, before.price, siteUrl(req));
+            }
+            return res.status(200).json({ product: saved, priceDrop });
         }
 
         case 'deleteProduct': {
             requireMethod(req, 'POST');
             const { id } = getBody(req);
             if (!isUuid(id)) throw new HttpError(400, 'Invalid product id.');
-            const { data: p, error } = await db.from('products').select('id, images').eq('id', id).maybeSingle();
+            const { data: p, error } = await db.from('products').select('*').eq('id', id).maybeSingle();
             if (error) throw error;
             if (!p) throw new HttpError(404, 'Product not found.');
-            const paths = (p.images || []).map(storagePath).filter(Boolean);
+            const paths = [...(p.images || []), ...(p.thumbs || [])].map(storagePath).filter(Boolean);
             if (paths.length) await db.storage.from(BUCKET).remove(paths);
             const del = await db.from('products').delete().eq('id', id);
             if (del.error) throw del.error;
@@ -503,6 +590,159 @@ export default route(async (req, res) => {
             const { error } = await db.from('messages').delete().eq('id', id);
             if (error) throw error;
             return res.status(200).json({ ok: true });
+        }
+
+        case 'setThumbs': {
+            requireMethod(req, 'POST');
+            const { id, thumbs } = getBody(req);
+            if (!isUuid(id)) throw new HttpError(400, 'Invalid product id.');
+            const { data: p, error } = await db.from('products').select('*').eq('id', id).maybeSingle();
+            if (error) throw error;
+            if (!p) throw new HttpError(404, 'Product not found.');
+            const list = (p.images || []).map((_, i) => {
+                const t = str(Array.isArray(thumbs) ? thumbs[i] : '', 500);
+                return /^https:\/\//.test(t) ? t : (p.thumbs?.[i] || '');
+            });
+            const up = await db.from('products').update({ thumbs: list }).eq('id', id).select('id, thumbs').single();
+            if (up.error) throw missingTable(up.error, 'thumbs');
+            return res.status(200).json({ product: up.data });
+        }
+
+        case 'offers': {
+            requireMethod(req, 'GET');
+            const [bundle, referral, emails] = await Promise.all([readSetting('bundle'), readSetting('referral'), readSetting('emails')]);
+            const offers = normalizeOffers(bundle, referral);
+            let stats = null;
+            try { stats = await referralStats(db); } catch { stats = null; }
+            return res.status(200).json({ ...offers, stats, emails: { priceDrop: emails?.priceDrop !== false, cartReminder: emails?.cartReminder !== false } });
+        }
+
+        case 'saveOffers': {
+            requireMethod(req, 'POST');
+            const body = getBody(req);
+            const offers = sanitizeOffers(body.bundle, body.referral);
+            try {
+                await writeSetting('bundle', offers.bundle);
+                await writeSetting('referral', offers.referral);
+            } catch (e) {
+                throw new HttpError(400, e.message);
+            }
+            return res.status(200).json(offers);
+        }
+
+        case 'saveEmailSettings': {
+            requireMethod(req, 'POST');
+            const b = getBody(req);
+            const emails = { priceDrop: b.priceDrop !== false, cartReminder: b.cartReminder !== false };
+            try { await writeSetting('emails', emails); } catch (e) { throw new HttpError(400, e.message); }
+            return res.status(200).json({ emails });
+        }
+
+        case 'runReminders': {
+            requireMethod(req, 'POST');
+            const out = await runCartReminders(db, siteUrl(req));
+            if (!out.sent && out.error) throw new HttpError(400, out.error);
+            return res.status(200).json(out);
+        }
+
+        case 'reviews': {
+            requireMethod(req, 'GET');
+            const { data, error } = await db.from('reviews').select('*').order('created_at', { ascending: false }).limit(500);
+            if (error) throw missingTable(error, 'reviews');
+            const orderIds = (data || []).map(r => r.order_id).filter(Boolean);
+            let orders = [];
+            if (orderIds.length) {
+                const o = await db.from('orders').select('id, order_no, customer_name, phone').in('id', orderIds);
+                orders = o.data || [];
+            }
+            const byId = new Map(orders.map(o => [o.id, o]));
+            return res.status(200).json({ reviews: (data || []).map(r => ({ ...r, order: byId.get(r.order_id) || null })) });
+        }
+
+        case 'reviewStatus': {
+            requireMethod(req, 'POST');
+            const { id, status: st } = getBody(req);
+            if (!isUuid(id)) throw new HttpError(400, 'Invalid review.');
+            if (!REVIEW_STATUSES.includes(st)) throw new HttpError(400, 'Invalid status.');
+            const { data, error } = await db.from('reviews')
+                .update({ status: st, approved_at: st === 'Approved' ? new Date().toISOString() : null })
+                .eq('id', id).select('*').maybeSingle();
+            if (error) throw missingTable(error, 'reviews');
+            if (!data) throw new HttpError(404, 'Review not found.');
+            return res.status(200).json({ review: data });
+        }
+
+        case 'deleteReview': {
+            requireMethod(req, 'POST');
+            const { id } = getBody(req);
+            if (!isUuid(id)) throw new HttpError(400, 'Invalid review.');
+            const { data, error } = await db.from('reviews').delete().eq('id', id).select('images');
+            if (error) throw missingTable(error, 'reviews');
+            const paths = (data || []).flatMap(r => r.images || []).map(storagePath).filter(Boolean);
+            if (paths.length) await db.storage.from(BUCKET).remove(paths);
+            return res.status(200).json({ ok: true });
+        }
+
+        case 'sellRequests': {
+            requireMethod(req, 'GET');
+            const { data, error } = await db.from('sell_requests').select('*').order('created_at', { ascending: false }).limit(500);
+            if (error) throw missingTable(error, 'sell_requests');
+            return res.status(200).json({ requests: data || [], emailReady: emailReady() });
+        }
+
+        case 'sellOffer': {
+            requireMethod(req, 'POST');
+            const b = getBody(req);
+            if (!isUuid(b.id)) throw new HttpError(400, 'Invalid request.');
+            const price = parseInt(b.offer_price, 10);
+            if (!(price >= 100 && price <= 10000000)) throw new HttpError(400, 'Enter your offer in PKR (at least 100).');
+            const { data, error } = await db.from('sell_requests')
+                .update({ status: 'Offered', offer_price: price, offer_note: str(b.offer_note, 400) || null, updated_at: new Date().toISOString() })
+                .eq('id', b.id).select('*').maybeSingle();
+            if (error) throw missingTable(error, 'sell_requests');
+            if (!data) throw new HttpError(404, 'Request not found.');
+            let emailed = false, emailError = null;
+            try { await emailSellOffer(data, siteUrl(req)); emailed = true; } catch (e) { emailError = e.message; }
+            return res.status(200).json({ request: data, emailed, emailError });
+        }
+
+        case 'sellStatus': {
+            requireMethod(req, 'POST');
+            const { id, status: st } = getBody(req);
+            if (!isUuid(id)) throw new HttpError(400, 'Invalid request.');
+            if (!SELL_STATUSES.includes(st)) throw new HttpError(400, 'Invalid status.');
+            const { data, error } = await db.from('sell_requests').update({ status: st, updated_at: new Date().toISOString() })
+                .eq('id', id).select('*').maybeSingle();
+            if (error) throw missingTable(error, 'sell_requests');
+            if (!data) throw new HttpError(404, 'Request not found.');
+            return res.status(200).json({ request: data });
+        }
+
+        case 'deleteSell': {
+            requireMethod(req, 'POST');
+            const { id } = getBody(req);
+            if (!isUuid(id)) throw new HttpError(400, 'Invalid request.');
+            const { data, error } = await db.from('sell_requests').delete().eq('id', id).select('images');
+            if (error) throw missingTable(error, 'sell_requests');
+            const paths = (data || []).flatMap(r => r.images || []).map(storagePath).filter(Boolean);
+            if (paths.length) await db.storage.from(BUCKET).remove(paths);
+            return res.status(200).json({ ok: true });
+        }
+
+        case 'visitors': {
+            requireMethod(req, 'GET');
+            const days = [7, 30, 90].includes(parseInt(getQuery(req).days, 10)) ? parseInt(getQuery(req).days, 10) : 7;
+            const { data, error } = await db.rpc('visitor_stats', { p_days: days, p_tz: TIMEZONE });
+            if (error) throw missingTable(error, 'visitor_stats|page_views');
+            const since = new Date(Date.now() - days * 86400000).toISOString();
+            const { data: orders } = await db.from('orders').select('user_uid, total, status').gte('created_at', since).neq('status', 'Cancelled').limit(5000);
+            return res.status(200).json({
+                days,
+                ...(data || {}),
+                orders: (orders || []).length,
+                buyers: new Set((orders || []).map(o => o.user_uid)).size,
+                sales: (orders || []).reduce((s, o) => s + o.total, 0)
+            });
         }
 
         default:

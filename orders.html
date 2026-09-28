@@ -26,6 +26,7 @@
     </div>
 
     <div id="placedBanner"></div>
+    <div id="invite"></div>
     <div id="ordersRoot"><div class="loading-state"><i class="fas fa-spinner fa-spin"></i><p>Loading your orders…</p></div></div>
 </main>
 
@@ -46,6 +47,12 @@
     const placed = Store.qs('placed');
     let pollTimer = null;
     let lastJson = '';
+    let reviews = {};
+    const DISCOUNT_NAMES = { bundle: 'Bundle deal', referral: 'Invite code', credit: 'Invite credit', coupon: 'Coupon' };
+    const discountName = (o) => {
+        const t = o.discount_type || (o.coupon ? 'coupon' : '');
+        return (DISCOUNT_NAMES[t] || 'Discount') + (o.coupon && (t === 'coupon' || t === 'referral') ? ' ' + o.coupon : '');
+    };
 
     if (placed) {
         $('placedBanner').innerHTML = `
@@ -117,23 +124,161 @@
                     <div class="block">
                         <h5>Payment • Cash on Delivery</h5>
                         <div class="sum-row"><span>Subtotal</span><span>${pkr(o.subtotal)}</span></div>
-                        ${o.discount ? `<div class="sum-row"><span>Discount${o.coupon ? ' (' + esc(o.coupon) + ')' : ''}</span><span>− ${pkr(o.discount)}</span></div>` : ''}
+                        ${o.discount ? `<div class="sum-row"><span>${esc(discountName(o))}</span><span>− ${pkr(o.discount)}</span></div>` : ''}
                         <div class="sum-row"><span>Delivery</span><span>${o.delivery_fee ? pkr(o.delivery_fee) : 'Free'}</span></div>
                         <div class="sum-row total"><span>Total</span><span>${pkr(o.total)}</span></div>
                     </div>
                     ${o.status === 'Pending' ? `<button class="btn btn-danger btn-sm" data-cancel="${esc(o.id)}" data-no="${esc(o.order_no)}" style="margin-top:14px"><i class="fas fa-xmark"></i> Cancel order</button>` : ''}
                 </div>
             </div>
+            ${o.status === 'Delivered' ? reviewBox(o) : ''}
         </article>`;
+    }
+
+    // ---------- Reviews (delivered orders only; shown after the shop approves) ----------
+    function reviewBox(o) {
+        const r = reviews[o.id];
+        if (r) {
+            return `<div class="review-box done"><span class="stars">${Store.stars(r.rating)}</span>
+                <span>${r.status === 'Approved' ? 'Thank you! Your review is live on our website.' : r.status === 'Hidden' ? 'Thank you for your review!' : 'Thank you! Your review will appear after we check it.'}</span></div>`;
+        }
+        return `
+            <div class="review-box" data-review="${esc(o.id)}">
+                <button class="btn btn-outline btn-sm rv-open" type="button"><i class="fa-regular fa-star"></i> Rate your order</button>
+                <form class="review-form" hidden>
+                    <h5>How were your shoes?</h5>
+                    <div class="star-input" role="radiogroup" aria-label="Rating">
+                        ${[1, 2, 3, 4, 5].map(n => `<button type="button" data-star="${n}" aria-label="${n} star${n > 1 ? 's' : ''}"><i class="fa-regular fa-star"></i></button>`).join('')}
+                    </div>
+                    <textarea class="input" maxlength="1000" rows="3" placeholder="Tell other buyers about the quality, fit and delivery (optional)"></textarea>
+                    <div class="rv-photos">
+                        <label class="rv-add"><input type="file" accept="image/*" multiple hidden><i class="fas fa-camera"></i><span>Add photos</span></label>
+                        <div class="rv-previews"></div>
+                    </div>
+                    <p class="field-hint">Up to 3 photos of your pair. Your first name, last initial and city are shown with the review.</p>
+                    <div class="alert rv-alert"></div>
+                    <button class="btn btn-primary" type="submit"><i class="fas fa-paper-plane"></i> Send review</button>
+                </form>
+            </div>`;
+    }
+    function bindReviews(root) {
+        root.querySelectorAll('[data-review]').forEach(box => {
+            const form = box.querySelector('form');
+            let rating = 0;
+            const files = [];
+            box.querySelector('.rv-open').addEventListener('click', e => { e.currentTarget.hidden = true; form.hidden = false; });
+            const paint = (n) => box.querySelectorAll('[data-star]').forEach(b => {
+                b.querySelector('i').className = (Number(b.dataset.star) <= n ? 'fas' : 'fa-regular') + ' fa-star';
+                b.classList.toggle('on', Number(b.dataset.star) <= n);
+            });
+            box.querySelectorAll('[data-star]').forEach(b => {
+                b.addEventListener('click', () => { rating = Number(b.dataset.star); paint(rating); });
+                b.addEventListener('mouseenter', () => paint(Number(b.dataset.star)));
+                b.addEventListener('mouseleave', () => paint(rating));
+            });
+            const input = box.querySelector('input[type=file]');
+            const previews = box.querySelector('.rv-previews');
+            const renderPreviews = () => {
+                previews.innerHTML = files.map((f, i) => `<span class="rv-prev"><img src="${URL.createObjectURL(f)}" alt=""><button type="button" data-rm="${i}" aria-label="Remove photo">&times;</button></span>`).join('');
+                previews.querySelectorAll('[data-rm]').forEach(b => b.addEventListener('click', () => { files.splice(Number(b.dataset.rm), 1); renderPreviews(); }));
+                box.querySelector('.rv-add').hidden = files.length >= 3;
+            };
+            input.addEventListener('change', () => {
+                [...input.files].forEach(f => { if (files.length < 3) files.push(f); });
+                input.value = '';
+                renderPreviews();
+            });
+            form.addEventListener('submit', async e => {
+                e.preventDefault();
+                const alertBox = box.querySelector('.rv-alert');
+                const btn = form.querySelector('[type=submit]');
+                const text = form.querySelector('textarea').value.trim();
+                alertBox.className = 'alert rv-alert';
+                if (!rating) { alertBox.textContent = 'Please tap the stars to rate your order.'; alertBox.className = 'alert rv-alert show'; return; }
+                if (rating <= 3 && text.length < 5) { alertBox.textContent = 'Please tell us a little about what went wrong, so we can do better.'; alertBox.className = 'alert rv-alert show'; return; }
+                btn.disabled = true;
+                try {
+                    const images = [];
+                    for (let i = 0; i < files.length; i++) {
+                        btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Uploading photo ${i + 1} of ${files.length}…`;
+                        images.push(await Store.uploadPhoto('reviews', files[i]));
+                    }
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending…';
+                    await api('/api/orders?action=review', { method: 'POST', auth: true, body: { order_id: box.dataset.review, rating, text, images } });
+                    reviews[box.dataset.review] = { rating, status: 'Pending' };
+                    box.outerHTML = reviewBox({ id: box.dataset.review });
+                    Store.toast('Thank you for your review!');
+                } catch (err) {
+                    alertBox.textContent = err.message;
+                    alertBox.className = 'alert rv-alert show';
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send review';
+                }
+            });
+        });
+    }
+
+    // ---------- Invite friends ----------
+    async function loadInvite(create) {
+        const box = $('invite');
+        try {
+            const info = await api('/api/orders?action=referral', { method: create ? 'POST' : 'GET', auth: true });
+            renderInvite(info);
+        } catch (e) {
+            if (create) Store.toast(e.message, 'error');
+            else box.innerHTML = '';
+        }
+    }
+    function renderInvite(info) {
+        const box = $('invite');
+        const o = info.offer;
+        if (!info.code && !o.active) { box.innerHTML = ''; return; }
+        const link = info.code ? `${location.origin}/?ref=${encodeURIComponent(info.code)}` : '';
+        const waText = info.code ? `Get ${o.percent}% off your first pair of original sneakers at JENZY THRIFTS with my code ${info.code} 👟\n${link}&s=wa` : '';
+        box.innerHTML = `
+            <section class="invite-card">
+                <div class="invite-main">
+                    <div class="invite-icon"><i class="fas fa-gift"></i></div>
+                    <div>
+                        <h3>Invite friends, get ${pkr(o.reward)} off</h3>
+                        <p>Your friend gets <strong>${o.percent}% off</strong> their first order. When it's delivered, you get <strong>${pkr(o.reward)} off</strong> your next order.</p>
+                    </div>
+                </div>
+                ${info.code ? `
+                    <div class="invite-code-row">
+                        <div class="invite-code" id="inviteCode">${esc(info.code)}</div>
+                        <button class="btn btn-outline btn-sm" type="button" id="copyCode"><i class="fas fa-copy"></i> Copy code</button>
+                        <button class="btn btn-outline btn-sm" type="button" id="copyInvite"><i class="fas fa-link"></i> Copy link</button>
+                        <a class="btn btn-primary btn-sm wa-btn" id="waInvite" href="https://wa.me/?text=${encodeURIComponent(waText)}" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> Share on WhatsApp</a>
+                    </div>
+                    <div class="invite-stats">
+                        <div><strong>${info.friends}</strong><span>friend${info.friends === 1 ? '' : 's'} ordered</span></div>
+                        <div><strong>${info.friendsDelivered}</strong><span>delivered</span></div>
+                        <div class="${info.balance ? 'hl' : ''}"><strong>${pkr(info.balance)}</strong><span>credit to use</span></div>
+                    </div>
+                    ${info.balance ? '<p class="invite-note"><i class="fas fa-circle-info"></i> Your credit is applied automatically at checkout (only the biggest discount is used per order).</p>' : ''}
+                ` : `<button class="btn btn-primary" type="button" id="makeCode"><i class="fas fa-wand-magic-sparkles"></i> Get my invite code</button>`}
+            </section>`;
+        $('makeCode')?.addEventListener('click', e => { e.currentTarget.disabled = true; loadInvite(true); });
+        $('copyCode')?.addEventListener('click', () => Store.copyText(info.code, 'Code copied'));
+        $('copyInvite')?.addEventListener('click', () => Store.copyText(link, 'Invite link copied'));
+        if (location.hash === '#invite' && !renderInvite.scrolled) {
+            renderInvite.scrolled = true;
+            box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
     }
 
     async function load(silent) {
         if (!Store.user) return;
         try {
-            const { orders } = await api('/api/orders?action=mine', { auth: true });
-            const json = JSON.stringify(orders);
+            const res = await api('/api/orders?action=mine', { auth: true });
+            const orders = res.orders;
+            const json = JSON.stringify(res);
             if (silent && json === lastJson) return;
+            // Don't wipe a review the customer is writing
+            if (silent && [...document.querySelectorAll('.review-form')].some(f => !f.hidden)) return;
             lastJson = json;
+            reviews = res.reviews || {};
             if (!orders.length) {
                 $('ordersRoot').innerHTML = `
                     <div class="gate">
@@ -147,6 +292,7 @@
             $('ordersRoot').innerHTML = orders.map(orderCard).join('');
             $('ordersRoot').querySelectorAll('[data-cancel]').forEach(b => b.addEventListener('click', () => cancel(b)));
             $('ordersRoot').querySelectorAll('[data-copy]').forEach(b => b.addEventListener('click', () => Store.copyText(b.dataset.copy, 'Tracking number copied')));
+            bindReviews($('ordersRoot'));
         } catch (e) {
             if (!silent) $('ordersRoot').innerHTML = `<div class="alert show">${esc(e.message)}</div>`;
         }
@@ -171,6 +317,7 @@
         clearInterval(pollTimer);
         lastJson = '';
         if (!user) {
+            $('invite').innerHTML = '';
             $('ordersRoot').innerHTML = `
                 <div class="gate">
                     <div class="gate-icon"><i class="fas fa-user-lock"></i></div>
@@ -183,6 +330,7 @@
         }
         $('ordersRoot').innerHTML = '<div class="loading-state"><i class="fas fa-spinner fa-spin"></i><p>Loading your orders…</p></div>';
         load(false);
+        loadInvite(false);
         pollTimer = setInterval(() => { if (!document.hidden) load(true); }, 20000);
     });
     document.addEventListener('visibilitychange', () => { if (!document.hidden) load(true); });

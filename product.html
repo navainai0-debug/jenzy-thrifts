@@ -66,6 +66,33 @@
     <span class="lb-count" id="lbCount"></span>
 </div>
 
+<div class="modal sg-modal" id="sizeGuide" role="dialog" aria-modal="true" aria-labelledby="sgTitle">
+    <div class="modal-card sg-card">
+        <button class="icon-btn modal-close" id="sgClose" aria-label="Close"><i class="fas fa-xmark"></i></button>
+        <h3 id="sgTitle"><i class="fas fa-ruler-horizontal"></i> Size guide</h3>
+        <p class="sg-fit" id="sgFit"></p>
+        <div class="sg-tabs" role="tablist">
+            <button type="button" role="tab" data-sg="Men">Men</button>
+            <button type="button" role="tab" data-sg="Women">Women</button>
+        </div>
+        <div class="sg-finder">
+            <label for="sgCm">Your foot length</label>
+            <div class="sg-finder-row">
+                <input class="input" id="sgCm" type="number" inputmode="decimal" min="20" max="34" step="0.1" placeholder="e.g. 26.5">
+                <span>cm</span>
+            </div>
+            <div class="sg-result" id="sgResult">Stand on a paper against a wall, mark your longest toe and measure from the wall in cm.</div>
+        </div>
+        <div class="sg-table-wrap">
+            <table class="sg-table">
+                <thead><tr><th>US</th><th>UK</th><th>EU</th><th>Foot (cm)</th></tr></thead>
+                <tbody id="sgBody"></tbody>
+            </table>
+        </div>
+        <p class="sg-note"><span class="sg-dot"></span> = sizes available in this shoe. Between two sizes? Pick the bigger one.</p>
+    </div>
+</div>
+
 <script src="assets/js/store.js"></script>
 <script>
 (function () {
@@ -141,7 +168,7 @@
 
         const specs = [
             ['Brand', p.brand], ['Category', p.category], ['For', p.gender], ['Color', p.color],
-            ['Condition', p.condition], ['Available sizes', sizes.length ? 'US ' + sizes.join(', ') : 'Sold out'],
+            ['Condition', p.condition], ['Fit', p.fit], ['Available sizes', sizes.length ? 'US ' + sizes.join(', ') : 'Sold out'],
             ['Retail price', p.original_price && p.original_price > p.price ? pkr(p.original_price) : '']
         ].filter(([, v]) => v);
 
@@ -161,7 +188,7 @@
                         ${!sold && p.tag ? `<span class="badge badge-${esc(p.tag.toLowerCase())}">${esc(p.tag)}</span>` : ''}
                     </div>
                 </div>
-                ${images.length > 1 ? `<div class="thumbs">${images.map((src, i) => `<button class="${i === imageIndex ? 'active' : ''}" data-img="${i}" aria-label="Photo ${i + 1}"><img src="${esc(src)}" alt="" loading="lazy"></button>`).join('')}</div>` : ''}
+                ${images.length > 1 ? `<div class="thumbs">${images.map((src, i) => `<button class="${i === imageIndex ? 'active' : ''}" data-img="${i}" aria-label="Photo ${i + 1}"><img src="${esc(Store.thumb(p, i) || src)}" alt="" loading="lazy"></button>`).join('')}</div>` : ''}
             </div>
 
             <div class="pd-info">
@@ -182,7 +209,8 @@
                     ${notifyBox(p, sizes, true)}
                 ` : `
                     <div class="pd-block">
-                        <div class="pd-block-head"><h4>Select size (US)</h4><span>${sizes.length === 1 ? 'Only 1 size available' : sizes.length + ' sizes available'}</span></div>
+                        <div class="pd-block-head"><h4>Select size (US)</h4><button class="link-btn sg-open" type="button" data-size-guide><i class="fas fa-ruler-horizontal"></i> Size guide</button></div>
+                        ${fitLine(p)}
                         <div class="size-grid" id="sizeGrid">
                             ${sizes.map(s => `<button class="size-opt ${s === selectedSize ? 'active' : ''}" data-size="${esc(s)}">${esc(s)}</button>`).join('')}
                         </div>
@@ -194,6 +222,7 @@
                         <button class="btn btn-outline btn-lg" id="addToCart"><i class="fas fa-bag-shopping"></i> Add to Cart</button>
                         <button class="btn btn-primary btn-lg" id="buyNow"><i class="fas fa-bolt"></i> Buy Now</button>
                     </div>
+                    <div class="deal-note pd-deal" id="pdDeal" hidden></div>
                 `}
 
                 <div class="pd-share">
@@ -229,6 +258,7 @@
                         ${specs.map(([k, v]) => `<tr><td>${esc(k)}</td><td>${esc(v)}</td></tr>`).join('')}
                     </tbody></table>
                 </div>
+                <div id="pdReviews"></div>
             </div>
         </div>`;
 
@@ -272,7 +302,7 @@
         // Share (WhatsApp, copy link, phone share sheet)
         const link = Store.shareUrl(p);
         const shareText = `${p.brand && !p.name.toLowerCase().startsWith(p.brand.toLowerCase()) ? p.brand + ' ' : ''}${p.name} — ${pkr(p.price)}${sold ? ' (sold)' : ''} at JENZY THRIFTS`;
-        $('shareWa').href = 'https://wa.me/?text=' + encodeURIComponent(`${shareText}\n${link}`);
+        $('shareWa').href = 'https://wa.me/?text=' + encodeURIComponent(`${shareText}\n${Store.shareUrl(p, 'wa')}`);
         $('shareCopy').addEventListener('click', () => Store.copyText(link, 'Link copied — paste it anywhere to share'));
         if (navigator.share) {
             $('shareMore').hidden = false;
@@ -280,6 +310,14 @@
         }
 
         Store.setHelpMessage(`Hi JENZY THRIFTS! I have a question about ${shareText.replace(' at JENZY THRIFTS', '')}\n${link}`);
+        root.querySelectorAll('[data-size-guide]').forEach(b => b.addEventListener('click', () => openSizeGuide(p)));
+        renderReviews();
+        Store.offers().then(o => {
+            const el = $('pdDeal');
+            if (!el || !o.bundle.active) return;
+            el.innerHTML = `<i class="fas fa-tags"></i> Buy ${o.bundle.min} or more pairs and get <strong>${o.bundle.percent}% off</strong> your order`;
+            el.hidden = false;
+        });
         bindNotify(p);
         renderBuyBar(sold);
         if (sold) return;
@@ -309,6 +347,91 @@
         $('buyNow').addEventListener('click', buyNow);
         $('bbCart').addEventListener('click', addToCart);
         $('bbBuy').addEventListener('click', buyNow);
+    }
+
+    // ---------- Fit + size guide ----------
+    const FIT_NOTES = {
+        'True to size': ['fit-true', 'fa-circle-check', 'Fits true to size: order your normal size.'],
+        'Runs small': ['fit-small', 'fa-arrow-up', 'Runs small: we suggest half a size bigger than usual.'],
+        'Runs large': ['fit-large', 'fa-arrow-down', 'Runs large: we suggest half a size smaller than usual.']
+    };
+    function fitLine(p) {
+        const f = FIT_NOTES[p.fit];
+        return f ? `<div class="fit-line ${f[0]}"><i class="fas ${f[1]}"></i> ${esc(f[2])}</div>` : '';
+    }
+    // Nike's official charts (most brands are within half a size)
+    const SIZE_CHART = {
+        Men: [['4', '3.5', '36', 22.5], ['4.5', '4', '36.5', 23], ['5', '4.5', '37.5', 23.5], ['5.5', '5', '38', 24], ['6', '5.5', '38.5', 24],
+            ['6.5', '6', '39', 24.5], ['7', '6', '40', 25], ['7.5', '6.5', '40.5', 25.5], ['8', '7', '41', 26], ['8.5', '7.5', '42', 26.5],
+            ['9', '8', '42.5', 27], ['9.5', '8.5', '43', 27.5], ['10', '9', '44', 28], ['10.5', '9.5', '44.5', 28.5], ['11', '10', '45', 29],
+            ['11.5', '10.5', '45.5', 29.5], ['12', '11', '46', 30], ['12.5', '11.5', '47', 30.5], ['13', '12', '47.5', 31], ['14', '13', '48.5', 32], ['15', '14', '49.5', 33]],
+        Women: [['5', '2.5', '35.5', 22], ['5.5', '3', '36', 22.5], ['6', '3.5', '36.5', 23], ['6.5', '4', '37.5', 23.5], ['7', '4.5', '38', 24],
+            ['7.5', '5', '38.5', 24.5], ['8', '5.5', '39', 25], ['8.5', '6', '40', 25.5], ['9', '6.5', '40.5', 26], ['9.5', '7', '41', 26.5],
+            ['10', '7.5', '42', 27], ['10.5', '8', '42.5', 27.5], ['11', '8.5', '43', 28], ['12', '9.5', '44.5', 29]]
+    };
+    let sgTab = 'Men';
+    let sgProduct = null;
+    function renderSizeGuide() {
+        const p = sgProduct;
+        const avail = new Set(p && p.status === 'Active' ? (p.sizes || []) : []);
+        const matches = !p || p.gender === sgTab || (p.gender !== 'Women' && sgTab === 'Men');
+        document.querySelectorAll('[data-sg]').forEach(b => { b.classList.toggle('active', b.dataset.sg === sgTab); b.setAttribute('aria-selected', b.dataset.sg === sgTab); });
+        const cm = parseFloat($('sgCm').value);
+        let pick = null;
+        if (cm >= 20 && cm <= 34) {
+            const rows = SIZE_CHART[sgTab];
+            let idx = rows.findIndex(r => r[3] >= cm);
+            if (idx === -1) idx = rows.length - 1;
+            if (p && p.fit === 'Runs small') idx = Math.min(idx + 1, rows.length - 1);
+            if (p && p.fit === 'Runs large') idx = Math.max(idx - 1, 0);
+            pick = rows[idx][0];
+            const inStock = matches && avail.has(pick);
+            $('sgResult').innerHTML = `Your size: <strong>US ${esc(sgTab === 'Women' ? 'W' : '')}${esc(pick)}</strong>${p && p.fit && p.fit !== 'True to size' ? ` <span class="muted">(adjusted: ${esc(p.fit.toLowerCase())})</span>` : ''}` +
+                (matches && p ? (inStock ? ' <span class="sg-ok"><i class="fas fa-circle-check"></i> available in this shoe</span>' : ' <span class="sg-no">not available in this shoe</span>') : '');
+        } else {
+            $('sgResult').textContent = 'Stand on a paper against a wall, mark your longest toe and measure from the wall in cm.';
+        }
+        $('sgBody').innerHTML = SIZE_CHART[sgTab].map(r => `<tr class="${matches && avail.has(r[0]) ? 'avail' : ''} ${pick === r[0] ? 'pick' : ''}">
+            <td>${sgTab === 'Women' ? 'W' : ''}${r[0]}${matches && avail.has(r[0]) ? ' <span class="sg-dot"></span>' : ''}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`).join('');
+    }
+    function openSizeGuide(p) {
+        sgProduct = p;
+        sgTab = p && p.gender === 'Women' ? 'Women' : 'Men';
+        const f = p && FIT_NOTES[p.fit];
+        $('sgFit').innerHTML = f ? `<span class="fit-line ${f[0]}"><i class="fas ${f[1]}"></i> ${esc(f[2])}</span>` : 'Sizes are US. Every pair is checked and measured before listing.';
+        renderSizeGuide();
+        $('sizeGuide').classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeSizeGuide() {
+        $('sizeGuide').classList.remove('open');
+        document.body.style.overflow = '';
+    }
+    document.querySelectorAll('[data-sg]').forEach(b => b.addEventListener('click', () => { sgTab = b.dataset.sg; renderSizeGuide(); }));
+    $('sgCm').addEventListener('input', renderSizeGuide);
+    $('sgClose').addEventListener('click', closeSizeGuide);
+    $('sizeGuide').addEventListener('click', e => { if (e.target.id === 'sizeGuide') closeSizeGuide(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('sizeGuide').classList.contains('open')) closeSizeGuide(); });
+
+    // ---------- Buyer reviews (approved by the shop) ----------
+    let reviewsCache = null;
+    async function renderReviews() {
+        const box = $('pdReviews');
+        if (!box) return;
+        if (!reviewsCache) {
+            const { data, error } = await db.from('reviews').select('id, name, city, rating, text, created_at').eq('status', 'Approved').order('created_at', { ascending: false }).limit(50);
+            reviewsCache = error ? [] : (data || []);
+        }
+        const list = reviewsCache;
+        if (!list.length || !$('pdReviews')) return;
+        const avg = list.reduce((s, r) => s + r.rating, 0) / list.length;
+        const withText = list.filter(r => r.text).slice(0, 2);
+        $('pdReviews').innerHTML = `
+            <div class="pd-block pd-reviews">
+                <div class="pd-block-head"><h4>What buyers say</h4><a class="link-btn" href="index.html#reviews">See all</a></div>
+                <div class="rv-summary"><span class="stars">${Store.stars(avg)}</span><strong>${avg.toFixed(1)}</strong><span class="muted">from ${list.length} verified buyer${list.length > 1 ? 's' : ''}</span></div>
+                ${withText.map(r => `<div class="rv-mini"><span class="stars sm">${Store.stars(r.rating)}</span><p>“${esc(r.text.length > 160 ? r.text.slice(0, 157) + '…' : r.text)}”</p><span class="muted">${esc(r.name)}${r.city ? ', ' + esc(r.city) : ''} <i class="fas fa-circle-check verified"></i> Verified buyer</span></div>`).join('')}
+            </div>`;
     }
 
     // ---------- "Notify me when my size arrives" ----------

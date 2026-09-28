@@ -86,9 +86,10 @@
                 <button class="btn btn-dark" id="couponBtn" type="button">Apply</button>
             </div>
             <div class="coupon-msg" id="couponMsg"></div>
+            <div class="deal-note" id="dealNote" hidden></div>
 
             <div class="sum-row"><span>Subtotal</span><span id="sSubtotal">–</span></div>
-            <div class="sum-row" id="discountRow" hidden><span>Discount <span id="sCouponCode" class="muted"></span></span><span id="sDiscount" style="color:var(--accent)"></span></div>
+            <div class="sum-row" id="discountRow" hidden><span id="sDiscountLabel">Discount</span><span id="sDiscount" style="color:var(--accent)"></span></div>
             <div class="sum-row"><span>Delivery</span><span id="sDelivery">–</span></div>
             <div class="sum-row total"><span>Total</span><span id="sTotal">–</span></div>
             <p class="drawer-note" id="freeNote"></p>
@@ -112,7 +113,8 @@
     const buyNow = !!(buyId && buySize);
 
     let quote = null;
-    let coupon = sessionStorage.getItem('jenzyCoupon') || '';
+    // A typed code, or a friend's invite code saved from an invite link (?ref=CODE)
+    let coupon = sessionStorage.getItem('jenzyCoupon') || Store.referralCode() || '';
     let placing = false;
 
     const items = () => buyNow ? [{ id: buyId, size: buySize }] : Store.cart.items.map(i => ({ id: i.id, size: i.size }));
@@ -142,12 +144,23 @@
         if (quote.couponError) {
             $('couponMsg').textContent = quote.couponError;
             $('couponMsg').className = 'coupon-msg err';
+            if (coupon === Store.referralCode()) Store.clearReferralCode();
             coupon = '';
             sessionStorage.removeItem('jenzyCoupon');
-        } else if (quote.coupon) {
-            $('couponMsg').textContent = `Code ${quote.coupon} applied — ${quote.couponPercent}% off`;
-            $('couponMsg').className = 'coupon-msg ok';
-            $('couponInput').value = quote.coupon;
+        } else if (quote.codeKind) {
+            $('couponInput').value = coupon;
+            if (quote.coupon) {
+                $('couponMsg').textContent = quote.codeKind === 'referral'
+                    ? `Friend's invite code applied: ${quote.couponPercent}% off your first order`
+                    : `Code ${quote.coupon} applied: ${quote.couponPercent}% off`;
+                $('couponMsg').className = 'coupon-msg ok';
+            } else {
+                $('couponMsg').textContent = quote.couponNote || '';
+                $('couponMsg').className = 'coupon-msg info';
+            }
+        } else {
+            $('couponMsg').textContent = '';
+            $('couponMsg').className = 'coupon-msg';
         }
         renderSummary();
     }
@@ -183,7 +196,16 @@
         $('sSubtotal').textContent = pkr(q.subtotal);
         $('discountRow').hidden = !q.discount;
         $('sDiscount').textContent = '− ' + pkr(q.discount);
-        $('sCouponCode').textContent = q.coupon ? `(${q.coupon})` : '';
+        $('sDiscountLabel').textContent = q.discountLabel || 'Discount';
+        // Bundle deal / invite credit notes
+        let deal = '';
+        if (q.discountType === 'credit') deal = `<i class="fas fa-gift"></i> Your invite credit of ${pkr(q.credit.amount)} is applied. Thanks for inviting friends!`;
+        else if (q.bundleHint) deal = `<i class="fas fa-tags"></i> ${esc(q.bundleHint)} <a href="index.html#shop">Browse shoes</a>`;
+        else if (q.discountType === 'bundle') deal = `<i class="fas fa-tags"></i> Bundle deal applied: ${q.bundle.percent}% off for ${q.bundle.min}+ pairs.`;
+        else if (q.credit && !q.credit.applied) deal = `<i class="fas fa-gift"></i> You have ${pkr(q.credit.amount)} invite credit. It is kept for your next order because a bigger discount is used now.`;
+        $('dealNote').innerHTML = deal;
+        $('dealNote').className = 'deal-note' + (q.discountType === 'bundle' || q.discountType === 'credit' ? ' on' : '');
+        $('dealNote').hidden = !deal;
         $('sDelivery').textContent = q.subtotal === 0 ? '–' : (q.deliveryFee ? pkr(q.deliveryFee) : 'Free');
         $('sTotal').textContent = pkr(q.total);
         const after = q.subtotal - q.discount;
@@ -219,6 +241,8 @@
             fill('fAddress', saved.address);
         }
         updateButton();
+        // Logged in / out changes invite codes and credit
+        if (quote && !placing) refreshQuote();
     });
     $('gateLogin').addEventListener('click', () => Store.requireLogin('Log in to place your order.').catch(() => {}));
 
@@ -277,7 +301,7 @@
         try {
             const { order } = await api('/api/orders?action=place', {
                 method: 'POST', auth: true,
-                body: { items: items().map(i => ({ product_id: i.id, size: i.size })), customer, coupon: quote && quote.coupon }
+                body: { items: items().map(i => ({ product_id: i.id, size: i.size })), customer, coupon: quote && quote.codeKind ? coupon : '' }
             });
             localStorage.setItem(savedKey(Store.user.uid), JSON.stringify({
                 name: customer.name, phone: customer.phone, city: customer.city, area, address: $('fAddress').value.trim()
@@ -285,6 +309,7 @@
             // Remove ordered pairs from the cart
             items().forEach(i => Store.cart.remove(i.id, i.size));
             sessionStorage.removeItem('jenzyCoupon');
+            if (quote && quote.codeKind === 'referral') Store.clearReferralCode();
             location.replace('orders.html?placed=' + encodeURIComponent(order.order_no));
         } catch (e) {
             placing = false;

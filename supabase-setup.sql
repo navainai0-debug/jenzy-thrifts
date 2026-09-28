@@ -32,6 +32,8 @@ create table if not exists public.products (
 );
 
 alter table public.products add column if not exists updated_at timestamptz default now();
+alter table public.products add column if not exists fit text;                    -- True to size | Runs small | Runs large
+alter table public.products add column if not exists thumbs text[] default '{}';  -- small photos for the shop grid (same order as images)
 
 alter table public.products enable row level security;
 
@@ -91,6 +93,9 @@ create table if not exists public.orders (
 alter table public.orders add column if not exists courier text;
 alter table public.orders add column if not exists tracking_no text;
 alter table public.orders add column if not exists tracking_url text;
+-- Which discount was used (only the biggest one applies) and who invited this customer
+alter table public.orders add column if not exists discount_type text;   -- coupon | referral | bundle | credit
+alter table public.orders add column if not exists referrer_uid text;
 
 create index if not exists orders_user_uid_idx on public.orders (user_uid);
 create index if not exists orders_created_at_idx on public.orders (created_at desc);
@@ -108,13 +113,20 @@ create table if not exists public.shop_settings (
 );
 alter table public.shop_settings enable row level security;
 revoke all on public.shop_settings from anon, authenticated;
--- The website may read ONLY the public "drop" countdown row (never the Telegram settings)
+-- The website may read ONLY the public rows: drop countdown, bundle deal, invite-friends offer
+-- (never the Telegram settings)
 grant select on public.shop_settings to anon, authenticated;
 drop policy if exists "Public can read public settings" on public.shop_settings;
 create policy "Public can read public settings"
   on public.shop_settings for select
   to anon, authenticated
-  using (key in ('drop'));
+  using (key in ('drop', 'bundle', 'referral'));
+
+-- Default offers (change them any time in Admin → Promotions)
+insert into public.shop_settings (key, value) values
+  ('bundle',   '{"active": true, "min": 2, "percent": 10}'),
+  ('referral', '{"active": true, "percent": 10, "reward": 300}')
+on conflict (key) do nothing;
 
 
 -- Coupon codes — created and removed in the admin panel (Promotions).
@@ -165,6 +177,182 @@ revoke all on public.restock_requests from anon, authenticated;
 
 
 -- ---------------------------------------------------------------------
+-- WISHLIST (logged-in customers) — used for price-drop emails
+-- ---------------------------------------------------------------------
+create table if not exists public.wishlist_items (
+  user_uid text not null,
+  product_id uuid not null references public.products(id) on delete cascade,
+  email text,
+  name text,
+  created_at timestamptz not null default now(),
+  alerted_price integer,                 -- last price we emailed them about
+  primary key (user_uid, product_id)
+);
+create index if not exists wishlist_items_product_idx on public.wishlist_items (product_id);
+alter table public.wishlist_items enable row level security;   -- server only
+revoke all on public.wishlist_items from anon, authenticated;
+
+
+-- ---------------------------------------------------------------------
+-- SAVED CARTS (logged-in customers) — used for the "you left something" email
+-- ---------------------------------------------------------------------
+create table if not exists public.carts (
+  user_uid text primary key,
+  email text,
+  name text,
+  items jsonb not null default '[]',     -- [{product_id, size}]
+  updated_at timestamptz not null default now(),
+  reminded_at timestamptz
+);
+alter table public.carts enable row level security;            -- server only
+revoke all on public.carts from anon, authenticated;
+
+
+-- ---------------------------------------------------------------------
+-- "SELL US YOUR SNEAKERS" requests
+-- ---------------------------------------------------------------------
+create table if not exists public.sell_requests (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  user_uid text not null,
+  email text,
+  name text not null,
+  phone text not null,
+  city text,
+  brand text not null,
+  model text not null,
+  size text not null,
+  condition text,
+  asking_price integer,
+  notes text,
+  images text[] not null default '{}',
+  status text not null default 'New' check (status in ('New', 'Offered', 'Accepted', 'Declined', 'Rejected', 'Bought')),
+  offer_price integer,
+  offer_note text
+);
+create index if not exists sell_requests_created_idx on public.sell_requests (created_at desc);
+create index if not exists sell_requests_user_idx on public.sell_requests (user_uid);
+alter table public.sell_requests enable row level security;    -- server only
+revoke all on public.sell_requests from anon, authenticated;
+
+
+-- ---------------------------------------------------------------------
+-- CUSTOMER REVIEWS — only buyers of delivered orders, shown after you approve
+-- ---------------------------------------------------------------------
+create table if not exists public.reviews (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  order_id uuid unique references public.orders(id) on delete cascade,
+  user_uid text not null,
+  name text not null,                    -- shown as "Ali K."
+  city text,
+  rating integer not null check (rating between 1 and 5),
+  text text check (text is null or char_length(text) <= 1000),
+  images text[] not null default '{}',
+  product_names text,
+  status text not null default 'Pending' check (status in ('Pending', 'Approved', 'Hidden')),
+  approved_at timestamptz
+);
+create index if not exists reviews_created_idx on public.reviews (created_at desc);
+alter table public.reviews enable row level security;
+revoke all on public.reviews from anon, authenticated;
+-- The website can read approved reviews only (never the customer's id)
+grant select (id, created_at, name, city, rating, text, images, product_names, status) on public.reviews to anon, authenticated;
+drop policy if exists "Public can read approved reviews" on public.reviews;
+create policy "Public can read approved reviews"
+  on public.reviews for select
+  to anon, authenticated
+  using (status = 'Approved');
+
+
+-- ---------------------------------------------------------------------
+-- INVITE FRIENDS (referral codes + PKR credits)
+-- ---------------------------------------------------------------------
+create table if not exists public.referral_codes (
+  code text primary key check (code ~ '^[A-Z0-9]{4,20}$'),
+  user_uid text not null unique,
+  email text,
+  name text,
+  created_at timestamptz not null default now()
+);
+alter table public.referral_codes enable row level security;   -- server only
+revoke all on public.referral_codes from anon, authenticated;
+
+create table if not exists public.credits (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  user_uid text not null,
+  amount integer not null check (amount > 0),
+  reason text,
+  source_order_id uuid unique references public.orders(id) on delete set null,  -- the friend's order that earned it
+  used_order_id uuid references public.orders(id) on delete set null,
+  used_at timestamptz
+);
+create index if not exists credits_user_idx on public.credits (user_uid);
+alter table public.credits enable row level security;          -- server only
+revoke all on public.credits from anon, authenticated;
+
+
+-- ---------------------------------------------------------------------
+-- VISITOR STATS — the website adds one row per page view (no personal data)
+-- ---------------------------------------------------------------------
+create table if not exists public.page_views (
+  id bigint generated always as identity primary key,
+  created_at timestamptz not null default now(),
+  visitor text check (visitor ~ '^[a-z0-9]{8,32}$'),     -- random id saved in the browser
+  path text check (char_length(path) <= 120),
+  product_id uuid,
+  source text check (source in ('instagram', 'whatsapp', 'google', 'facebook', 'tiktok', 'youtube', 'direct', 'other')),
+  device text check (device in ('mobile', 'tablet', 'desktop'))
+);
+create index if not exists page_views_created_idx on public.page_views (created_at desc);
+alter table public.page_views enable row level security;
+revoke all on public.page_views from anon, authenticated;
+grant insert (visitor, path, product_id, source, device) on public.page_views to anon, authenticated;
+drop policy if exists "Website can add page views" on public.page_views;
+create policy "Website can add page views"
+  on public.page_views for insert
+  to anon, authenticated
+  with check (created_at > now() - interval '1 minute');
+
+create or replace function public.visitor_stats(p_days integer, p_tz text default 'Asia/Karachi')
+returns jsonb
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  with v as (
+    select * from public.page_views
+     where created_at >= now() - make_interval(days => greatest(1, least(coalesce(p_days, 7), 120)))
+  )
+  select jsonb_build_object(
+    'views', (select count(*) from v),
+    'visitors', (select count(distinct visitor) from v),
+    'daily', coalesce((select jsonb_agg(d order by d.day) from (
+        select to_char((created_at at time zone p_tz)::date, 'YYYY-MM-DD') as day,
+               count(*) as views, count(distinct visitor) as visitors
+          from v group by 1) d), '[]'::jsonb),
+    'sources', coalesce((select jsonb_agg(s order by s.visitors desc) from (
+        select coalesce(source, 'other') as source, count(distinct visitor) as visitors, count(*) as views
+          from v group by 1) s), '[]'::jsonb),
+    'devices', coalesce((select jsonb_agg(s order by s.visitors desc) from (
+        select coalesce(device, 'desktop') as device, count(distinct visitor) as visitors
+          from v group by 1) s), '[]'::jsonb),
+    'products', coalesce((select jsonb_agg(t) from (
+        select p.id, p.name, p.brand, p.price, p.status,
+               coalesce(nullif(p.thumbs[1], ''), p.images[1]) as image,
+               count(*) as views, count(distinct v.visitor) as visitors
+          from v join public.products p on p.id = v.product_id
+         group by p.id order by count(*) desc limit 10) t), '[]'::jsonb),
+    'pages', coalesce((select jsonb_agg(t) from (
+        select path, count(*) as views from v group by path order by count(*) desc limit 8) t), '[]'::jsonb)
+  );
+$$;
+
+
+-- ---------------------------------------------------------------------
 -- 3) CONTACT MESSAGES (the "Send Us a Message" form)
 --    Visitors can send; only the admin panel can read.
 -- ---------------------------------------------------------------------
@@ -196,6 +384,8 @@ create policy "Anyone can send a message"
 --    uses the REAL price from the database, removes the size,
 --    marks the product Sold when empty, then saves the order.
 --    Two people can never buy the same pair.
+--    Discounts: coupon code, friend's invite code, "buy 2+" deal and
+--    invite credit — ONLY THE BIGGEST ONE is applied.
 -- ---------------------------------------------------------------------
 create or replace function public.place_order(
   p_user_uid text,
@@ -207,7 +397,7 @@ create or replace function public.place_order(
   p_notes text,
   p_items jsonb,
   p_coupon text,
-  p_discount_percent integer,
+  p_discount_percent integer,            -- ignored (kept for compatibility)
   p_delivery_fee integer,
   p_free_delivery_min integer
 ) returns public.orders
@@ -222,31 +412,62 @@ declare
   v_remaining text[];
   v_items jsonb := '[]'::jsonb;
   v_subtotal integer := 0;
+  v_count integer := 0;
   v_discount integer := 0;
+  v_type text := null;
   v_after integer;
   v_fee integer;
   v_order public.orders;
   v_coupon public.coupons%rowtype;
+  v_is_coupon boolean := false;
   v_code text := upper(nullif(trim(coalesce(p_coupon, '')), ''));
-  v_pct integer := 0;
+  v_ref public.referral_codes%rowtype;
+  v_ref_on boolean := false;
+  v_ref_cfg jsonb;
+  v_bundle jsonb;
+  v_credit public.credits%rowtype;
+  v_has_credit boolean := false;
+  c_coupon integer := 0;
+  c_ref integer := 0;
+  c_bundle integer := 0;
+  c_credit integer := 0;
 begin
   if p_items is null or jsonb_typeof(p_items) <> 'array' or jsonb_array_length(p_items) = 0 then
     raise exception 'EMPTY_CART';
   end if;
 
-  -- Coupon: must exist, be switched on, not expired and not used up
+  select value into v_ref_cfg from public.shop_settings where key = 'referral';
+  v_ref_cfg := coalesce(v_ref_cfg, '{}'::jsonb);
+  select value into v_bundle from public.shop_settings where key = 'bundle';
+  v_bundle := coalesce(v_bundle, '{}'::jsonb);
+
+  -- Code typed at checkout: a coupon, or a friend's invite code
   if v_code is not null then
     select * into v_coupon from public.coupons where code = v_code for update;
-    if not found or not v_coupon.active then
-      raise exception 'COUPON:Coupon "%" is not valid.', v_code;
+    if found then
+      if not v_coupon.active then
+        raise exception 'COUPON:Coupon "%" is not valid.', v_code;
+      end if;
+      if v_coupon.expires_at is not null and v_coupon.expires_at <= now() then
+        raise exception 'COUPON:Coupon "%" has expired.', v_code;
+      end if;
+      if v_coupon.max_uses is not null and v_coupon.used_count >= v_coupon.max_uses then
+        raise exception 'COUPON:Coupon "%" has been fully used.', v_code;
+      end if;
+      v_is_coupon := true;
+    else
+      select * into v_ref from public.referral_codes where code = v_code;
+      if not found or coalesce((v_ref_cfg->>'active')::boolean, true) = false then
+        raise exception 'COUPON:Coupon "%" is not valid.', v_code;
+      end if;
+      if v_ref.user_uid = p_user_uid then
+        raise exception 'COUPON:This is your own invite code. Share it with friends: they get the discount and you get credit.';
+      end if;
+      if exists (select 1 from public.orders where user_uid = p_user_uid and status <> 'Cancelled') then
+        raise exception 'COUPON:Invite codes only work on your first order.';
+      end if;
+      v_ref_on := true;
     end if;
-    if v_coupon.expires_at is not null and v_coupon.expires_at <= now() then
-      raise exception 'COUPON:Coupon "%" has expired.', v_code;
-    end if;
-    if v_coupon.max_uses is not null and v_coupon.used_count >= v_coupon.max_uses then
-      raise exception 'COUPON:Coupon "%" has been fully used.', v_code;
-    end if;
-    v_pct := v_coupon.percent;
   end if;
 
   for v_item in select * from jsonb_array_elements(p_items)
@@ -280,31 +501,71 @@ begin
       'brand', v_product.brand,
       'size', v_size,
       'price', v_product.price,
-      'image', coalesce(v_product.images[1], '')
+      'image', coalesce(nullif(v_product.thumbs[1], ''), v_product.images[1], '')
     ));
     v_subtotal := v_subtotal + v_product.price;
+    v_count := v_count + 1;
   end loop;
 
-  if v_code is not null then
+  if v_is_coupon then
     if v_subtotal < v_coupon.min_order then
       raise exception 'COUPON:Coupon "%" needs an order of at least PKR %.', v_code, v_coupon.min_order;
     end if;
+    c_coupon := (v_subtotal * v_coupon.percent) / 100;
+  end if;
+  if v_ref_on then
+    c_ref := (v_subtotal * greatest(least(coalesce((v_ref_cfg->>'percent')::int, 10), 50), 0)) / 100;
+  end if;
+  if coalesce((v_bundle->>'active')::boolean, true)
+     and v_count >= greatest(coalesce((v_bundle->>'min')::int, 2), 2) then
+    c_bundle := (v_subtotal * greatest(least(coalesce((v_bundle->>'percent')::int, 10), 50), 0)) / 100;
+  end if;
+  select * into v_credit from public.credits
+   where user_uid = p_user_uid and used_order_id is null
+   order by created_at limit 1 for update;
+  if found then
+    v_has_credit := true;
+    c_credit := least(v_credit.amount, v_subtotal);
+  end if;
+
+  -- Only the biggest discount (ties: deal, then code, then credit — credit is kept for later)
+  if c_bundle > 0 and c_bundle >= greatest(c_coupon, c_ref, c_credit) then
+    v_discount := c_bundle; v_type := 'bundle';
+  elsif c_coupon > 0 and c_coupon >= greatest(c_ref, c_credit) then
+    v_discount := c_coupon; v_type := 'coupon';
+  elsif c_ref > 0 and c_ref >= c_credit then
+    v_discount := c_ref; v_type := 'referral';
+  elsif c_credit > 0 then
+    v_discount := c_credit; v_type := 'credit';
+  end if;
+
+  if v_type = 'coupon' then
     update public.coupons set used_count = used_count + 1 where code = v_code;
   end if;
 
-  v_discount := (v_subtotal * greatest(least(v_pct, 100), 0)) / 100;
   v_after := v_subtotal - v_discount;
   v_fee := case when v_after >= coalesce(p_free_delivery_min, 0) then 0 else greatest(coalesce(p_delivery_fee, 0), 0) end;
 
   insert into public.orders (
     user_uid, user_email, customer_name, phone, address, city, notes,
-    items, subtotal, discount, coupon, delivery_fee, total, status, status_history
+    items, subtotal, discount, coupon, discount_type, referrer_uid, delivery_fee, total, status, status_history
   ) values (
     p_user_uid, p_user_email, p_customer_name, p_phone, p_address, p_city, nullif(p_notes, ''),
-    v_items, v_subtotal, v_discount, v_code, v_fee, v_after + v_fee, 'Pending',
+    v_items, v_subtotal, v_discount,
+    case when v_type in ('coupon', 'referral') then v_code end,
+    v_type,
+    case when v_ref_on then v_ref.user_uid end,
+    v_fee, v_after + v_fee, 'Pending',
     jsonb_build_array(jsonb_build_object('status', 'Pending', 'at', now(), 'by', 'customer'))
   )
   returning * into v_order;
+
+  if v_type = 'credit' then
+    update public.credits set used_order_id = v_order.id, used_at = now() where id = v_credit.id;
+  end if;
+
+  -- The customer's saved cart is done
+  delete from public.carts where user_uid = p_user_uid;
 
   return v_order;
 end;
@@ -313,6 +574,7 @@ $$;
 
 -- ---------------------------------------------------------------------
 -- 5) CHANGE ORDER STATUS — cancelling puts the pairs back in stock.
+--    Delivered: the friend who invited this customer gets their credit.
 -- ---------------------------------------------------------------------
 create or replace function public.set_order_status(
   p_order_id uuid,
@@ -326,6 +588,7 @@ as $$
 declare
   v_order public.orders;
   v_item jsonb;
+  v_cfg jsonb;
 begin
   if p_status not in ('Pending', 'Confirmed', 'Shipped', 'Delivered', 'Cancelled') then
     raise exception 'BAD_STATUS';
@@ -355,9 +618,25 @@ begin
              updated_at = now()
        where id = (v_item->>'product_id')::uuid;
     end loop;
-    -- …and gives the coupon use back
-    if v_order.coupon is not null then
+    -- …gives the coupon use back
+    if v_order.coupon is not null and coalesce(v_order.discount_type, 'coupon') = 'coupon' then
       update public.coupons set used_count = greatest(used_count - 1, 0) where code = v_order.coupon;
+    end if;
+    -- …gives the customer's invite credit back
+    update public.credits set used_order_id = null, used_at = null where used_order_id = v_order.id;
+    -- …and removes an unused credit this order earned for the friend
+    delete from public.credits where source_order_id = v_order.id and used_order_id is null;
+  end if;
+
+  -- Delivered: reward the friend who shared the invite code
+  if p_status = 'Delivered' and v_order.referrer_uid is not null then
+    select value into v_cfg from public.shop_settings where key = 'referral';
+    v_cfg := coalesce(v_cfg, '{}'::jsonb);
+    if coalesce((v_cfg->>'active')::boolean, true) then
+      insert into public.credits (user_uid, amount, reason, source_order_id)
+      values (v_order.referrer_uid, greatest(coalesce((v_cfg->>'reward')::int, 300), 1),
+              'Your friend''s order JT-' || v_order.order_no || ' was delivered', v_order.id)
+      on conflict (source_order_id) do nothing;
     end if;
   end if;
 
@@ -378,6 +657,8 @@ revoke all on function public.place_order(text, text, text, text, text, text, te
 revoke all on function public.set_order_status(uuid, text, text) from public, anon, authenticated;
 grant execute on function public.place_order(text, text, text, text, text, text, text, jsonb, text, integer, integer, integer) to service_role;
 grant execute on function public.set_order_status(uuid, text, text) to service_role;
+revoke all on function public.visitor_stats(integer, text) from public, anon, authenticated;
+grant execute on function public.visitor_stats(integer, text) to service_role;
 
 
 -- ---------------------------------------------------------------------

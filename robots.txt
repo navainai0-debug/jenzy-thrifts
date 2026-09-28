@@ -1,0 +1,9 @@
+# JENZY THRIFTS — rules for Google and other search engines
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /checkout
+Disallow: /orders
+Disallow: /wishlist
+Disallow: /api/
+Sitemap: https://www.jenzythrifts.com/sitemap.xml

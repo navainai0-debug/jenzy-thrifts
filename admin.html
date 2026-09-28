@@ -286,6 +286,71 @@
         .wl-row .who small { display: block; color: var(--text-3); font-size: 12px; }
         .wl-row a { color: var(--accent-2); }
 
+        /* Batch 2: offers, reviews, sell requests, visitors, story, printing */
+        .grid-2 + .grid-2 { margin-top: 20px; }
+        .grid-2 > .panel { margin-top: 0 !important; }
+        .offers-grid { grid-template-columns: 1fr 1fr; }
+        .offers-save { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+        .ref-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 16px; }
+        .ref-stats div { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; }
+        .ref-stats strong { display: block; font-size: 17px; }
+        .ref-stats span { font-size: 11.5px; color: var(--text-3); }
+        .print-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+        .bulk-actions { display: flex; gap: 8px; margin-left: auto; flex-wrap: wrap; }
+        .chk-col { width: 36px; padding-right: 0 !important; }
+        .chk-col input, .row-chk { width: 17px; height: 17px; accent-color: var(--accent); cursor: pointer; vertical-align: middle; }
+        .card-list { padding: 14px 20px 20px; display: grid; gap: 12px; }
+        .rv-card, .sr-card { border: 1px solid var(--border); border-radius: 12px; background: var(--bg); padding: 14px 16px; display: grid; gap: 10px; }
+        .rv-top, .sr-top { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .rv-top .grow, .sr-top .grow { flex: 1; min-width: 160px; }
+        .rv-top h5, .sr-top h5 { font-size: 14px; font-weight: 600; }
+        .rv-top p, .sr-top p { font-size: 12.5px; color: var(--text-3); }
+        .rv-stars { color: var(--yellow); font-size: 13px; letter-spacing: 1px; white-space: nowrap; }
+        .rv-stars .off { color: var(--border-2); }
+        .rv-text { font-size: 14px; color: var(--text-2); white-space: pre-wrap; word-break: break-word; }
+        .rv-meta { font-size: 12.5px; color: var(--text-3); display: flex; gap: 6px 14px; flex-wrap: wrap; }
+        .rv-meta a { color: var(--accent-2); }
+        .ph-row { display: flex; gap: 8px; flex-wrap: wrap; }
+        .ph-row a { display: block; width: 76px; height: 76px; border-radius: 10px; overflow: hidden; border: 1px solid var(--border); background: var(--surface-2); }
+        .ph-row img { width: 100%; height: 100%; object-fit: cover; }
+        .st-Approved, .st-Accepted, .st-Bought { background: rgba(57,255,20,.1); color: var(--accent); border-color: rgba(57,255,20,.3); }
+        .st-Hidden, .st-Declined, .st-Rejected { background: rgba(124,124,134,.12); color: var(--text-2); border-color: var(--border-2); }
+        .st-New { background: rgba(255,214,10,.1); color: var(--yellow); border-color: rgba(255,214,10,.3); }
+        .st-Offered { background: rgba(0,212,255,.1); color: var(--accent-2); border-color: rgba(0,212,255,.3); }
+        .sr-facts { display: flex; flex-wrap: wrap; gap: 6px; }
+        .sr-facts span { font-size: 12.5px; padding: 4px 10px; border-radius: 8px; background: var(--surface-2); border: 1px solid var(--border); color: var(--text-2); }
+        .sr-facts strong { color: var(--text); }
+        .sr-offer { display: grid; grid-template-columns: 160px 1fr auto; gap: 10px; align-items: end; padding-top: 10px; border-top: 1px dashed var(--border); }
+        .sr-offer .lbl { margin-bottom: 4px; }
+        .sr-sent { font-size: 13px; color: var(--accent-2); }
+        .visit-head { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 16px; }
+        .chart.days { display: flex; gap: 3px; }
+        .chart.days .bar-col { flex: 1; min-width: 0; }
+        .chart.days .bar { max-width: none; border-radius: 4px 4px 2px 2px; }
+        .chart.days .bar-day { font-size: 10px; white-space: nowrap; }
+        .bd-row.wide { grid-template-columns: 120px 1fr 56px; }
+        .bd-row .bd-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .story-card { max-width: 860px; }
+        .story-body { display: grid; grid-template-columns: 300px 1fr; gap: 24px; align-items: start; }
+        .story-preview { position: relative; width: 100%; aspect-ratio: 9 / 16; border-radius: 14px; overflow: hidden; background: #000; border: 1px solid var(--border); }
+        .story-preview canvas { width: 100%; height: 100%; display: block; }
+        .story-loading { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,.5); }
+        .story-loading.show { display: flex; }
+        .story-controls .select { width: 100%; }
+        .story-controls .check { margin-top: 8px; }
+        .story-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+        .t-prod img.nothumb { outline: 2px dashed rgba(255,214,10,.5); outline-offset: -2px; }
+        @media (max-width: 900px) {
+            .offers-grid { grid-template-columns: 1fr; }
+            .bulk-actions { margin-left: 0; width: 100%; }
+            .bulk-actions .btn { flex: 1; }
+            .story-body { grid-template-columns: 1fr; }
+            .story-preview { max-width: 260px; margin: 0 auto; }
+            .sr-offer { grid-template-columns: 1fr; }
+            .card-list { padding: 12px; }
+        }
+        @media (max-width: 520px) { .ref-stats { grid-template-columns: 1fr 1fr 1fr; gap: 6px; } .ref-stats strong { font-size: 15px; } }
+
         @media (max-width: 1200px) { .stats { grid-template-columns: repeat(2, 1fr); } .grid-2 { grid-template-columns: 1fr; } }
         @media (max-width: 900px) {
             .sidebar { transform: translateX(-100%); }
@@ -360,12 +425,15 @@
             <div class="sec">Sales</div>
             <a href="#orders" data-view="orders"><i class="fas fa-receipt"></i>Orders<span class="nav-badge zero" id="badgePending">0</span></a>
             <a href="#promotions" data-view="promotions"><i class="fas fa-tags"></i>Promotions</a>
+            <a href="#visitors" data-view="visitors"><i class="fas fa-chart-pie"></i>Visitors</a>
             <div class="sec">Catalog</div>
             <a href="#products" data-view="products"><i class="fas fa-shoe-prints"></i>Products<span class="nav-badge zero" id="badgeProducts" style="background:var(--surface-2);color:var(--text-2)">0</span></a>
             <a href="#add" data-view="add"><i class="fas fa-circle-plus"></i>Add Product</a>
             <div class="sec">Customers</div>
             <a href="#messages" data-view="messages"><i class="fas fa-envelope"></i>Messages<span class="nav-badge zero" id="badgeMessages">0</span></a>
             <a href="#waitlist" data-view="waitlist"><i class="fas fa-user-clock"></i>Waiting list<span class="nav-badge zero" id="badgeWaitlist">0</span></a>
+            <a href="#reviews" data-view="reviews"><i class="fas fa-star"></i>Reviews<span class="nav-badge zero" id="badgeReviews">0</span></a>
+            <a href="#sell" data-view="sell"><i class="fas fa-hand-holding-dollar"></i>Sell requests<span class="nav-badge zero" id="badgeSell">0</span></a>
             <div class="sec">Settings</div>
             <a href="#alerts" data-view="alerts"><i class="fas fa-bell"></i>Order Alerts</a>
         </nav>
@@ -413,8 +481,12 @@
                     <div class="toolbar" style="border-bottom:1px solid var(--border);margin-top:14px">
                         <div class="search"><i class="fas fa-magnifying-glass"></i><input class="input" id="orderSearch" placeholder="Search order no, name, phone, city"></div>
                         <button class="btn btn-outline btn-sm" id="refreshOrders"><i class="fas fa-rotate"></i> Refresh</button>
+                        <div class="bulk-actions">
+                            <button class="btn btn-outline btn-sm" id="printLabels"><i class="fas fa-tag"></i> <span>Print labels</span></button>
+                            <button class="btn btn-outline btn-sm" id="exportCsv"><i class="fas fa-file-csv"></i> <span>Courier CSV</span></button>
+                        </div>
                     </div>
-                    <div class="table-wrap"><table class="tbl"><thead><tr><th>Order</th><th>Date</th><th>Customer</th><th>Phone</th><th>City</th><th>Items</th><th>Total</th><th>Status</th></tr></thead><tbody id="ordersTable"></tbody></table></div>
+                    <div class="table-wrap"><table class="tbl"><thead><tr><th class="chk-col"><input type="checkbox" id="selectAllOrders" aria-label="Select all"></th><th>Order</th><th>Date</th><th>Customer</th><th>Phone</th><th>City</th><th>Items</th><th>Total</th><th>Status</th></tr></thead><tbody id="ordersTable"></tbody></table></div>
                 </div>
             </section>
 
@@ -425,6 +497,7 @@
                         <div class="search"><i class="fas fa-magnifying-glass"></i><input class="input" id="productSearch" placeholder="Search products"></div>
                         <select class="select" id="productStatusFilter"><option value="">All statuses</option><option>Active</option><option>Draft</option><option>Sold</option></select>
                         <select class="select" id="productGenderFilter"><option value="">Men &amp; Women</option><option>Men</option><option>Women</option><option>Unisex</option><option>Kids</option></select>
+                        <button class="btn btn-outline btn-sm" id="optimizeBtn" hidden style="margin-left:auto"><i class="fas fa-bolt"></i> <span>Optimize old photos</span></button>
                         <a href="#add" class="btn btn-primary btn-sm" style="margin-left:auto" id="addNewBtn"><i class="fas fa-plus"></i> Add product</a>
                     </div>
                     <div class="table-wrap"><table class="tbl"><thead><tr><th>Product</th><th>For</th><th>Price</th><th>Sizes</th><th>Condition</th><th>Status</th><th style="text-align:right">Actions</th></tr></thead><tbody id="productsTable"></tbody></table></div>
@@ -445,6 +518,7 @@
                                 <div><label class="lbl" for="pGender">For <span class="req">*</span></label><select class="select" id="pGender"><option value="Men">Men</option><option value="Women">Women</option><option value="Unisex">Unisex (Men &amp; Women)</option><option value="Kids">Kids</option></select></div>
                                 <div><label class="lbl" for="pCategory">Category</label><select class="select" id="pCategory"><option value="">Select</option><option>Sneakers</option><option>Running</option><option>Basketball</option><option>Casual</option><option>Skate</option><option>Boots</option><option>Slides</option><option>Formal</option></select></div>
                                 <div><label class="lbl" for="pCondition">Condition</label><select class="select" id="pCondition"><option value="Excellent">Excellent — barely worn</option><option value="Good">Good — light wear</option><option value="Fair">Fair — visible wear</option></select></div>
+                                <div><label class="lbl" for="pFit">Fit</label><select class="select" id="pFit"><option value="">Not set</option><option value="True to size">True to size</option><option value="Runs small">Runs small (buy half size up)</option><option value="Runs large">Runs large (buy half size down)</option></select></div>
                                 <div><label class="lbl" for="pPrice">Selling price (PKR) <span class="req">*</span></label><input class="input" id="pPrice" type="number" min="1" step="1" inputmode="numeric" placeholder="8500"></div>
                                 <div><label class="lbl" for="pOriginal">Original retail price (PKR)</label><input class="input" id="pOriginal" type="number" min="0" step="1" inputmode="numeric" placeholder="Optional — shows the discount %"></div>
                                 <div><label class="lbl" for="pColor">Color</label><input class="input" id="pColor" maxlength="60" placeholder="White / Black"></div>
@@ -459,7 +533,7 @@
                                 <div class="full"><label class="lbl" for="pDescription">Description</label><textarea class="input" id="pDescription" maxlength="3000" placeholder="Details, flaws, box included, etc."></textarea></div>
                                 <div class="full">
                                     <label class="lbl">Photos <span class="req">*</span> <span class="muted">(first photo is the main one — up to 8)</span></label>
-                                    <div class="drop" id="dropZone"><i class="fas fa-cloud-arrow-up"></i><div style="font-weight:600">Drag photos here or click to choose</div><p>JPG, PNG or WEBP. Large photos are resized automatically.</p><input type="file" id="imageInput" accept="image/*" multiple></div>
+                                    <div class="drop" id="dropZone"><i class="fas fa-cloud-arrow-up"></i><div style="font-weight:600">Drag photos here or click to choose</div><p>JPG, PNG or WEBP. Large photos are resized automatically, and a small fast version is made for the shop grid.</p><input type="file" id="imageInput" accept="image/*" multiple></div>
                                     <div class="thumbs" id="thumbs"></div>
                                 </div>
                                 <div class="full form-actions">
@@ -482,6 +556,18 @@
                 <div class="panel">
                     <div class="panel-head"><h3><i class="fas fa-envelope"></i> Emails — you &amp; your customers</h3><span id="emState"></span></div>
                     <div class="panel-body" id="emBody"><div class="spinner"></div></div>
+                </div>
+                <div class="panel">
+                    <div class="panel-head"><h3><i class="fas fa-wand-magic-sparkles"></i> Automatic customer emails</h3></div>
+                    <div class="panel-body">
+                        <label class="check"><input type="checkbox" id="emPriceDrop"> <span><strong>Price drop</strong> — when you lower a shoe's price, everyone who saved it (logged in) gets an email</span></label>
+                        <label class="check" style="margin-top:10px"><input type="checkbox" id="emCart"> <span><strong>Cart reminder</strong> — one friendly email the next day to logged-in customers who left shoes in their cart without ordering</span></label>
+                        <p class="muted" style="font-size:12.5px;margin-top:12px">Cart reminders are sent automatically once a day (around 4 PM). Nobody gets more than one reminder for the same cart, and only if the shoes are still available.</p>
+                        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px">
+                            <button class="btn btn-outline btn-sm" id="runRemindersBtn"><i class="fas fa-paper-plane"></i> Send cart reminders now</button>
+                            <span class="muted" id="runRemindersResult" style="font-size:13px"></span>
+                        </div>
+                    </div>
                 </div>
                 <div class="panel">
                     <div class="panel-body" style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
@@ -509,6 +595,38 @@
                         </form>
                     </div>
                     <div class="table-wrap"><table class="tbl"><thead><tr><th>Code</th><th>Discount</th><th>Rules</th><th>Used</th><th>Top bar</th><th>Status</th><th style="text-align:right">Actions</th></tr></thead><tbody id="couponsTable"></tbody></table></div>
+                </div>
+
+                <div class="grid-2 offers-grid">
+                    <div class="panel">
+                        <div class="panel-head"><h3><i class="fas fa-layer-group"></i> Bundle deal</h3><span id="bundleState"></span></div>
+                        <div class="panel-body">
+                            <p class="alert-lead">Automatic discount when a customer buys several pairs in one order. No code needed.</p>
+                            <div class="form-grid">
+                                <div><label class="lbl" for="bMin">Minimum pairs</label><input class="input" id="bMin" type="number" min="2" max="10" step="1" inputmode="numeric"></div>
+                                <div><label class="lbl" for="bPercent">% off the order</label><input class="input" id="bPercent" type="number" min="1" max="50" step="1" inputmode="numeric"></div>
+                                <label class="check full"><input type="checkbox" id="bActive"> Bundle deal is on</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-head"><h3><i class="fas fa-gift"></i> Invite friends</h3><span id="refState"></span></div>
+                        <div class="panel-body">
+                            <p class="alert-lead">Customers share their code. The friend gets % off their first order; when it's <strong>Delivered</strong>, the customer gets PKR credit for their next order.</p>
+                            <div class="form-grid">
+                                <div><label class="lbl" for="rPercent">Friend's % off</label><input class="input" id="rPercent" type="number" min="1" max="50" step="1" inputmode="numeric"></div>
+                                <div><label class="lbl" for="rReward">Reward (PKR)</label><input class="input" id="rReward" type="number" min="50" max="20000" step="50" inputmode="numeric"></div>
+                                <label class="check full"><input type="checkbox" id="rActive"> Invite codes are on</label>
+                            </div>
+                            <div class="ref-stats" id="refStats"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel">
+                    <div class="panel-body offers-save">
+                        <button class="btn btn-primary" id="offersSave" type="button"><i class="fas fa-floppy-disk"></i> Save offers</button>
+                        <span class="muted" style="font-size:13px"><i class="fas fa-circle-info"></i> Discounts never add up: each order gets only the biggest one (coupon, bundle deal, invite code or invite credit).</span>
+                    </div>
                 </div>
 
                 <div class="panel">
@@ -547,6 +665,58 @@
                     <div id="messagesList"></div>
                 </div>
             </section>
+
+            <!-- REVIEWS -->
+            <section class="view" id="view-reviews">
+                <p class="alert-lead">Only customers with a <strong>Delivered</strong> order can write a review. Nothing shows on the website until you press <strong>Approve</strong>.</p>
+                <div class="panel">
+                    <div class="tabs" id="reviewTabs"></div>
+                    <div id="reviewList" class="card-list"></div>
+                </div>
+            </section>
+
+            <!-- SELL REQUESTS -->
+            <section class="view" id="view-sell">
+                <p class="alert-lead">Customers who want to sell you their sneakers (from the <a href="sell.html" target="_blank" rel="noopener">Sell your sneakers</a> page). Send an offer: they get an email and can accept or decline on the website.</p>
+                <div class="alert" id="sellEmailWarn"></div>
+                <div class="panel">
+                    <div class="tabs" id="sellTabs"></div>
+                    <div id="sellList" class="card-list"></div>
+                </div>
+            </section>
+
+            <!-- VISITORS -->
+            <section class="view" id="view-visitors">
+                <div class="visit-head">
+                    <div class="tabs" id="visitRange" style="padding:0;border:0">
+                        <button class="tab" data-days="7">Last 7 days</button>
+                        <button class="tab" data-days="30">30 days</button>
+                        <button class="tab" data-days="90">90 days</button>
+                    </div>
+                    <span class="muted" style="font-size:12.5px"><i class="fas fa-user-shield"></i> Anonymous counts only. Your own visits on this device are not counted.</span>
+                </div>
+                <div class="stats" id="visitStats"></div>
+                <div class="grid-2">
+                    <div class="panel">
+                        <div class="panel-head"><h3><i class="fas fa-chart-column"></i> Visitors per day</h3><span class="muted" id="visitChartNote"></span></div>
+                        <div class="panel-body"><div class="chart" id="visitChart"></div></div>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-head"><h3><i class="fas fa-share-nodes"></i> Where visitors come from</h3></div>
+                        <div class="panel-body"><div class="breakdown" id="visitSources"></div></div>
+                    </div>
+                </div>
+                <div class="grid-2">
+                    <div class="panel">
+                        <div class="panel-head"><h3><i class="fas fa-fire"></i> Most viewed shoes</h3></div>
+                        <div class="table-wrap"><table class="tbl"><thead><tr><th>Shoe</th><th>Views</th><th>People</th><th>Status</th></tr></thead><tbody id="visitProducts"></tbody></table></div>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-head"><h3><i class="fas fa-mobile-screen"></i> Devices &amp; pages</h3></div>
+                        <div class="panel-body"><div class="breakdown" id="visitDevices"></div><div class="breakdown" id="visitPages" style="margin-top:22px"></div></div>
+                    </div>
+                </div>
+            </section>
         </div>
     </div>
 </div>
@@ -572,6 +742,32 @@
     </div>
 </div>
 
+<!-- Instagram story maker -->
+<div class="modal" id="storyModal">
+    <div class="modal-card story-card">
+        <div class="modal-head"><h3><i class="fab fa-instagram"></i> Story for Instagram</h3><button class="icon-btn" data-close-modal aria-label="Close"><i class="fas fa-xmark"></i></button></div>
+        <div class="modal-body story-body">
+            <div class="story-preview"><canvas id="storyCanvas" width="1080" height="1920"></canvas><div class="story-loading" id="storyLoading"><div class="spinner"></div></div></div>
+            <div class="story-controls">
+                <label class="lbl" for="stHeadline">Headline</label>
+                <select class="select" id="stHeadline">
+                    <option>JUST DROPPED</option><option>NEW ARRIVAL</option><option>PRICE DROP</option><option>LAST PAIR</option><option>RESTOCKED</option><option value="">No headline</option>
+                </select>
+                <label class="lbl" for="stPhoto" style="margin-top:12px">Photo</label>
+                <select class="select" id="stPhoto"></select>
+                <label class="check" style="margin-top:12px"><input type="checkbox" id="stSizes" checked> Show sizes</label>
+                <label class="check"><input type="checkbox" id="stWas" checked> Show retail price</label>
+                <div class="story-actions">
+                    <button class="btn btn-primary" id="stDownload" type="button"><i class="fas fa-download"></i> Download</button>
+                    <button class="btn btn-outline" id="stShare" type="button" hidden><i class="fas fa-share-nodes"></i> Share</button>
+                    <button class="btn btn-outline" id="stCopy" type="button"><i class="fas fa-link"></i> Copy shoe link</button>
+                </div>
+                <p class="muted" style="font-size:12.5px;margin-top:12px">Post it as a story and add a <strong>Link sticker</strong> with the shoe link. Visits from Instagram show up in <a href="#visitors">Visitors</a>.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="toast" id="toast"><i class="fas fa-circle-check"></i><div><strong id="toastTitle"></strong><span id="toastSub"></span></div></div>
 
 <script>
@@ -585,7 +781,7 @@
     const COURIER_NAMES = ['TCS', 'Leopards', 'PostEx', 'Trax', 'M&P', 'Call Courier', 'BlueEx', 'Pakistan Post', 'Other'];
     const STATUS_COLORS = { Pending: 'var(--yellow)', Confirmed: 'var(--accent-2)', Shipped: 'var(--purple)', Delivered: 'var(--accent)', Cancelled: 'var(--danger)' };
     const DEFAULT_SIZES = ['5', '6', '6.5', '7', '7.5', '8', '8.5', '9', '9.5', '10', '10.5', '11', '12', '13'];
-    const VIEW_TITLES = { dashboard: 'Dashboard', orders: 'Orders', promotions: 'Promotions', products: 'Products', add: 'Add Product', messages: 'Messages', waitlist: 'Waiting list', alerts: 'Order Alerts' };
+    const VIEW_TITLES = { dashboard: 'Dashboard', orders: 'Orders', promotions: 'Promotions', products: 'Products', add: 'Add Product', messages: 'Messages', waitlist: 'Waiting list', alerts: 'Order Alerts', reviews: 'Reviews', sell: 'Sell requests', visitors: 'Visitors' };
 
     const $ = (id) => document.getElementById(id);
     const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -677,6 +873,8 @@
         $('layout').classList.add('show');
         $('adminEmail').textContent = admin.email;
         $('adminAvatar').textContent = (admin.email || 'A').charAt(0).toUpperCase();
+        // Don't count the owner's own visits in Visitors
+        try { localStorage.setItem('jenzyNoTrack', '1'); } catch { /* ignore */ }
         buildSizeChips([]);
         route();
         refreshAll(true);
@@ -765,8 +963,11 @@
         if (view === 'messages') loadMessages();
         if (view === 'dashboard') loadDashboard();
         if (view === 'alerts') loadAlerts();
-        if (view === 'promotions') { loadCoupons(); loadDrop(); }
+        if (view === 'promotions') { loadCoupons(); loadDrop(); loadOffers(); }
         if (view === 'waitlist') loadWaitlist();
+        if (view === 'reviews') loadReviews();
+        if (view === 'sell') loadSell();
+        if (view === 'visitors') loadVisitors();
     }
     window.addEventListener('hashchange', route);
     const closeSidebar = () => { $('sidebar').classList.remove('open'); $('scrim').classList.remove('show'); };
@@ -812,6 +1013,8 @@
         setBadge('badgeMessages', s.unreadMessages);
         setBadge('badgeProducts', s.totalProducts);
         setBadge('badgeWaitlist', s.waitingRequests || 0);
+        setBadge('badgeReviews', s.pendingReviews || 0);
+        setBadge('badgeSell', s.newSellRequests || 0);
         document.title = (s.pendingOrders ? `(${s.pendingOrders}) ` : '') + 'Admin | JENZY THRIFTS';
         renderDashboard();
     }
@@ -874,14 +1077,14 @@
     // ---------- Orders ----------
     let ordersLoaded = false;
     async function loadOrders(silent) {
-        if (!silent && !ordersLoaded) $('ordersTable').innerHTML = `<tr><td colspan="8"><div class="empty"><div class="spinner" style="margin:0 auto"></div></div></td></tr>`;
+        if (!silent && !ordersLoaded) $('ordersTable').innerHTML = `<tr><td colspan="9"><div class="empty"><div class="spinner" style="margin:0 auto"></div></div></td></tr>`;
         try {
             const res = await api('orders');
             orders = res.orders;
             ordersLoaded = true;
             renderOrders();
         } catch (e) {
-            if (!silent) $('ordersTable').innerHTML = `<tr><td colspan="8"><div class="alert show" style="margin:16px">${esc(e.message)}</div></td></tr>`;
+            if (!silent) $('ordersTable').innerHTML = `<tr><td colspan="9"><div class="alert show" style="margin:16px">${esc(e.message)}</div></td></tr>`;
         }
     }
     function renderOrders() {
@@ -893,12 +1096,17 @@
         const q = $('orderSearch').value.trim().toLowerCase().replace(/^jt-?/, '');
         const list = orders.filter(o => (orderFilter === 'All' || o.status === orderFilter) &&
             (!q || `${o.order_no} ${o.customer_name} ${o.phone} ${o.city} ${o.user_email || ''}`.toLowerCase().includes(q)));
+        visibleOrders = list;
+        const ids = new Set(orders.map(o => o.id));
+        [...selectedOrders].forEach(id => { if (!ids.has(id)) selectedOrders.delete(id); });
+        updateBulk();
         if (!list.length) {
-            $('ordersTable').innerHTML = `<tr><td colspan="8"><div class="empty"><i class="fas fa-receipt"></i>${orders.length ? 'No orders match.' : 'No orders yet. They will appear here as soon as customers order on the website.'}</div></td></tr>`;
+            $('ordersTable').innerHTML = `<tr><td colspan="9"><div class="empty"><i class="fas fa-receipt"></i>${orders.length ? 'No orders match.' : 'No orders yet. They will appear here as soon as customers order on the website.'}</div></td></tr>`;
             return;
         }
         $('ordersTable').innerHTML = list.map(o => `
             <tr class="click" data-order="${esc(o.id)}">
+                <td class="chk-col" data-stop><input type="checkbox" class="row-chk" data-sel="${esc(o.id)}" ${selectedOrders.has(o.id) ? 'checked' : ''} aria-label="Select order"></td>
                 <td><strong>${orderNo(o.order_no)}</strong></td>
                 <td class="muted">${fmtDate(o.created_at)}</td>
                 <td>${esc(o.customer_name)}<div class="muted" style="font-size:12px">${esc(o.user_email || '')}</div></td>
@@ -916,6 +1124,160 @@
             openOrder(tr.dataset.order);
         }));
         $('ordersTable').querySelectorAll('[data-status]').forEach(sel => sel.addEventListener('change', () => changeStatus(sel.dataset.status, sel.value, sel)));
+        $('ordersTable').querySelectorAll('[data-sel]').forEach(c => c.addEventListener('change', () => {
+            c.checked ? selectedOrders.add(c.dataset.sel) : selectedOrders.delete(c.dataset.sel);
+            updateBulk();
+        }));
+    }
+    // ----- Selection, printing, courier export -----
+    let visibleOrders = [];
+    const selectedOrders = new Set();
+    function bulkTargets() {
+        if (selectedOrders.size) return orders.filter(o => selectedOrders.has(o.id));
+        return visibleOrders.filter(o => o.status !== 'Cancelled');
+    }
+    function updateBulk() {
+        const n = selectedOrders.size;
+        const all = $('selectAllOrders');
+        all.checked = n > 0 && visibleOrders.length > 0 && visibleOrders.every(o => selectedOrders.has(o.id));
+        all.indeterminate = n > 0 && !all.checked;
+        const count = bulkTargets().length;
+        $('printLabels').querySelector('span').textContent = `Print labels (${count})`;
+        $('exportCsv').querySelector('span').textContent = `Courier CSV (${count})`;
+        $('printLabels').title = $('exportCsv').title = n ? 'Selected orders' : 'All orders in this list (cancelled left out). Tick orders to choose.';
+    }
+    $('selectAllOrders').addEventListener('change', (e) => {
+        visibleOrders.forEach(o => e.target.checked ? selectedOrders.add(o.id) : selectedOrders.delete(o.id));
+        renderOrders();
+    });
+    $('printLabels').addEventListener('click', () => {
+        const list = bulkTargets();
+        if (!list.length) return toast('No orders to print', 'Tick the orders you want labels for', 'error');
+        printDoc('Labels', list.map(labelHtml).join(''), 'label');
+    });
+    $('exportCsv').addEventListener('click', () => {
+        const list = bulkTargets();
+        if (!list.length) return toast('No orders to export', 'Tick the orders you want to book', 'error');
+        downloadCsv(list);
+    });
+
+    const SHOP = { name: 'JENZY THRIFTS', site: location.host || 'jenzy-thrifts.vercel.app' };
+    const DISCOUNT_NAMES = { coupon: 'Coupon', bundle: 'Bundle deal', referral: 'Invite code', credit: 'Invite credit' };
+    function discountLabel(o) {
+        const t = o.discount_type || (o.coupon ? 'coupon' : '');
+        const name = DISCOUNT_NAMES[t] || 'Discount';
+        return (t === 'coupon' || t === 'referral') && o.coupon ? `${name} (${o.coupon})` : name;
+    }
+    const itemsText = (o) => (o.items || []).map(it => `${it.brand ? it.brand + ' ' : ''}${it.name} (US ${it.size})`).join(', ');
+
+    function printDoc(title, body, kind) {
+        const page = kind === 'label' ? '@page { size: 100mm 150mm; margin: 0; }' : '@page { size: A5; margin: 10mm; }';
+        const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${esc(title)}</title><style>
+            ${page}
+            * { box-sizing: border-box; margin: 0; padding: 0; }
+            body { font-family: Arial, Helvetica, sans-serif; color: #000; background: #fff; font-size: 12px; }
+            .lbl-page { width: 100mm; height: 150mm; padding: 6mm; display: flex; flex-direction: column; gap: 3mm; page-break-after: always; overflow: hidden; }
+            .lbl-page:last-child { page-break-after: auto; }
+            .lbl-top { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #000; padding-bottom: 2mm; }
+            .lbl-brand { font-weight: 900; font-size: 15px; letter-spacing: 1px; }
+            .lbl-no { font-weight: 900; font-size: 16px; }
+            .lbl-cod { border: 3px solid #000; text-align: center; padding: 2mm; }
+            .lbl-cod small { display: block; font-size: 10px; font-weight: 700; letter-spacing: 2px; }
+            .lbl-cod strong { font-size: 26px; font-weight: 900; }
+            .lbl-sec small { display: block; font-size: 9px; font-weight: 700; letter-spacing: 1.5px; color: #333; margin-bottom: 1mm; }
+            .lbl-name { font-size: 17px; font-weight: 900; }
+            .lbl-phone { font-size: 16px; font-weight: 700; margin-top: 1mm; }
+            .lbl-addr { font-size: 13px; line-height: 1.35; margin-top: 1mm; word-break: break-word; }
+            .lbl-city { font-size: 22px; font-weight: 900; text-transform: uppercase; margin-top: 1mm; }
+            .lbl-items { font-size: 11px; line-height: 1.35; border-top: 1px dashed #000; padding-top: 2mm; flex: 1; overflow: hidden; }
+            .lbl-foot { display: flex; justify-content: space-between; font-size: 10px; border-top: 2px solid #000; padding-top: 2mm; }
+            .inv { page-break-after: always; }
+            .inv:last-child { page-break-after: auto; }
+            .inv-head { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #000; padding-bottom: 4mm; margin-bottom: 4mm; }
+            .inv-brand { font-size: 20px; font-weight: 900; letter-spacing: 1px; }
+            .inv-head p { font-size: 11px; color: #333; }
+            .inv-meta { text-align: right; }
+            .inv-meta h2 { font-size: 16px; letter-spacing: 2px; }
+            .inv-bill { display: flex; justify-content: space-between; gap: 6mm; margin-bottom: 4mm; font-size: 12px; line-height: 1.45; }
+            .inv-bill small { display: block; font-size: 9px; font-weight: 700; letter-spacing: 1.5px; color: #555; }
+            table { width: 100%; border-collapse: collapse; margin-bottom: 4mm; }
+            th { text-align: left; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; border-bottom: 1.5px solid #000; padding: 2mm 1mm; }
+            td { padding: 2mm 1mm; border-bottom: 1px solid #ccc; vertical-align: top; }
+            .r { text-align: right; white-space: nowrap; }
+            .inv-sum { width: 60%; margin-left: auto; }
+            .inv-sum div { display: flex; justify-content: space-between; padding: 1mm 0; }
+            .inv-sum .tot { border-top: 2px solid #000; margin-top: 1mm; padding-top: 2mm; font-size: 15px; font-weight: 900; }
+            .inv-foot { margin-top: 6mm; font-size: 10.5px; color: #333; text-align: center; line-height: 1.5; }
+            @media screen { body { background: #e5e5e5; padding: 10px; } .lbl-page, .inv { background: #fff; margin: 0 auto 10px; box-shadow: 0 2px 10px rgba(0,0,0,.2); } .inv { width: 148mm; padding: 10mm; } }
+        </style></head><body>${body}<script>window.onload = function () { setTimeout(function () { window.print(); }, 250); };<\/script></body></html>`;
+        const w = window.open('', '_blank');
+        if (w && w.document) {
+            w.document.open(); w.document.write(html); w.document.close();
+            return;
+        }
+        // Pop-up blocked: print through a hidden frame instead
+        const f = document.createElement('iframe');
+        f.style.cssText = 'position:fixed;width:0;height:0;border:0;right:0;bottom:0';
+        document.body.appendChild(f);
+        f.contentDocument.open(); f.contentDocument.write(html.replace(/<script>[\s\S]*?<\/script>/, '')); f.contentDocument.close();
+        setTimeout(() => { f.contentWindow.focus(); f.contentWindow.print(); setTimeout(() => f.remove(), 60000); }, 400);
+    }
+    function labelHtml(o) {
+        const items = o.items || [];
+        return `<div class="lbl-page">
+            <div class="lbl-top"><span class="lbl-brand">${SHOP.name}</span><span class="lbl-no">${orderNo(o.order_no)}</span></div>
+            <div class="lbl-cod"><small>CASH ON DELIVERY — COLLECT</small><strong>${pkr(o.total)}</strong></div>
+            <div class="lbl-sec"><small>DELIVER TO</small>
+                <div class="lbl-name">${esc(o.customer_name)}</div>
+                <div class="lbl-phone">${esc(o.phone)}</div>
+                <div class="lbl-addr">${esc(o.address)}</div>
+                <div class="lbl-city">${esc(o.city)}</div>
+            </div>
+            <div class="lbl-items"><strong>${items.length} ${items.length === 1 ? 'pair' : 'pairs'}:</strong> ${esc(itemsText(o))}${o.courier ? `<br><strong>${esc(o.courier)}</strong> ${esc(o.tracking_no || '')}` : ''}</div>
+            <div class="lbl-foot"><span>From: ${SHOP.name}</span><span>${esc(SHOP.site)}</span></div>
+        </div>`;
+    }
+    function invoiceHtml(o) {
+        const items = o.items || [];
+        return `<div class="inv">
+            <div class="inv-head">
+                <div><div class="inv-brand">${SHOP.name}</div><p>Pre-loved original sneakers</p><p>${esc(SHOP.site)}</p></div>
+                <div class="inv-meta"><h2>INVOICE</h2><p><strong>${orderNo(o.order_no)}</strong></p><p>${new Date(o.created_at).toLocaleDateString('en-PK', { day: 'numeric', month: 'long', year: 'numeric' })}</p></div>
+            </div>
+            <div class="inv-bill">
+                <div><small>BILL TO</small><strong>${esc(o.customer_name)}</strong><br>${esc(o.phone)}<br>${esc(o.address)}<br>${esc(o.city)}</div>
+                <div style="text-align:right"><small>PAYMENT</small>Cash on Delivery<br><small style="margin-top:2mm">STATUS</small>${esc(o.status)}</div>
+            </div>
+            <table><thead><tr><th>#</th><th>Item</th><th>Size</th><th class="r">Price</th></tr></thead><tbody>
+                ${items.map((it, i) => `<tr><td>${i + 1}</td><td><strong>${esc(it.name)}</strong>${it.brand ? `<br><span style="color:#555">${esc(it.brand)}</span>` : ''}</td><td>US ${esc(it.size)}</td><td class="r">${pkr(it.price)}</td></tr>`).join('')}
+            </tbody></table>
+            <div class="inv-sum">
+                <div><span>Subtotal</span><span>${pkr(o.subtotal)}</span></div>
+                ${o.discount ? `<div><span>${esc(discountLabel(o))}</span><span>− ${pkr(o.discount)}</span></div>` : ''}
+                <div><span>Delivery</span><span>${o.delivery_fee ? pkr(o.delivery_fee) : 'Free'}</span></div>
+                <div class="tot"><span>Total (COD)</span><span>${pkr(o.total)}</span></div>
+            </div>
+            <div class="inv-foot">Thank you for shopping with ${SHOP.name}! Please check your shoes when they arrive.<br>Questions? Message us through ${esc(SHOP.site)}.</div>
+        </div>`;
+    }
+    function csvCell(v) {
+        const s = String(v == null ? '' : v).replace(/\r?\n/g, ' ').trim();
+        return /[",;]/.test(s) || /^[=@]|^[+\-](?!\d)/.test(s) ? `"${s.replace(/^([=@]|[+\-](?!\d))/, "'$1").replace(/"/g, '""')}"` : s;
+    }
+    function downloadCsv(list) {
+        const head = ['Order Ref', 'Consignee Name', 'Consignee Phone', 'Consignee Email', 'Delivery Address', 'Destination City', 'COD Amount', 'Pieces', 'Weight (kg)', 'Product Description', 'Special Instructions', 'Order Date', 'Status'];
+        const rows = list.map(o => [
+            orderNo(o.order_no), o.customer_name, o.phone, o.user_email || '', o.address, o.city, o.total,
+            (o.items || []).length, Math.max(1, (o.items || []).length), itemsText(o), o.notes || '',
+            new Date(o.created_at).toISOString().slice(0, 10), o.status
+        ]);
+        const csv = '\ufeff' + [head, ...rows].map(r => r.map(csvCell).join(',')).join('\r\n') + '\r\n';
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+        a.download = `jenzy-orders-${new Date().toISOString().slice(0, 10)}.csv`;
+        document.body.appendChild(a); a.click();
+        setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+        toast(`${list.length} ${list.length === 1 ? 'order' : 'orders'} exported`, 'Upload the file in your PostEx, Leopards or TCS bulk booking page');
     }
     $('orderSearch').addEventListener('input', renderOrders);
     $('refreshOrders').addEventListener('click', () => loadOrders(false));
@@ -960,7 +1322,7 @@
             </div>
             <div style="max-width:320px;margin-left:auto">
                 <div class="sum-row"><span>Subtotal</span><span>${pkr(o.subtotal)}</span></div>
-                ${o.discount ? `<div class="sum-row"><span>Discount ${o.coupon ? '(' + esc(o.coupon) + ')' : ''}</span><span>− ${pkr(o.discount)}</span></div>` : ''}
+                ${o.discount ? `<div class="sum-row"><span>${esc(discountLabel(o))}</span><span>− ${pkr(o.discount)}</span></div>` : ''}
                 <div class="sum-row"><span>Delivery</span><span>${o.delivery_fee ? pkr(o.delivery_fee) : 'Free'}</span></div>
                 <div class="sum-row total"><span>Collect (COD)</span><span style="color:var(--accent)">${pkr(o.total)}</span></div>
             </div>
@@ -977,6 +1339,10 @@
                     : 'The customer sees this on their My Orders page. Changing the number emails them the new one.'}</p>
                 ${o.status !== 'Confirmed' ? `<button class="btn btn-outline btn-sm" id="omSaveTrack"><i class="fas fa-floppy-disk"></i> Save tracking</button>` : ''}
             </div>` : ''}
+            <div class="print-actions">
+                <button class="btn btn-outline btn-sm" id="omInvoice" type="button"><i class="fas fa-file-invoice"></i> Print invoice</button>
+                <button class="btn btn-outline btn-sm" id="omLabel" type="button"><i class="fas fa-tag"></i> Print label</button>
+            </div>
             ${next.length ? `<div class="status-actions">${next.map(s => `<button class="btn ${s === 'Cancelled' ? 'btn-danger' : 'btn-primary'} btn-sm" data-set="${s}"><i class="fas ${s === 'Cancelled' ? 'fa-xmark' : 'fa-check'}"></i> Mark ${s}</button>`).join('')}</div>` : ''}
             <div class="history">${(o.status_history || []).map(h => `<div><i class="fas fa-circle" style="font-size:6px;vertical-align:middle"></i> ${esc(h.status)} — ${fmtDateLong(h.at)}${h.by ? ' • by ' + esc(h.by) : ''}</div>`).join('')}</div>`;
         const trackingFields = () => $('omCourier') ? {
@@ -988,6 +1354,8 @@
             if (status === 'Shipped' && !extra.tracking_no && !confirm('Mark as shipped without a tracking number? You can add it later.')) return;
             changeStatus(o.id, status, null, extra);
         }));
+        $('omInvoice').addEventListener('click', () => printDoc(`Invoice ${orderNo(o.order_no)}`, invoiceHtml(o), 'invoice'));
+        $('omLabel').addEventListener('click', () => printDoc(`Label ${orderNo(o.order_no)}`, labelHtml(o), 'label'));
         $('omSaveTrack')?.addEventListener('click', async () => {
             const btn = $('omSaveTrack');
             btn.disabled = true;
@@ -1008,6 +1376,7 @@
     const state = (ok, text) => `<span class="state ${ok ? 'ok' : 'warn'}"><i class="fas ${ok ? 'fa-circle-check' : 'fa-circle-exclamation'}"></i> ${text}</span>`;
     const VERCEL_ENV = 'Vercel → your project → <strong>Settings → Environment Variables</strong>';
     async function loadAlerts() {
+        loadEmailSettings();
         try {
             renderAlerts(await api('notifyStatus'));
         } catch (e) {
@@ -1094,6 +1463,534 @@
             $('testAlertResult').textContent = e.message;
         }
         btn.disabled = false;
+    });
+
+    // ---------- Promotions: bundle deal + invite friends ----------
+    async function loadOffers() {
+        try {
+            const o = await api('offers');
+            $('bMin').value = o.bundle.min; $('bPercent').value = o.bundle.percent; $('bActive').checked = !!o.bundle.active;
+            $('rPercent').value = o.referral.percent; $('rReward').value = o.referral.reward; $('rActive').checked = !!o.referral.active;
+            renderOfferStates();
+            const st = o.stats;
+            $('refStats').innerHTML = st ? `
+                <div><strong>${st.codes}</strong><span>Invite codes</span></div>
+                <div><strong>${st.orders}</strong><span>Friend orders (${st.delivered} delivered)</span></div>
+                <div><strong>${pkrShort(st.sales)}</strong><span>Sales from invites</span></div>
+                <div><strong>${pkr(st.creditsGiven)}</strong><span>Credit earned</span></div>
+                <div><strong>${pkr(st.creditsUsed)}</strong><span>Credit used</span></div>` : '';
+        } catch (e) {
+            $('refStats').innerHTML = `<div class="alert show" style="grid-column:1/-1">${esc(e.message)}</div>`;
+        }
+    }
+    function renderOfferStates() {
+        $('bundleState').innerHTML = $('bActive').checked ? `<span class="banner-on"><i class="fas fa-circle"></i> Buy ${esc($('bMin').value)}+, get ${esc($('bPercent').value)}% off</span>` : pill('Off');
+        $('refState').innerHTML = $('rActive').checked ? `<span class="banner-on"><i class="fas fa-circle"></i> ${esc($('rPercent').value)}% off • PKR ${esc($('rReward').value)} reward</span>` : pill('Off');
+    }
+    ['bMin', 'bPercent', 'bActive', 'rPercent', 'rReward', 'rActive'].forEach(id => $(id).addEventListener('input', renderOfferStates));
+    $('offersSave').addEventListener('click', async () => {
+        const btn = $('offersSave');
+        btn.disabled = true;
+        try {
+            await api('saveOffers', { method: 'POST', body: {
+                bundle: { active: $('bActive').checked, min: $('bMin').value, percent: $('bPercent').value },
+                referral: { active: $('rActive').checked, percent: $('rPercent').value, reward: $('rReward').value }
+            } });
+            toast('Offers saved', 'The website uses the new offers right away');
+            loadOffers();
+        } catch (e) {
+            toast('Could not save offers', e.message, 'error');
+        }
+        btn.disabled = false;
+    });
+
+    // ---------- Automatic customer emails ----------
+    async function loadEmailSettings() {
+        try {
+            const o = await api('offers');
+            $('emPriceDrop').checked = o.emails.priceDrop;
+            $('emCart').checked = o.emails.cartReminder;
+        } catch { /* shown elsewhere */ }
+    }
+    ['emPriceDrop', 'emCart'].forEach(id => $(id).addEventListener('change', async () => {
+        try {
+            await api('saveEmailSettings', { method: 'POST', body: { priceDrop: $('emPriceDrop').checked, cartReminder: $('emCart').checked } });
+            toast('Saved', `${id === 'emCart' ? 'Cart reminders' : 'Price-drop emails'} ${$(id).checked ? 'on' : 'off'}`);
+        } catch (e) {
+            toast('Could not save', e.message, 'error');
+            $(id).checked = !$(id).checked;
+        }
+    }));
+    $('runRemindersBtn').addEventListener('click', async () => {
+        const btn = $('runRemindersBtn');
+        btn.disabled = true;
+        $('runRemindersResult').textContent = 'Sending…';
+        try {
+            const r = await api('runReminders', { method: 'POST' });
+            $('runRemindersResult').textContent = r.sent
+                ? `✅ ${r.sent} reminder${r.sent === 1 ? '' : 's'} sent${r.failed ? ` • ${r.failed} failed` : ''}`
+                : `No carts need a reminder right now${r.skipped ? ` (${r.skipped} skipped: ordered or sold out)` : ''}.`;
+        } catch (e) {
+            $('runRemindersResult').textContent = '❌ ' + e.message;
+        }
+        btn.disabled = false;
+    });
+
+    // ---------- Reviews ----------
+    let reviews = [], reviewFilter = 'Pending';
+    const starRow = (n) => `<span class="rv-stars" aria-label="${n} stars">${[1, 2, 3, 4, 5].map(i => `<i class="fas fa-star ${i <= n ? '' : 'off'}"></i>`).join('')}</span>`;
+    const photoRow = (list) => (list || []).length ? `<div class="ph-row">${list.map(u => `<a href="${esc(u)}" target="_blank" rel="noopener"><img src="${esc(u)}" alt="" loading="lazy"></a>`).join('')}</div>` : '';
+    async function loadReviews() {
+        if (!reviews.length) $('reviewList').innerHTML = `<div class="empty"><div class="spinner" style="margin:0 auto"></div></div>`;
+        try {
+            reviews = (await api('reviews')).reviews;
+            renderReviews();
+        } catch (e) {
+            $('reviewList').innerHTML = `<div class="alert show">${esc(e.message)}</div>`;
+        }
+    }
+    function renderReviews() {
+        const tabs = ['Pending', 'Approved', 'Hidden', 'All'];
+        const count = (t) => t === 'All' ? reviews.length : reviews.filter(r => r.status === t).length;
+        $('reviewTabs').innerHTML = tabs.map(t => `<button class="tab ${reviewFilter === t ? 'active' : ''}" data-tab="${t}">${t}<span class="c">${count(t)}</span></button>`).join('');
+        $('reviewTabs').querySelectorAll('[data-tab]').forEach(b => b.addEventListener('click', () => { reviewFilter = b.dataset.tab; renderReviews(); }));
+        setBadge('badgeReviews', count('Pending'));
+        const list = reviews.filter(r => reviewFilter === 'All' || r.status === reviewFilter);
+        if (!list.length) {
+            $('reviewList').innerHTML = `<div class="empty"><i class="fas fa-star"></i>${reviewFilter === 'Pending' ? 'No reviews waiting. Customers can review an order once it is Delivered.' : 'Nothing here.'}</div>`;
+            return;
+        }
+        $('reviewList').innerHTML = list.map(r => `
+            <div class="rv-card">
+                <div class="rv-top">
+                    ${starRow(r.rating)}
+                    <div class="grow"><h5>${esc(r.name)}${r.city ? ` <span class="muted" style="font-weight:400">• ${esc(r.city)}</span>` : ''}</h5><p>${fmtDateLong(r.created_at)}</p></div>
+                    ${pill(r.status)}
+                </div>
+                ${r.text ? `<div class="rv-text">${esc(r.text)}</div>` : '<div class="muted" style="font-size:13px">No written review — stars only.</div>'}
+                ${photoRow(r.images)}
+                <div class="rv-meta">
+                    ${r.product_names ? `<span><i class="fas fa-shoe-prints"></i> ${esc(r.product_names)}</span>` : ''}
+                    ${r.order ? `<span><i class="fas fa-receipt"></i> <a href="#" data-open-order="${esc(r.order_id)}">${orderNo(r.order.order_no)}</a></span>
+                    <span><i class="fas fa-user"></i> ${esc(r.order.customer_name)} • <a href="${waLink(r.order.phone)}" target="_blank" rel="noopener">${esc(r.order.phone)}</a></span>` : ''}
+                </div>
+                <div class="row-actions" style="justify-content:flex-start;flex-wrap:wrap">
+                    ${r.status !== 'Approved' ? `<button class="btn btn-primary btn-sm" data-rv="${esc(r.id)}" data-st="Approved"><i class="fas fa-check"></i> Approve</button>` : ''}
+                    ${r.status !== 'Hidden' ? `<button class="btn btn-outline btn-sm" data-rv="${esc(r.id)}" data-st="Hidden"><i class="fas fa-eye-slash"></i> Hide</button>` : ''}
+                    <button class="btn btn-outline btn-sm" data-rv-del="${esc(r.id)}"><i class="fas fa-trash"></i> Delete</button>
+                </div>
+            </div>`).join('');
+        $('reviewList').querySelectorAll('[data-rv]').forEach(b => b.addEventListener('click', async () => {
+            b.disabled = true;
+            try {
+                await api('reviewStatus', { method: 'POST', body: { id: b.dataset.rv, status: b.dataset.st } });
+                toast(b.dataset.st === 'Approved' ? 'Review approved' : 'Review hidden', b.dataset.st === 'Approved' ? 'It now shows on the website' : 'It no longer shows on the website');
+                await loadReviews(); loadDashboard();
+            } catch (e) { toast('Could not update review', e.message, 'error'); b.disabled = false; }
+        }));
+        $('reviewList').querySelectorAll('[data-rv-del]').forEach(b => b.addEventListener('click', () => askConfirm('Delete review?', 'The review and its photos will be removed. The customer will not be able to review this order again.', 'Delete', async () => {
+            await api('deleteReview', { method: 'POST', body: { id: b.dataset.rvDel } });
+            toast('Review deleted');
+            await loadReviews(); loadDashboard();
+        })));
+        $('reviewList').querySelectorAll('[data-open-order]').forEach(a => a.addEventListener('click', (e) => { e.preventDefault(); openOrder(a.dataset.openOrder); }));
+    }
+
+    // ---------- Sell requests ----------
+    let sellRequests = [], sellFilter = 'New';
+    const SELL_LABEL = { New: 'New', Offered: 'Offer sent', Accepted: 'Accepted', Declined: 'Declined', Rejected: 'Not buying', Bought: 'Bought' };
+    async function loadSell() {
+        if (!sellRequests.length) $('sellList').innerHTML = `<div class="empty"><div class="spinner" style="margin:0 auto"></div></div>`;
+        try {
+            const res = await api('sellRequests');
+            sellRequests = res.requests;
+            $('sellEmailWarn').className = res.emailReady ? 'alert' : 'alert show';
+            $('sellEmailWarn').innerHTML = res.emailReady ? '' : '<i class="fas fa-circle-info"></i> Gmail is not set up, so sellers are not emailed about your offer. They still see it on the Sell page — or message them on WhatsApp.';
+            renderSell();
+        } catch (e) {
+            $('sellList').innerHTML = `<div class="alert show">${esc(e.message)}</div>`;
+        }
+    }
+    function renderSell() {
+        const tabs = ['New', 'Offered', 'Accepted', 'Bought', 'Declined', 'Rejected', 'All'];
+        const count = (t) => t === 'All' ? sellRequests.length : sellRequests.filter(r => r.status === t).length;
+        $('sellTabs').innerHTML = tabs.map(t => `<button class="tab ${sellFilter === t ? 'active' : ''}" data-tab="${t}">${t === 'All' ? 'All' : SELL_LABEL[t]}<span class="c">${count(t)}</span></button>`).join('');
+        $('sellTabs').querySelectorAll('[data-tab]').forEach(b => b.addEventListener('click', () => { sellFilter = b.dataset.tab; renderSell(); }));
+        setBadge('badgeSell', count('New'));
+        const list = sellRequests.filter(r => sellFilter === 'All' || r.status === sellFilter);
+        if (!list.length) {
+            $('sellList').innerHTML = `<div class="empty"><i class="fas fa-hand-holding-dollar"></i>${sellFilter === 'New' ? 'No new requests. Share the "Sell your sneakers" page to get pairs.' : 'Nothing here.'}</div>`;
+            return;
+        }
+        $('sellList').innerHTML = list.map(r => `
+            <div class="sr-card">
+                <div class="sr-top">
+                    <div class="grow"><h5>${esc(r.brand)} ${esc(r.model)}</h5><p>${fmtDateLong(r.created_at)}</p></div>
+                    <span class="pill st-${esc(r.status)}">${esc(SELL_LABEL[r.status] || r.status)}</span>
+                </div>
+                <div class="sr-facts">
+                    <span>Size <strong>${esc(r.size)}</strong></span>
+                    ${r.condition ? `<span>Condition <strong>${esc(r.condition)}</strong></span>` : ''}
+                    ${r.asking_price ? `<span>Asking <strong>${pkr(r.asking_price)}</strong></span>` : '<span>No price given</span>'}
+                    ${r.offer_price ? `<span>Your offer <strong style="color:var(--accent-2)">${pkr(r.offer_price)}</strong></span>` : ''}
+                </div>
+                ${photoRow(r.images)}
+                ${r.notes ? `<div class="rv-text">${esc(r.notes)}</div>` : ''}
+                <div class="rv-meta">
+                    <span><i class="fas fa-user"></i> ${esc(r.name)}${r.city ? ' • ' + esc(r.city) : ''}</span>
+                    <span><a href="tel:${esc(r.phone)}"><i class="fas fa-phone"></i> ${esc(r.phone)}</a></span>
+                    <span><a href="${waLink(r.phone)}" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> WhatsApp</a></span>
+                    ${r.email ? `<span><i class="fas fa-envelope"></i> ${esc(r.email)}</span>` : ''}
+                </div>
+                ${r.offer_note && r.status !== 'New' ? `<div class="sr-sent"><i class="fas fa-comment"></i> Your note: ${esc(r.offer_note)}</div>` : ''}
+                ${['New', 'Offered', 'Declined'].includes(r.status) ? `
+                <div class="sr-offer">
+                    <div><label class="lbl">${r.status === 'New' ? 'Your offer (PKR)' : 'New offer (PKR)'}</label><input class="input" type="number" min="100" step="100" inputmode="numeric" data-offer-price="${esc(r.id)}" value="${esc(r.offer_price || '')}"></div>
+                    <div><label class="lbl">Note to the seller (optional)</label><input class="input" maxlength="400" data-offer-note="${esc(r.id)}" placeholder="e.g. We pick up from Lahore, or you send it by courier" value="${esc(r.offer_note || '')}"></div>
+                    <button class="btn btn-primary btn-sm" data-offer="${esc(r.id)}"><i class="fas fa-paper-plane"></i> ${r.status === 'New' ? 'Send offer' : 'Send again'}</button>
+                </div>` : ''}
+                <div class="row-actions" style="justify-content:flex-start;flex-wrap:wrap">
+                    ${r.status === 'Accepted' ? `<button class="btn btn-primary btn-sm" data-sell="${esc(r.id)}" data-st="Bought"><i class="fas fa-check"></i> Mark as bought</button>` : ''}
+                    ${['New', 'Offered', 'Accepted'].includes(r.status) ? `<button class="btn btn-outline btn-sm" data-sell="${esc(r.id)}" data-st="Rejected"><i class="fas fa-ban"></i> Not buying</button>` : ''}
+                    <button class="btn btn-outline btn-sm" data-sell-del="${esc(r.id)}"><i class="fas fa-trash"></i> Delete</button>
+                </div>
+            </div>`).join('');
+        $('sellList').querySelectorAll('[data-offer]').forEach(b => b.addEventListener('click', async () => {
+            const id = b.dataset.offer;
+            const price = parseInt(document.querySelector(`[data-offer-price="${id}"]`).value, 10);
+            const note = document.querySelector(`[data-offer-note="${id}"]`).value.trim();
+            if (!(price >= 100)) return toast('Enter your offer', 'In PKR, at least 100', 'error');
+            b.disabled = true;
+            try {
+                const res = await api('sellOffer', { method: 'POST', body: { id, offer_price: price, offer_note: note } });
+                toast('Offer sent', res.emailed ? 'The seller got an email and can accept on the website' : 'Shown on the Sell page. Email not sent' + (res.emailError ? ': ' + res.emailError : ''));
+                await loadSell(); loadDashboard();
+            } catch (e) { toast('Could not send offer', e.message, 'error'); b.disabled = false; }
+        }));
+        $('sellList').querySelectorAll('[data-sell]').forEach(b => b.addEventListener('click', async () => {
+            b.disabled = true;
+            try {
+                await api('sellStatus', { method: 'POST', body: { id: b.dataset.sell, status: b.dataset.st } });
+                toast(b.dataset.st === 'Bought' ? 'Marked as bought' : 'Marked as not buying');
+                await loadSell(); loadDashboard();
+            } catch (e) { toast('Could not update', e.message, 'error'); b.disabled = false; }
+        }));
+        $('sellList').querySelectorAll('[data-sell-del]').forEach(b => b.addEventListener('click', () => askConfirm('Delete request?', 'The request and its photos will be removed.', 'Delete', async () => {
+            await api('deleteSell', { method: 'POST', body: { id: b.dataset.sellDel } });
+            toast('Request deleted');
+            await loadSell(); loadDashboard();
+        })));
+    }
+
+    // ---------- Visitors ----------
+    let visitDays = 7;
+    const SOURCE_NAMES = { direct: 'Direct / typed', instagram: 'Instagram', facebook: 'Facebook', whatsapp: 'WhatsApp', google: 'Google', tiktok: 'TikTok', youtube: 'YouTube', other: 'Other websites', wa: 'WhatsApp', ig: 'Instagram', fb: 'Facebook', story: 'Instagram story', email: 'Emails', referral: 'Invite links' };
+    const DEVICE_NAMES = { mobile: 'Phone', desktop: 'Computer', tablet: 'Tablet' };
+    const niceName = (map, k) => map[k] || (k ? k.charAt(0).toUpperCase() + k.slice(1) : 'Other');
+    async function loadVisitors() {
+        $('visitRange').querySelectorAll('[data-days]').forEach(b => b.classList.toggle('active', Number(b.dataset.days) === visitDays));
+        $('visitStats').innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="spinner" style="margin:0 auto"></div></div>`;
+        let v;
+        try {
+            v = await api('visitors', { query: `&days=${visitDays}` });
+        } catch (e) {
+            $('visitStats').innerHTML = `<div class="alert show" style="grid-column:1/-1">${esc(e.message)}</div>`;
+            return;
+        }
+        const card = (label, value, sub, icon, color) => `
+            <div class="stat"><div class="stat-top"><span class="stat-label">${label}</span><span class="stat-icon" style="background:color-mix(in srgb, ${color} 12%, transparent);color:${color}"><i class="fas ${icon}"></i></span></div>
+            <div class="stat-value">${value}</div><div class="stat-sub">${sub}</div></div>`;
+        const conv = v.visitors ? (v.buyers / v.visitors * 100) : 0;
+        $('visitStats').innerHTML = [
+            card('Visitors', v.visitors || 0, `${v.views || 0} page views`, 'fa-users', 'var(--accent-2)'),
+            card('Pages per visitor', v.visitors ? (v.views / v.visitors).toFixed(1) : '0', 'How much they browse', 'fa-layer-group', 'var(--purple)'),
+            card('Orders', v.orders || 0, `${v.buyers || 0} ${v.buyers === 1 ? 'buyer' : 'buyers'} • ${pkr(v.sales || 0)}`, 'fa-bag-shopping', 'var(--accent)'),
+            card('Conversion', conv ? conv.toFixed(conv < 10 ? 1 : 0) + '%' : '0%', 'Visitors who ordered', 'fa-bullseye', 'var(--yellow)')
+        ].join('');
+
+        // Daily chart (fill empty days)
+        const byDay = new Map((v.daily || []).map(d => [d.day, d]));
+        const days = [];
+        for (let i = visitDays - 1; i >= 0; i--) {
+            const d = new Date(Date.now() - i * 86400000);
+            const key = d.toLocaleDateString('en-CA', { timeZone: 'Asia/Karachi' });
+            days.push({ key, d, visitors: byDay.get(key)?.visitors || 0, views: byDay.get(key)?.views || 0 });
+        }
+        const max = Math.max(1, ...days.map(d => d.visitors));
+        const every = visitDays <= 7 ? 1 : visitDays <= 30 ? 5 : 15;
+        $('visitChart').className = visitDays <= 7 ? 'chart' : 'chart days';
+        $('visitChartNote').textContent = `best day: ${Math.max(0, ...days.map(d => d.visitors))}`;
+        $('visitChart').innerHTML = days.map((d, i) => {
+            const h = d.visitors ? Math.max(6, Math.round(d.visitors / max * 160)) : 3;
+            const lbl = visitDays <= 7 ? d.d.toLocaleDateString('en-PK', { weekday: 'short' }) : ((days.length - 1 - i) % every === 0 ? d.d.toLocaleDateString('en-PK', { day: 'numeric', month: 'short' }) : '');
+            return `<div class="bar-col" title="${d.key}: ${d.visitors} visitors, ${d.views} views">
+                <span class="bar-val">${visitDays <= 7 && d.visitors ? d.visitors : ''}</span>
+                <div class="bar ${d.visitors ? '' : 'bar-zero'}" style="height:${h}px;background:${d.visitors ? 'linear-gradient(to top, rgba(0,240,255,.3), var(--accent-2))' : ''}"></div>
+                <span class="bar-day">${lbl}</span></div>`;
+        }).join('');
+
+        const bars = (rows, total, color) => rows.length ? rows.map(r => `
+            <div class="bd-row wide"><span class="bd-name" title="${esc(r.name)}">${esc(r.name)}</span><div class="bd-track"><div class="bd-fill" style="width:${total ? r.n / total * 100 : 0}%;background:${color}"></div></div><strong style="text-align:right">${r.n}</strong></div>`).join('')
+            : '<div class="muted" style="font-size:13px">No visits yet in this period.</div>';
+        const srcTotal = (v.sources || []).reduce((a, s) => a + s.visitors, 0);
+        $('visitSources').innerHTML = bars((v.sources || []).map(s => ({ name: niceName(SOURCE_NAMES, s.source), n: s.visitors })), srcTotal, 'var(--accent)');
+        const devTotal = (v.devices || []).reduce((a, s) => a + s.visitors, 0);
+        $('visitDevices').innerHTML = '<h5 class="muted" style="font-size:12px;letter-spacing:1px;text-transform:uppercase">Devices (visitors)</h5>' + bars((v.devices || []).map(s => ({ name: niceName(DEVICE_NAMES, s.device), n: s.visitors })), devTotal, 'var(--purple)');
+        const pgMax = Math.max(0, ...(v.pages || []).map(p => p.views));
+        const PAGE_NAMES = { '/': 'Home', '/shoe': 'Shoe pages', '/product': 'Shoe pages', '/checkout': 'Checkout', '/orders': 'My orders', '/wishlist': 'Wishlist', '/sell': 'Sell your sneakers' };
+        const pageName = (p) => PAGE_NAMES[p.replace(/\/index$/, '/').replace(/\.html$/, '')] || p.replace(/^\//, '').replace(/\.html$/, '') || 'Home';
+        $('visitPages').innerHTML = '<h5 class="muted" style="font-size:12px;letter-spacing:1px;text-transform:uppercase">Top pages (views)</h5>' + bars((v.pages || []).map(p => ({ name: pageName(p.path || '/'), n: p.views })), pgMax, 'var(--accent-2)');
+
+        $('visitProducts').innerHTML = (v.products || []).length ? v.products.map(p => `
+            <tr><td><div class="t-prod"><img src="${esc(p.image || '')}" alt="" loading="lazy"><div><h5>${esc(p.name)}</h5><p>${esc(p.brand || '')} • ${pkr(p.price)}</p></div></div></td>
+            <td><strong>${p.views}</strong></td><td>${p.visitors}</td><td>${pill(p.status)}</td></tr>`).join('')
+            : `<tr><td colspan="4"><div class="empty" style="padding:30px"><i class="fas fa-shoe-prints"></i>No shoe views yet.</div></td></tr>`;
+    }
+    $('visitRange').querySelectorAll('[data-days]').forEach(b => b.addEventListener('click', () => { visitDays = Number(b.dataset.days); loadVisitors(); }));
+
+    // ---------- Photos: small versions for the shop grid ----------
+    function loadImg(src) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = () => resolve(img);
+            img.onerror = () => reject(new Error('Could not load the photo'));
+            img.src = src;
+        });
+    }
+    // Returns { blob, ext } — a 480px WebP (JPEG on browsers without WebP)
+    async function makeThumb(source, maxSide = 480) {
+        let url = null, img;
+        try {
+            if (source instanceof Blob) { url = URL.createObjectURL(source); img = await loadImg(url); }
+            else img = await loadImg(source + (source.includes('?') ? '&' : '?') + 'thumbsrc=1');   // fresh CORS copy
+        } finally { if (url) URL.revokeObjectURL(url); }
+        const scale = Math.min(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight));
+        const c = document.createElement('canvas');
+        c.width = Math.max(1, Math.round(img.naturalWidth * scale));
+        c.height = Math.max(1, Math.round(img.naturalHeight * scale));
+        const ctx = c.getContext('2d');
+        ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, 0, 0, c.width, c.height);
+        const toBlob = (type, q) => new Promise(r => c.toBlob(r, type, q));
+        let blob = await toBlob('image/webp', 0.78);
+        if (blob && blob.type === 'image/webp') return { blob, ext: 'webp' };
+        blob = await toBlob('image/jpeg', 0.78);
+        if (!blob) throw new Error('Could not make the small photo');
+        return { blob, ext: 'jpg' };
+    }
+    async function uploadBlob(blob, ext) {
+        const signed = await api('uploadUrl', { method: 'POST', body: { ext } });
+        const { error } = await sb.storage.from(BUCKET).uploadToSignedUrl(signed.path, signed.token, blob, { contentType: blob.type || 'image/jpeg', cacheControl: '31536000' });
+        if (error) throw error;
+        return signed.publicUrl;
+    }
+    const needsThumbs = (p) => (p.images || []).some((u, i) => !(p.thumbs || [])[i]);
+    function updateOptimizeBtn() {
+        const n = products.filter(needsThumbs).length;
+        $('optimizeBtn').hidden = !n || optimizing;
+        if (!optimizing) $('optimizeBtn').querySelector('span').textContent = `Optimize old photos (${n})`;
+        $('optimizeBtn').title = 'Makes small, fast versions of photos added before this update, so the shop loads quicker and uses less Supabase bandwidth.';
+        $('addNewBtn').style.marginLeft = n ? '0' : 'auto';
+    }
+    let optimizing = false;
+    $('optimizeBtn').addEventListener('click', async () => {
+        const todo = products.filter(needsThumbs);
+        if (!todo.length) return;
+        optimizing = true;
+        const btn = $('optimizeBtn');
+        btn.disabled = true;
+        let done = 0, failed = 0;
+        for (const p of todo) {
+            btn.querySelector('span').textContent = `Optimizing ${done + failed + 1} of ${todo.length}…`;
+            try {
+                const thumbs = [];
+                for (let i = 0; i < p.images.length; i++) {
+                    const have = (p.thumbs || [])[i];
+                    if (have) { thumbs.push(have); continue; }
+                    const t = await makeThumb(p.images[i]);
+                    thumbs.push(await uploadBlob(t.blob, t.ext));
+                }
+                const res = await api('setThumbs', { method: 'POST', body: { id: p.id, thumbs } });
+                p.thumbs = res.product.thumbs;
+                done++;
+            } catch (e) {
+                console.error('[optimize]', p.name, e);
+                failed++;
+            }
+        }
+        optimizing = false;
+        btn.disabled = false;
+        toast(`${done} ${done === 1 ? 'shoe' : 'shoes'} optimized`, failed ? `${failed} could not be done — try again later` : 'The shop grid now loads the small photos', failed ? 'error' : 'ok');
+        await loadProducts(true);
+    });
+
+    // ---------- Instagram story maker ----------
+    let storyProduct = null, storyImg = null;
+    const STORY_SITE = (location.host || 'jenzy-thrifts.vercel.app').replace(/^www\./, '');
+    function openStory(id) {
+        const p = products.find(x => x.id === id);
+        if (!p) return;
+        storyProduct = p;
+        $('stPhoto').innerHTML = (p.images || []).map((u, i) => `<option value="${i}">Photo ${i + 1}${i === 0 ? ' (main)' : ''}</option>`).join('');
+        $('stHeadline').value = p.status === 'Sold' ? 'RESTOCKED' : (p.original_price > p.price ? 'JUST DROPPED' : 'NEW ARRIVAL');
+        if (p.status === 'Sold') $('stHeadline').value = '';
+        $('stShare').hidden = !(navigator.canShare && navigator.share);
+        $('storyModal').classList.add('open');
+        loadStoryPhoto();
+    }
+    async function loadStoryPhoto() {
+        const p = storyProduct;
+        const src = (p.images || [])[Number($('stPhoto').value) || 0];
+        $('storyLoading').classList.add('show');
+        try {
+            storyImg = src ? await loadImg(src + (src.includes('?') ? '&' : '?') + 'story=1') : null;
+        } catch { storyImg = null; toast('Photo could not be loaded', 'The story will be made without it', 'error'); }
+        try { await Promise.all([document.fonts.load('900 60px Orbitron'), document.fonts.load('700 40px Poppins'), document.fonts.load('600 40px Poppins')]); } catch { /* fallback fonts */ }
+        $('storyLoading').classList.remove('show');
+        drawStory();
+    }
+    function roundRect(ctx, x, y, w, h, r) {
+        ctx.beginPath();
+        ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+        ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+    }
+    function wrapLines(ctx, text, maxW, maxLines) {
+        const words = String(text).split(/\s+/); const lines = []; let line = '';
+        for (const w of words) {
+            const t = line ? line + ' ' + w : w;
+            if (ctx.measureText(t).width > maxW && line) { lines.push(line); line = w; } else line = t;
+        }
+        if (line) lines.push(line);
+        if (lines.length > maxLines) {
+            lines.length = maxLines;
+            let last = lines[maxLines - 1];
+            while (ctx.measureText(last + '…').width > maxW && last.length) last = last.slice(0, -1);
+            lines[maxLines - 1] = last + '…';
+        }
+        return lines;
+    }
+    function drawStory() {
+        const p = storyProduct; if (!p) return;
+        const c = $('storyCanvas'), ctx = c.getContext('2d');
+        const W = 1080, H = 1920, D = 'Orbitron, Arial Black, sans-serif', B = 'Poppins, Arial, sans-serif';
+        ctx.clearRect(0, 0, W, H);
+        ctx.fillStyle = '#07070b'; ctx.fillRect(0, 0, W, H);
+        let g = ctx.createRadialGradient(150, 260, 0, 150, 260, 800); g.addColorStop(0, 'rgba(57,255,20,.20)'); g.addColorStop(1, 'rgba(57,255,20,0)');
+        ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+        g = ctx.createRadialGradient(980, 1500, 0, 980, 1500, 900); g.addColorStop(0, 'rgba(0,240,255,.16)'); g.addColorStop(1, 'rgba(0,240,255,0)');
+        ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+
+        // Brand
+        ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'center';
+        const lg = ctx.createLinearGradient(260, 0, 820, 0); lg.addColorStop(0, '#39ff14'); lg.addColorStop(1, '#00f0ff');
+        ctx.fillStyle = lg; ctx.font = `900 64px ${D}`;
+        ctx.fillText('JENZY THRIFTS', W / 2, 170);
+        ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.font = `600 28px ${B}`;
+        ctx.fillText('ORIGINAL  •  PRE-LOVED  •  CASH ON DELIVERY', W / 2, 220);
+
+        // Headline pill
+        const head = $('stHeadline').value;
+        let y = 270;
+        if (head) {
+            ctx.font = `900 50px ${D}`;
+            const tw = ctx.measureText(head).width + 90;
+            ctx.fillStyle = '#39ff14'; roundRect(ctx, (W - tw) / 2, y, tw, 90, 45); ctx.fill();
+            ctx.fillStyle = '#000'; ctx.fillText(head, W / 2, y + 64);
+        }
+        // Photo
+        const ps = 860, px = (W - ps) / 2, py = 390;
+        ctx.save(); roundRect(ctx, px, py, ps, ps, 48); ctx.clip();
+        ctx.fillStyle = '#fff'; ctx.fillRect(px, py, ps, ps);
+        if (storyImg) {
+            const s = Math.max(ps / storyImg.naturalWidth, ps / storyImg.naturalHeight);
+            const w = storyImg.naturalWidth * s, h = storyImg.naturalHeight * s;
+            ctx.drawImage(storyImg, px + (ps - w) / 2, py + (ps - h) / 2, w, h);
+        }
+        ctx.restore();
+        ctx.strokeStyle = 'rgba(255,255,255,.14)'; ctx.lineWidth = 3; roundRect(ctx, px, py, ps, ps, 48); ctx.stroke();
+        // Condition + discount chips on the photo
+        ctx.textAlign = 'left';
+        if (p.condition) {
+            ctx.font = `700 30px ${B}`;
+            const t = p.condition.toUpperCase(), tw = ctx.measureText(t).width + 44;
+            ctx.fillStyle = 'rgba(0,0,0,.78)'; roundRect(ctx, px + 28, py + 28, tw, 60, 30); ctx.fill();
+            ctx.fillStyle = '#fff'; ctx.fillText(t, px + 50, py + 69);
+        }
+        const off = p.original_price > p.price ? Math.round((1 - p.price / p.original_price) * 100) : 0;
+        if (off && $('stWas').checked) {
+            ctx.font = `900 34px ${D}`;
+            const t = `-${off}%`, tw = ctx.measureText(t).width + 44;
+            ctx.fillStyle = '#ff2d95'; roundRect(ctx, px + ps - tw - 28, py + 28, tw, 62, 31); ctx.fill();
+            ctx.fillStyle = '#fff'; ctx.fillText(t, px + ps - tw - 6, py + 72);
+        }
+        // Text block
+        ctx.textAlign = 'center';
+        y = py + ps + 90;
+        if (p.brand) { ctx.fillStyle = '#00f0ff'; ctx.font = `700 34px ${B}`; ctx.fillText(p.brand.toUpperCase().split('').join(String.fromCharCode(8202)), W / 2, y); y += 70; }
+        ctx.fillStyle = '#fff'; ctx.font = `700 60px ${B}`;
+        wrapLines(ctx, p.name, 940, 2).forEach(l => { ctx.fillText(l, W / 2, y); y += 72; });
+        y += 34;
+        const price = pkr(p.price), was = off && $('stWas').checked ? pkr(p.original_price) : '';
+        ctx.font = `900 92px ${D}`; const pw = ctx.measureText(price).width;
+        ctx.font = `600 44px ${B}`; const ww = was ? ctx.measureText(was).width + 34 : 0;
+        let x = (W - pw - ww) / 2;
+        ctx.textAlign = 'left';
+        ctx.fillStyle = '#39ff14'; ctx.font = `900 92px ${D}`; ctx.fillText(price, x, y);
+        if (was) {
+            ctx.fillStyle = 'rgba(255,255,255,.5)'; ctx.font = `600 44px ${B}`;
+            const wx = x + pw + 34; ctx.fillText(was, wx, y - 8);
+            ctx.fillRect(wx, y - 22, ww - 34, 4);
+        }
+        ctx.textAlign = 'center';
+        y += 76;
+        const sizes = sortSizes(p.sizes || []);
+        if ($('stSizes').checked && p.status !== 'Sold' && sizes.length) {
+            ctx.fillStyle = 'rgba(255,255,255,.85)'; ctx.font = `600 38px ${B}`;
+            const txt = `SIZE${sizes.length > 1 ? 'S' : ''}  US ${sizes.join('  •  ')}`;
+            wrapLines(ctx, txt, 940, 1).forEach(l => ctx.fillText(l, W / 2, y));
+        }
+        // CTA
+        const cy = H - 190;
+        ctx.fillStyle = 'rgba(255,255,255,.06)'; roundRect(ctx, 70, cy - 40, W - 140, 150, 34); ctx.fill();
+        ctx.strokeStyle = 'rgba(57,255,20,.5)'; ctx.lineWidth = 3; roundRect(ctx, 70, cy - 40, W - 140, 150, 34); ctx.stroke();
+        ctx.fillStyle = '#fff'; ctx.font = `900 40px ${D}`;
+        ctx.fillText(p.status === 'Sold' ? 'MORE PAIRS ON THE WEBSITE' : 'TAP THE LINK TO ORDER', W / 2, cy + 22);
+        ctx.fillStyle = 'rgba(255,255,255,.65)'; ctx.font = `500 30px ${B}`;
+        ctx.fillText(`${STORY_SITE}  •  Delivery all over Pakistan`, W / 2, cy + 78);
+    }
+    ['stHeadline', 'stSizes', 'stWas'].forEach(id => $(id).addEventListener('change', drawStory));
+    $('stPhoto').addEventListener('change', loadStoryPhoto);
+    const storyLink = () => `${location.origin}/shoe/${encodeURIComponent(storyProduct.id)}?s=story`;
+    const storyFileName = () => `jenzy-${(storyProduct.name || 'shoe').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40)}-story.png`;
+    function storyBlob() {
+        return new Promise((resolve, reject) => {
+            try { $('storyCanvas').toBlob(b => b ? resolve(b) : reject(new Error('Could not create the image')), 'image/png'); }
+            catch (e) { reject(new Error('The photo blocks downloading (storage CORS). Try another photo.')); }
+        });
+    }
+    $('stDownload').addEventListener('click', async () => {
+        try {
+            const b = await storyBlob();
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(b); a.download = storyFileName();
+            document.body.appendChild(a); a.click();
+            setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+            toast('Story downloaded', 'Post it on Instagram and add a Link sticker');
+        } catch (e) { toast('Could not download', e.message, 'error'); }
+    });
+    $('stShare').addEventListener('click', async () => {
+        try {
+            const file = new File([await storyBlob()], storyFileName(), { type: 'image/png' });
+            if (navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file], title: storyProduct.name, text: storyLink() });
+            else throw new Error('Sharing photos is not supported on this device. Use Download.');
+        } catch (e) { if (e.name !== 'AbortError') toast('Could not share', e.message, 'error'); }
+    });
+    $('stCopy').addEventListener('click', async () => {
+        const link = storyLink();
+        try { await navigator.clipboard.writeText(link); toast('Link copied', link); }
+        catch { prompt('Copy this link:', link); }
     });
 
     // ---------- Promotions: coupon codes ----------
@@ -1381,6 +2278,7 @@
             products = (await api('products')).products;
             productsLoaded = true;
             renderProducts();
+            updateOptimizeBtn();
         } catch (e) {
             if (!silent) $('productsTable').innerHTML = `<tr><td colspan="7"><div class="alert show" style="margin:16px">${esc(e.message)}</div></td></tr>`;
         }
@@ -1397,7 +2295,7 @@
         }
         $('productsTable').innerHTML = list.map(p => `
             <tr>
-                <td><div class="t-prod"><img src="${esc((p.images || [])[0] || '')}" alt=""><div><h5>${esc(p.name)}</h5><p>${esc(p.brand || '')}${p.color ? ' • ' + esc(p.color) : ''}</p></div></div></td>
+                <td><div class="t-prod"><img src="${esc((p.thumbs || [])[0] || (p.images || [])[0] || '')}" alt="" loading="lazy"><div><h5>${esc(p.name)}</h5><p>${esc(p.brand || '')}${p.color ? ' • ' + esc(p.color) : ''}${p.fit ? ' • ' + esc(p.fit) : ''}</p></div></div></td>
                 <td>${esc(p.gender || '')}</td>
                 <td class="price">${pkr(p.price)}${p.original_price > p.price ? `<div class="muted" style="font-size:12px;text-decoration:line-through;font-weight:400">${pkr(p.original_price)}</div>` : ''}</td>
                 <td>${sortSizes(p.sizes).join(', ') || '<span class="muted">—</span>'}</td>
@@ -1405,11 +2303,13 @@
                 <td>${pill(p.status)}</td>
                 <td><div style="display:flex;gap:6px;justify-content:flex-end">
                     <a class="icon-btn" href="product.html?id=${esc(p.id)}" target="_blank" rel="noopener" title="View in store"><i class="fas fa-eye"></i></a>
+                    <button class="icon-btn" data-story="${esc(p.id)}" title="Instagram story"><i class="fab fa-instagram"></i></button>
                     <button class="icon-btn" data-edit="${esc(p.id)}" title="Edit"><i class="fas fa-pen"></i></button>
                     <button class="icon-btn danger" data-del="${esc(p.id)}" title="Delete"><i class="fas fa-trash"></i></button>
                 </div></td>
             </tr>`).join('');
         $('productsTable').querySelectorAll('[data-edit]').forEach(b => b.addEventListener('click', () => startEdit(b.dataset.edit)));
+        $('productsTable').querySelectorAll('[data-story]').forEach(b => b.addEventListener('click', () => openStory(b.dataset.story)));
         $('productsTable').querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', () => askDelete(b.dataset.del)));
     }
     ['productSearch', 'productStatusFilter', 'productGenderFilter'].forEach(id => $(id).addEventListener(id === 'productSearch' ? 'input' : 'change', renderProducts));
@@ -1470,8 +2370,9 @@
 
     // ---------- Product form ----------
     let editingId = null;
-    let images = [];            // [{ url, uploading, id }]
+    let images = [];            // [{ url, thumb, uploading, preview }]
     let originalImages = [];    // images saved on the product being edited
+    let originalThumbs = [];    // their small versions
     let uploadedThisSession = []; // new uploads not yet saved (cleaned up on reset)
 
     function buildSizeChips(selected) {
@@ -1549,11 +2450,17 @@
                 const file = await resizeImage(original);
                 const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
                 const signed = await api('uploadUrl', { method: 'POST', body: { ext } });
-                const { error } = await sb.storage.from(BUCKET).uploadToSignedUrl(signed.path, signed.token, file, { contentType: file.type || 'image/jpeg' });
+                const { error } = await sb.storage.from(BUCKET).uploadToSignedUrl(signed.path, signed.token, file, { contentType: file.type || 'image/jpeg', cacheControl: '31536000' });
                 if (error) throw error;
                 entry.url = signed.publicUrl;
-                entry.uploading = false;
                 uploadedThisSession.push(signed.publicUrl);
+                // Small fast version for the shop grid (optional — the big photo still works without it)
+                try {
+                    const t = await makeThumb(file);
+                    entry.thumb = await uploadBlob(t.blob, t.ext);
+                    uploadedThisSession.push(entry.thumb);
+                } catch (e) { console.warn('[thumb]', e); }
+                entry.uploading = false;
             } catch (e) {
                 console.error(e);
                 images = images.filter(x => x !== entry);
@@ -1581,7 +2488,8 @@
         $('pStatus').value = p.status || 'Active';
         $('pDescription').value = p.description || '';
         buildSizeChips(p.sizes || []);
-        images = (p.images || []).map(url => ({ url }));
+        $('pFit').value = p.fit || '';
+        images = (p.images || []).map((url, i) => ({ url, thumb: (p.thumbs || [])[i] || '' }));
         renderThumbs();
     }
 
@@ -1591,6 +2499,7 @@
         cleanupUnsaved();
         editingId = id;
         originalImages = [...(p.images || [])];
+        originalThumbs = (p.thumbs || []).filter(Boolean);
         fillForm(p);
         $('formTitle').textContent = 'Edit shoe';
         $('editName').textContent = p.name;
@@ -1601,7 +2510,7 @@
     }
 
     function cleanupUnsaved() {
-        const unsaved = uploadedThisSession.filter(u => !originalImages.includes(u));
+        const unsaved = uploadedThisSession.filter(u => !originalImages.includes(u) && !originalThumbs.includes(u));
         uploadedThisSession = [];
         if (unsaved.length) api('deleteImages', { method: 'POST', body: { urls: unsaved } }).catch(() => {});
     }
@@ -1610,6 +2519,7 @@
         cleanupUnsaved();
         editingId = null;
         originalImages = [];
+        originalThumbs = [];
         $('productForm').reset();
         $('pGender').value = 'Men';
         buildSizeChips([]);
@@ -1651,7 +2561,9 @@
             status: $('pStatus').value,
             description: $('pDescription').value.trim(),
             sizes: selectedSizes(),
-            images: images.map(i => i.url).filter(Boolean)
+            fit: $('pFit').value || null,
+            images: images.filter(i => i.url).map(i => i.url),
+            thumbs: images.filter(i => i.url).map(i => i.thumb || '')
         };
         if (!product.name) return fail('Please enter the product name.', 'pName');
         if (product.price <= 0) return fail('Please enter the selling price.', 'pPrice');
@@ -1664,13 +2576,19 @@
         btn.querySelector('span').textContent = 'Saving…';
         try {
             const wasEditing = !!editingId;
-            const { product: saved } = await api('saveProduct', { method: 'POST', body: { id: editingId, product } });
-            // Delete photos that were removed from this product
-            const removed = originalImages.filter(u => !product.images.includes(u));
+            const { product: saved, priceDrop } = await api('saveProduct', { method: 'POST', body: { id: editingId, product } });
+            // Delete photos that were removed from this product (and their small versions)
+            const removed = [...originalImages.filter(u => !product.images.includes(u)), ...originalThumbs.filter(u => !product.thumbs.includes(u))];
             if (removed.length) api('deleteImages', { method: 'POST', body: { urls: removed } }).catch(() => {});
             uploadedThisSession = [];
             originalImages = [];
+            originalThumbs = [];
             toast(wasEditing ? 'Product updated' : 'Product added', `${saved.name} is ${saved.status === 'Active' ? 'now live in the store' : 'saved as ' + saved.status}`);
+            if (priceDrop && (priceDrop.sent || priceDrop.error)) {
+                setTimeout(() => priceDrop.sent
+                    ? toast('Price-drop email sent', `${priceDrop.sent} ${priceDrop.sent === 1 ? 'customer who saved' : 'customers who saved'} this shoe ${priceDrop.sent === 1 ? 'was' : 'were'} told about the new price${priceDrop.failed ? ` • ${priceDrop.failed} failed` : ''}`)
+                    : toast('Price-drop emails not sent', priceDrop.error, 'error'), 3200);
+            }
             resetForm(true);
             await loadProducts(true);
             loadDashboard();

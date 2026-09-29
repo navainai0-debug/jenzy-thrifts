@@ -1421,16 +1421,23 @@
         $('emState').innerHTML = em.configured ? state(true, 'Sending') : state(false, 'Not set up');
         if (!em.configured) {
             $('emBody').innerHTML = `
+                <p class="muted" style="font-size:13px;margin-bottom:8px"><strong>Your own domain (Zoho Mail, paid plan):</strong></p>
                 <ol class="howto">
-                    <li>Use a Gmail account for the shop. Turn on <a href="https://myaccount.google.com/signinoptions/twosv" target="_blank" rel="noopener">2-Step Verification</a>.</li>
-                    <li>Open <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener">App passwords</a>, create one called <em>Jenzy</em> and copy the 16-letter password.</li>
+                    <li>In Zoho Mail → Settings → <strong>Mail Accounts</strong> → IMAP/POP/SMTP, make sure <strong>SMTP</strong> access is on. If you use 2-factor login, create an <a href="https://accounts.zoho.com/home#security/app_password" target="_blank" rel="noopener">app-specific password</a>.</li>
+                    <li>In ${VERCEL_ENV} add <code>SMTP_USER</code> = e.g. <code>support@yourdomain.com</code>, <code>SMTP_PASS</code> = its password, and <code>SMTP_HOST</code> = <code>smtp.zoho.com</code> (or <code>smtp.zoho.in</code> / <code>smtp.zoho.eu</code> — same ending as your Zoho Mail address bar). Then <strong>Redeploy</strong>.</li>
+                </ol>
+                <p class="muted" style="font-size:13px;margin:12px 0 8px"><strong>Free option for your own domain — Brevo</strong> (300 emails/day): add <code>SMTP_HOST</code> = <code>smtp-relay.brevo.com</code>, <code>SMTP_PORT</code> = <code>587</code>, <code>SMTP_USER</code> = the SMTP login from Brevo → SMTP &amp; API, <code>SMTP_PASS</code> = an SMTP key, <code>EMAIL_FROM</code> = <code>support@yourdomain.com</code>. See SETUP.md.</p>
+                <p class="muted" style="font-size:13px;margin:12px 0 8px"><strong>Or Gmail:</strong></p>
+                <ol class="howto">
+                    <li>Turn on <a href="https://myaccount.google.com/signinoptions/twosv" target="_blank" rel="noopener">2-Step Verification</a>, open <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener">App passwords</a> and create one called <em>Jenzy</em>.</li>
                     <li>In ${VERCEL_ENV} add <code>GMAIL_USER</code> = your Gmail address and <code>GMAIL_APP_PASSWORD</code> = the 16-letter password, then <strong>Redeploy</strong>.</li>
-                    <li>Optional: <code>NOTIFY_EMAIL</code> = where new-order emails go (default: your admin email). <code>CUSTOMER_EMAILS</code> = <code>off</code> to stop emails to customers.</li>
-                </ol>`;
+                </ol>
+                <p class="muted" style="font-size:12.5px;margin-top:10px">Optional: <code>EMAIL_REPLY_TO</code> = where customers' replies go (e.g. <code>support@yourdomain.com</code>). <code>NOTIFY_EMAIL</code> = where new-order emails go (default: your admin email). <code>CUSTOMER_EMAILS</code> = <code>off</code> to stop emails to customers.</p>`;
         } else {
             $('emBody').innerHTML = `
                 <div class="alert-list">
-                    <div><i class="fas fa-paper-plane"></i> Sending from: <strong>${esc(em.from)}</strong></div>
+                    <div><i class="fas fa-paper-plane"></i> Sending from: <strong>${esc(em.from)}</strong>${em.provider ? ` <span class="muted">(${esc(em.provider)})</span>` : ''}</div>
+                    ${em.replyTo ? `<div><i class="fas fa-reply"></i> Customer replies go to: <strong>${esc(em.replyTo)}</strong></div>` : ''}
                     <div><i class="fas fa-inbox"></i> New-order emails to: <strong>${esc(em.owner.join(', ') || '—')}</strong></div>
                     <div><i class="fas fa-user-check"></i> Customer emails: <strong>${em.customers ? 'On — order placed, confirmed, shipped (with tracking), delivered, cancelled' : 'Off'}</strong></div>
                 </div>`;
@@ -1605,7 +1612,7 @@
             const res = await api('sellRequests');
             sellRequests = res.requests;
             $('sellEmailWarn').className = res.emailReady ? 'alert' : 'alert show';
-            $('sellEmailWarn').innerHTML = res.emailReady ? '' : '<i class="fas fa-circle-info"></i> Gmail is not set up, so sellers are not emailed about your offer. They still see it on the Sell page — or message them on WhatsApp.';
+            $('sellEmailWarn').innerHTML = res.emailReady ? '' : '<i class="fas fa-circle-info"></i> Email is not set up (Order Alerts), so sellers are not emailed about your offer. They still see it on the Sell page — or message them on WhatsApp.';
             renderSell();
         } catch (e) {
             $('sellList').innerHTML = `<div class="alert show">${esc(e.message)}</div>`;
@@ -2198,7 +2205,7 @@
         const sorted = [...groups.values()].sort((a, b) => inStock(b) - inStock(a) || b.items.length - a.items.length);
         $('waitSummary').textContent = list.length ? `${list.length} ${list.length === 1 ? 'request' : 'requests'} • ${sorted.filter(inStock).length} with the size in stock now` : '';
         if (!waitData.emailReady && counts.Waiting) {
-            $('waitSummary').innerHTML += ' • <span style="color:var(--yellow)">Set up Gmail (Order Alerts) to email customers</span>';
+            $('waitSummary').innerHTML += ' • <span style="color:var(--yellow)">Set up email (Order Alerts) to email customers</span>';
         }
         if (!sorted.length) {
             $('waitList').innerHTML = `<div class="empty"><i class="fas fa-user-clock"></i>${waitFilter === 'Waiting' ? 'Nobody is waiting right now. When a customer taps "Notify me" on a shoe, they appear here.' : 'Nothing here yet.'}</div>`;

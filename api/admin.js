@@ -194,7 +194,7 @@ async function sendPriceDrop(db, product, oldPrice, site) {
     // Only people we have not already told about this (or a lower) price
     const due = rows.filter(r => r.email && (r.alerted_price == null || product.price < r.alerted_price));
     if (!due.length) return { sent: 0 };
-    if (!emailReady()) return { sent: 0, error: 'Gmail is not set up, so price-drop emails were not sent.' };
+    if (!emailReady()) return { sent: 0, error: 'Email is not set up, so price-drop emails were not sent.' };
     const result = await emailPriceDrop(due, product, oldPrice, site);
     if (result.sent.length) {
         await db.from('wishlist_items').update({ alerted_price: product.price })
@@ -522,7 +522,7 @@ export default route(async (req, res) => {
                 if (pr.error) throw pr.error;
                 products = pr.data || [];
             }
-            return res.status(200).json({ requests: data || [], products, emailReady: !!(process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) });
+            return res.status(200).json({ requests: data || [], products, emailReady: emailReady() });
         }
 
         case 'waitlistNotify': {

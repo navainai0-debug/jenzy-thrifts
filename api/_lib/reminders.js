@@ -12,7 +12,7 @@ export async function runCartReminders(db, site, { max = 50 } = {}) {
     const out = { checked: 0, sent: 0, skipped: 0, failed: 0, error: null };
     const settings = (await readSetting('emails')) || {};
     if (settings.cartReminder === false) return { ...out, error: 'Cart reminder emails are switched off.' };
-    if (!emailReady()) return { ...out, error: 'Gmail is not set up yet (admin → Order Alerts).' };
+    if (!emailReady()) return { ...out, error: 'Email is not set up yet (admin → Order Alerts).' };
     if (!customerEmailsOn()) return { ...out, error: 'Customer emails are switched off (CUSTOMER_EMAILS=off).' };
 
     const now = Date.now();

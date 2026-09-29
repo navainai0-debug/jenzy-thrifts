@@ -100,7 +100,50 @@ Both are free. You can set up one or both.
 
 > To get alerts on more than one phone (e.g. a partner), have them press START on the bot too, then click **Connect Telegram** again.
 
+### Your own email address (Zoho Mail) — recommended
+
+Emails to customers then come from e.g. `support@jenzythrifts.com` instead of a Gmail address.
+Zoho's **Forever Free** plan does not allow this (no SMTP) — you need **Mail Lite** or higher.
+
+1. Zoho Mail → **Settings → Mail Accounts** → click the address → **IMAP/POP/SMTP**: make sure SMTP access is on.
+2. If you use 2-factor login for Zoho: **accounts.zoho.com → Security → App Passwords** → create one called `Jenzy website`.
+3. In Vercel, add these environment variables, then **Redeploy**:
+
+| Name | Value |
+|---|---|
+| `SMTP_USER` | `support@jenzythrifts.com` (emails are sent from this address) |
+| `SMTP_PASS` | Its password (or the app-specific password) |
+| `SMTP_HOST` | `smtp.zoho.com` — use `smtp.zoho.in` / `smtp.zoho.eu` if your Zoho Mail address bar ends in `.in` / `.eu` |
+| `EMAIL_REPLY_TO` | *(optional)* Where customers' replies go, if different, e.g. `info@jenzythrifts.com` |
+| `NOTIFY_EMAIL` | *(optional)* Where new-order emails go, e.g. `info@jenzythrifts.com` |
+
+When `SMTP_USER` + `SMTP_PASS` are set, they are used instead of Gmail. Check **admin → Order Alerts** — it shows "Sending from: support@… (Zoho Mail)" — and press **Send test alert**.
+
+### Free alternative: Brevo (own address on Zoho's free plan)
+
+Brevo sends up to **300 emails a day for free**, from your own address, while you keep reading mail in Zoho.
+
+1. Sign up at **brevo.com** (free plan).
+2. **Senders, Domains & Dedicated IPs → Domains → Add a domain** → `jenzythrifts.com`. Brevo shows DNS records (a `brevo-code` TXT, a DKIM record and DMARC). Add them where your domain's DNS is managed (the same place you added Zoho's MX records).
+   - **SPF:** you must have only ONE record starting with `v=spf1`. Edit the existing Zoho one to `v=spf1 include:zoho.com include:spf.brevo.com ~all` — don't add a second one.
+   - Don't touch Zoho's MX records.
+3. Wait until Brevo shows the domain as **Authenticated**, then add sender `support@jenzythrifts.com` (**Senders → Add a sender**).
+4. **SMTP & API → SMTP → Generate a new SMTP key**. Copy the key and the **SMTP login** shown on that page.
+5. In Vercel add, then **Redeploy**:
+
+| Name | Value |
+|---|---|
+| `SMTP_HOST` | `smtp-relay.brevo.com` |
+| `SMTP_PORT` | `587` |
+| `SMTP_USER` | The SMTP login from step 4 |
+| `SMTP_PASS` | The SMTP key from step 4 |
+| `EMAIL_FROM` | `support@jenzythrifts.com` |
+| `NOTIFY_EMAIL` | *(optional)* `info@jenzythrifts.com` |
+
 ### Gmail (emails to you and your customers)
+
+On Zoho's free plan, keep Gmail and add `EMAIL_REPLY_TO` = `support@jenzythrifts.com`, so customers who reply reach your support inbox.
+
 
 1. Use a Gmail account for the shop (e.g. `jenzythrift@gmail.com`).
 2. Turn on **2-Step Verification**: Google Account → Security.
@@ -229,6 +272,7 @@ Every number on the dashboard (revenue, orders, customers and so on) is calculat
 | "The Telegram bot token is wrong" | Copy the token from @BotFather again into `TELEGRAM_BOT_TOKEN`, then redeploy |
 | "Open Telegram, search for @…, press START…" when clicking Connect | Do exactly that: open your bot, press START (or send "hi"), then click Connect again |
 | "Gmail refused the login" | Create a new App Password (step 6) and check `GMAIL_USER` is the same account, then redeploy |
+| "Zoho Mail refused the login" | Check `SMTP_PASS` (use an app-specific password if 2-factor login is on), that SMTP is allowed on your Zoho plan, and `SMTP_HOST` matches your Zoho region. Redeploy after changes |
 | "Run the latest supabase-setup.sql…" in Promotions or Waiting list | Do step 2 again |
 | Customers see "Size alerts are not switched on yet" | Do step 2 again |
 | "Run the latest supabase-setup.sql…" in Reviews, Sell requests, Visitors or Promotions | Do step 2 again |

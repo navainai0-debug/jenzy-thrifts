@@ -1,6 +1,6 @@
 // Order alerts:
 //  • Telegram message to the shop owner for every new / cancelled order
-//  • Emails (through the shop's Gmail) to the owner and to customers
+//  • Emails (through the shop's Zoho Mail / Gmail) to the owner and to customers
 // Everything is optional — if a setting is missing that channel is simply
 // skipped, and a failed alert never breaks an order.
 import { getDb } from './db.js';
@@ -127,11 +127,31 @@ export async function connectTelegram() {
 }
 
 // ---------------------------------------------------------------------
-// Email (Gmail + App Password)
+// Email — your own domain (Zoho Mail or any SMTP) or Gmail + App Password
+//   Own domain: SMTP_USER + SMTP_PASS (+ SMTP_HOST, default smtp.zoho.com)
+//   Gmail:      GMAIL_USER + GMAIL_APP_PASSWORD (used when SMTP_* is not set)
+//   EMAIL_REPLY_TO: where customers' replies go (e.g. support@yourdomain)
 // ---------------------------------------------------------------------
-const gmailUser = () => (process.env.GMAIL_USER || '').trim();
+const env = (k) => (process.env[k] || '').trim();
+const smtpUser = () => env('SMTP_USER');
+const smtpPass = () => env('SMTP_PASS');
+const smtpOn = () => !!(smtpUser() && smtpPass());
+const gmailUser = () => env('GMAIL_USER');
 const gmailPass = () => (process.env.GMAIL_APP_PASSWORD || '').replace(/\s+/g, '');
-export const emailReady = () => !!(gmailUser() && gmailPass());
+const gmailOn = () => !!(gmailUser() && gmailPass());
+export const emailReady = () => smtpOn() || gmailOn();
+const emailProvider = () => smtpOn() ? (/zoho/i.test(smtpHost()) ? 'Zoho Mail' : /brevo|sendinblue/i.test(smtpHost()) ? 'Brevo' : 'SMTP') : gmailOn() ? 'Gmail' : null;
+function smtpHost() { return env('SMTP_HOST') || 'smtp.zoho.com'; }
+const isEmail = (s) => /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(s || '');
+// Zoho/Gmail only send "from" the account you log in with (or its verified alias)
+const fromAddress = () => {
+    const f = env('EMAIL_FROM');
+    return isEmail(f) ? f : (smtpOn() ? smtpUser() : gmailUser());
+};
+const replyTo = () => {
+    const r = env('EMAIL_REPLY_TO');
+    return isEmail(r) && r.toLowerCase() !== fromAddress().toLowerCase() ? r : '';
+};
 
 function ownerEmails() {
     const list = (process.env.NOTIFY_EMAIL || process.env.ADMIN_EMAILS || '')
@@ -144,11 +164,21 @@ async function mailer() {
     if (globalThis.__JENZY_TEST_MAILER__) return globalThis.__JENZY_TEST_MAILER__;
     if (transporter) return transporter;
     const nodemailer = (await import('nodemailer')).default;
-    transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: { user: gmailUser(), pass: gmailPass() },
-        connectionTimeout: 6000, greetingTimeout: 6000, socketTimeout: 8000
-    });
+    const timeouts = { connectionTimeout: 6000, greetingTimeout: 6000, socketTimeout: 8000 };
+    if (smtpOn()) {
+        const port = parseInt(env('SMTP_PORT'), 10) || 465;
+        transporter = nodemailer.createTransport({
+            host: smtpHost(), port, secure: port === 465,
+            auth: { user: smtpUser(), pass: smtpPass() },
+            ...timeouts
+        });
+    } else {
+        transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: { user: gmailUser(), pass: gmailPass() },
+            ...timeouts
+        });
+    }
     return transporter;
 }
 
@@ -158,9 +188,26 @@ async function sendEmail({ to, subject, html, text }) {
     if (!recipients.length) return 'skipped';
     const t = await mailer();
     try {
-        await t.sendMail({ from: `"${SHOP}" <${gmailUser()}>`, to: recipients.join(', '), subject, html, text });
+        const msg = { from: `"${SHOP}" <${fromAddress()}>`, to: recipients.join(', '), subject, html, text };
+        if (replyTo()) msg.replyTo = replyTo();
+        await t.sendMail(msg);
     } catch (e) {
-        if (/535|Username and Password not accepted|Invalid login/i.test(e.message || '')) {
+        const m = e.message || '';
+        if (smtpOn()) {
+            if (/535|authentication failed|Invalid login|AUTH/i.test(m)) {
+                throw new Error(emailProvider() === 'Brevo'
+                    ? `Brevo refused the login for ${smtpUser()}. SMTP_USER must be the SMTP login shown in Brevo → SMTP & API, and SMTP_PASS an SMTP key (not your Brevo password).`
+                    : `${emailProvider()} refused the login for ${smtpUser()}. Check SMTP_PASS (use an app-specific password if 2-factor login is on) and that SMTP access is allowed on your plan.`);
+            }
+            if (/553|sender|relaying|not allowed to send/i.test(m)) {
+                throw new Error(emailProvider() === 'Brevo'
+                    ? `Brevo would not send from ${fromAddress()}. Add and verify jenzythrifts.com (or this address) in Brevo → Senders, Domains.`
+                    : `${emailProvider()} would not send from ${fromAddress()}. EMAIL_FROM must be ${smtpUser()} or one of its aliases.`);
+            }
+            if (/ENOTFOUND|ECONNREFUSED|ETIMEDOUT|timeout/i.test(m)) {
+                throw new Error(`Could not reach ${smtpHost()}. Check SMTP_HOST (Brevo: smtp-relay.brevo.com with SMTP_PORT 587 · Zoho: smtp.zoho.com / .in / .eu).`);
+            }
+        } else if (/535|Username and Password not accepted|Invalid login/i.test(m)) {
             throw new Error('Gmail refused the login. Check GMAIL_USER and create a new App Password.');
         }
         throw e;
@@ -362,7 +409,9 @@ export async function notifyStatus() {
         },
         email: {
             configured: emailReady(),
-            from: gmailUser() || null,
+            provider: emailProvider(),
+            from: emailReady() ? fromAddress() : null,
+            replyTo: emailReady() ? (replyTo() || null) : null,
             owner: ownerEmails(),
             customers: customerEmailsOn()
         }
@@ -388,7 +437,7 @@ export async function sendTestAlert(site, adminEmail) {
 // "Your size is back" emails for the waiting list. Returns { sent, failed, skipped, error }.
 export async function notifyRestock(requests, productsById, site) {
     if (!emailReady()) {
-        return { sent: [], failed: [], skipped: requests.map(r => r.id), error: 'Gmail is not set up yet (admin → Order Alerts).' };
+        return { sent: [], failed: [], skipped: requests.map(r => r.id), error: 'Email is not set up yet (admin → Order Alerts).' };
     }
     const sent = [], failed = [], skipped = [];
     let error = null;
@@ -466,7 +515,7 @@ const firstOf = (name) => String(name || '').trim().split(/\s+/)[0] || 'there';
 export async function emailPriceDrop(rows, product, oldPrice, site) {
     const sent = [], failed = [];
     let error = null;
-    if (!emailReady()) return { sent, failed, error: 'Gmail is not set up yet (admin → Order Alerts).' };
+    if (!emailReady()) return { sent, failed, error: 'Email is not set up yet (admin → Order Alerts).' };
     const link = `${site}/shoe/${product.id}`;
     const saved = oldPrice - product.price;
     for (const r of rows) {
@@ -496,7 +545,7 @@ export async function emailPriceDrop(rows, product, oldPrice, site) {
 
 // "You left something in your cart" — items: [{...product, size}]
 export async function emailCartReminder(cart, items, site) {
-    if (!emailReady()) throw new Error('Gmail is not set up yet (admin → Order Alerts).');
+    if (!emailReady()) throw new Error('Email is not set up yet (admin → Order Alerts).');
     const total = items.reduce((s, p) => s + (p.price || 0), 0);
     await sendEmail({
         to: cart.email,
@@ -514,7 +563,7 @@ export async function emailCartReminder(cart, items, site) {
 
 // Our offer for a "sell us your sneakers" request
 export async function emailSellOffer(req, site) {
-    if (!emailReady()) throw new Error('Gmail is not set up yet (admin → Order Alerts).');
+    if (!emailReady()) throw new Error('Email is not set up yet (admin → Order Alerts).');
     if (!req.email) throw new Error('This customer has no email address.');
     await sendEmail({
         to: req.email,

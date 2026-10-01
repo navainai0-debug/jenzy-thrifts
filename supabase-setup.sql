@@ -85,7 +85,7 @@ create table if not exists public.orders (
   delivery_fee integer not null default 0,
   total integer not null default 0,
   status text not null default 'Pending'
-    check (status in ('Pending', 'Confirmed', 'Shipped', 'Delivered', 'Cancelled')),
+    check (status in ('Pending', 'Confirmed', 'Shipped', 'Delivered', 'Cancelled', 'Returned')),
   status_history jsonb not null default '[]'
 );
 
@@ -96,6 +96,21 @@ alter table public.orders add column if not exists tracking_url text;
 -- Which discount was used (only the biggest one applies) and who invited this customer
 alter table public.orders add column if not exists discount_type text;   -- coupon | referral | bundle | credit
 alter table public.orders add column if not exists referrer_uid text;
+-- "Returned" = the customer refused the parcel / it came back (pairs go back into stock)
+alter table public.orders drop constraint if exists orders_status_check;
+alter table public.orders add constraint orders_status_check
+  check (status in ('Pending', 'Confirmed', 'Shipped', 'Delivered', 'Cancelled', 'Returned'));
+-- Private staff notes:  [{ text, by, at }]
+alter table public.orders add column if not exists admin_notes jsonb not null default '[]';
+-- WhatsApp confirmation link (/c/<token>) — the customer taps it to confirm the order
+alter table public.orders add column if not exists confirm_token text default replace(gen_random_uuid()::text, '-', '');
+alter table public.orders add column if not exists confirm_sent_at timestamptz;
+alter table public.orders add column if not exists customer_confirmed_at timestamptz;
+-- "Pin my location" at checkout:  { lat, lng, acc }
+alter table public.orders add column if not exists location jsonb;
+update public.orders set confirm_token = replace(gen_random_uuid()::text, '-', '') where confirm_token is null;
+create unique index if not exists orders_confirm_token_idx on public.orders (confirm_token);
+create index if not exists orders_phone_idx on public.orders (phone);
 
 create index if not exists orders_user_uid_idx on public.orders (user_uid);
 create index if not exists orders_created_at_idx on public.orders (created_at desc);
@@ -573,7 +588,7 @@ $$;
 
 
 -- ---------------------------------------------------------------------
--- 5) CHANGE ORDER STATUS — cancelling puts the pairs back in stock.
+-- 5) CHANGE ORDER STATUS — cancelling / a returned parcel puts the pairs back in stock.
 --    Delivered: the friend who invited this customer gets their credit.
 -- ---------------------------------------------------------------------
 create or replace function public.set_order_status(
@@ -590,7 +605,7 @@ declare
   v_item jsonb;
   v_cfg jsonb;
 begin
-  if p_status not in ('Pending', 'Confirmed', 'Shipped', 'Delivered', 'Cancelled') then
+  if p_status not in ('Pending', 'Confirmed', 'Shipped', 'Delivered', 'Cancelled', 'Returned') then
     raise exception 'BAD_STATUS';
   end if;
 
@@ -606,9 +621,16 @@ begin
   if v_order.status = 'Cancelled' then
     raise exception 'ALREADY_CANCELLED';
   end if;
+  if v_order.status = 'Returned' then
+    raise exception 'ALREADY_RETURNED';
+  end if;
+  -- A parcel can only come back after the order was confirmed / sent
+  if p_status = 'Returned' and v_order.status not in ('Confirmed', 'Shipped', 'Delivered') then
+    raise exception 'BAD_TRANSITION';
+  end if;
 
-  -- Cancelling: return every pair to stock
-  if p_status = 'Cancelled' then
+  -- Cancelled or Returned (parcel refused): return every pair to stock
+  if p_status in ('Cancelled', 'Returned') then
     for v_item in select * from jsonb_array_elements(v_order.items)
     loop
       update public.products
@@ -659,6 +681,58 @@ grant execute on function public.place_order(text, text, text, text, text, text,
 grant execute on function public.set_order_status(uuid, text, text) to service_role;
 revoke all on function public.visitor_stats(integer, text) from public, anon, authenticated;
 grant execute on function public.visitor_stats(integer, text) to service_role;
+
+
+-- ---------------------------------------------------------------------
+-- 5b) CUSTOMERS, STAFF, BLOG  (private — only the secure server uses them)
+-- ---------------------------------------------------------------------
+-- Blocked customers: orders from these phones / accounts / emails are refused
+create table if not exists public.blocked_customers (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  phone text,            -- normalised, e.g. 03001234567
+  user_uid text,
+  email text,
+  name text,
+  reason text,
+  blocked_by text
+);
+create index if not exists blocked_customers_phone_idx on public.blocked_customers (phone);
+create index if not exists blocked_customers_uid_idx on public.blocked_customers (user_uid);
+alter table public.blocked_customers enable row level security;
+revoke all on public.blocked_customers from anon, authenticated;
+
+-- Staff (helpers) who can open the admin panel, with the pages they may use
+create table if not exists public.staff_members (
+  email text primary key check (email = lower(email) and email like '%@%'),
+  name text,
+  perms text[] not null default '{}',
+  active boolean not null default true,
+  added_by text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+alter table public.staff_members enable row level security;
+revoke all on public.staff_members from anon, authenticated;
+
+-- Blog / guides — shown at /blog (the server builds the pages, good for Google)
+create table if not exists public.posts (
+  id uuid primary key default gen_random_uuid(),
+  slug text not null unique check (slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$' and length(slug) <= 90),
+  title text not null check (length(title) between 3 and 140),
+  excerpt text,
+  body text not null default '',
+  cover_image text,
+  tags text[] not null default '{}',
+  status text not null default 'Draft' check (status in ('Draft', 'Published')),
+  author text,
+  published_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create index if not exists posts_status_idx on public.posts (status, published_at desc);
+alter table public.posts enable row level security;
+revoke all on public.posts from anon, authenticated;
 
 
 -- ---------------------------------------------------------------------

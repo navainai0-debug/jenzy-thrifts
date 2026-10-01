@@ -22,7 +22,8 @@ import {
     shopConfig, computeTotals, findCoupon, findCredit, computeDiscount, discountLabel, readOffers,
     validateItems, validateCustomer, isUuid, orderErrorMessage
 } from './_lib/shop.js';
-import { notifyNewOrder, notifyCustomerCancelled, notifyOwner, siteUrl, trackingLink } from './_lib/notify.js';
+import { notifyNewOrder, notifyCustomerCancelled, notifyOwner, siteUrl, trackingLink, readSetting } from './_lib/notify.js';
+import { checkCanOrder, cleanLocation, cleanSafety, loadHistory, loadBlocked, riskContext, computeRisk } from './_lib/safety.js';
 
 const PUBLIC_ORDER_FIELDS =
     'id, order_no, created_at, updated_at, customer_name, phone, address, city, notes, payment_method, items, subtotal, discount, coupon, discount_type, delivery_fee, total, status, status_history, courier, tracking_no, tracking_url';
@@ -185,6 +186,10 @@ export default route(async (req, res) => {
         const customer = validateCustomer(body.customer);
         const db = getDb();
         const coupon = await findCoupon(db, body.coupon, null, { user });
+        const location = cleanLocation(body.location);
+        const safety = cleanSafety((await readSetting('safety')) || {});
+        // Blocked numbers / accounts can't order
+        await checkCanOrder(db, { uid: user.uid, email: user.email, phone: customer.phone }, safety);
 
         // Stop people from locking up stock with lots of fake orders
         const { count, error: countError } = await db
@@ -217,8 +222,19 @@ export default route(async (req, res) => {
             throw error;
         }
         const order = Array.isArray(data) ? data[0] : data;
+        if (location) {
+            // "Pin my location" (ignored if supabase-setup.sql wasn't re-run yet)
+            const { error: locError } = await db.from('orders').update({ location }).eq('id', order.id);
+            if (!locError) order.location = location;
+        }
+        // Fake-order check for the owner's alert (never blocks the order)
+        let risk = null;
+        try {
+            const [history, blocked] = await Promise.all([loadHistory(db), loadBlocked(db)]);
+            risk = computeRisk(order, riskContext(history, blocked.list, safety));
+        } catch (e) { console.error('[risk]', e.message); }
         // Telegram / email alerts (never block or break the order)
-        await notifyNewOrder({ ...order, user_email: order.user_email || user.email || null }, siteUrl(req));
+        await notifyNewOrder({ ...order, risk, user_email: order.user_email || user.email || null }, siteUrl(req));
         return res.status(201).json({
             order: { id: order.id, order_no: order.order_no, total: order.total, status: order.status }
         });

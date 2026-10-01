@@ -245,6 +245,13 @@ function telegramNewOrder(order, site) {
     if (order.discount) lines.push(`🏷️ ${esc(discountName(order))}: −${pkr(order.discount)}`);
     lines.push(`🚚 Delivery: ${order.delivery_fee ? pkr(order.delivery_fee) : 'Free'}`);
     if (order.notes) lines.push('', `📝 ${esc(order.notes)}`);
+    if (order.location && Number.isFinite(order.location.lat)) lines.push(`🗺️ <a href="https://www.google.com/maps?q=${order.location.lat},${order.location.lng}">Customer's map pin</a>`);
+    if (order.risk) {
+        const icon = { high: '🔴', medium: '🟠', low: '🟢' }[order.risk.level] || '⚪';
+        const warn = (order.risk.flags || []).filter(f => f.tone === 'bad' || f.tone === 'warn').map(f => f.text);
+        lines.push('', `${icon} <b>Risk: ${esc(order.risk.level.toUpperCase())}</b>${warn.length ? '\n' + warn.map(t => '• ' + esc(t)).join('\n') : ''}`);
+        lines.push('📲 Send the WhatsApp confirmation from the admin panel.');
+    }
     lines.push('', `<a href="${esc(site)}/admin.html#orders">Open admin panel</a>`);
     return lines.join('\n');
 }

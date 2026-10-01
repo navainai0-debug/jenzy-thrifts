@@ -2658,6 +2658,45 @@
         }
         return lines;
     }
+    // Find the shoe inside a photo with a white/plain background, so the story can
+    // show the whole shoe (no cut-off soles, no big empty space).
+    function photoBox(img) {
+        if (img.__box) return img.__box;
+        const full = { sx: 0, sy: 0, sw: img.naturalWidth, sh: img.naturalHeight, plain: false, bg: '#fff' };
+        try {
+            const k = Math.min(1, 320 / Math.max(img.naturalWidth, img.naturalHeight));
+            const w = Math.max(1, Math.round(img.naturalWidth * k)), h = Math.max(1, Math.round(img.naturalHeight * k));
+            const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+            const cx = cv.getContext('2d', { willReadFrequently: true });
+            cx.drawImage(img, 0, 0, w, h);
+            const d = cx.getImageData(0, 0, w, h).data;
+            const px = (x, y) => { const i = (y * w + x) * 4; return [d[i], d[i + 1], d[i + 2], d[i + 3]]; };
+            // background = average of the four corners, if they are all light and similar
+            const cs = [px(1, 1), px(w - 2, 1), px(1, h - 2), px(w - 2, h - 2)];
+            const avg = [0, 1, 2].map(j => Math.round(cs.reduce((a, c) => a + c[j], 0) / 4));
+            const light = cs.every(c => c[3] > 200 && Math.min(c[0], c[1], c[2]) > 200 && Math.abs(c[0] - avg[0]) + Math.abs(c[1] - avg[1]) + Math.abs(c[2] - avg[2]) < 36);
+            if (!light) return (img.__box = full);
+            let x0 = w, y0 = h, x1 = -1, y1 = -1;
+            for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+                const [r, g, b, a] = px(x, y);
+                if (a > 40 && Math.abs(r - avg[0]) + Math.abs(g - avg[1]) + Math.abs(b - avg[2]) > 48) {
+                    if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
+                }
+            }
+            if (x1 < 0 || (x1 - x0) < w * 0.15 || (y1 - y0) < h * 0.1) return (img.__box = full);
+            const m = 2;   // small safety margin (in small-canvas pixels)
+            x0 = Math.max(0, x0 - m); y0 = Math.max(0, y0 - m); x1 = Math.min(w - 1, x1 + m); y1 = Math.min(h - 1, y1 + m);
+            return (img.__box = { sx: x0 / k, sy: y0 / k, sw: (x1 - x0 + 1) / k, sh: (y1 - y0 + 1) / k, plain: true, bg: `rgb(${avg.join(',')})` });
+        } catch { return (img.__box = full); }   // photo not readable (CORS) → old behaviour
+    }
+    // "Saucony" + "saucony" → don't repeat the brand; "Nike Air Force 1" with brand Nike → "Air Force 1"
+    function storyName(p) {
+        let n = String(p.name || '').trim();
+        const b = String(p.brand || '').trim();
+        if (b && n.toLowerCase().startsWith(b.toLowerCase())) n = n.slice(b.length).replace(/^[\s\-–—:|,]+/, '');
+        if (n && n === n.toLowerCase()) n = n.replace(/\b\p{L}/gu, ch => ch.toUpperCase());
+        return n;
+    }
     function drawStory() {
         const p = storyProduct; if (!p) return;
         const c = $('storyCanvas'), ctx = c.getContext('2d');
@@ -2689,8 +2728,15 @@
         // Photo
         const ps = 860, px = (W - ps) / 2, py = 390;
         ctx.save(); roundRect(ctx, px, py, ps, ps, 48); ctx.clip();
-        ctx.fillStyle = '#fff'; ctx.fillRect(px, py, ps, ps);
-        if (storyImg) {
+        const box = storyImg ? photoBox(storyImg) : null;
+        ctx.fillStyle = box && box.plain ? box.bg : '#fff'; ctx.fillRect(px, py, ps, ps);
+        if (storyImg && box.plain) {
+            // whole shoe, centred, with room for the chips at the top
+            const ax = px + 56, ay = py + 112, aw = ps - 112, ah = ps - 112 - 56;
+            const s = Math.min(aw / box.sw, ah / box.sh);
+            const w = box.sw * s, h = box.sh * s;
+            ctx.drawImage(storyImg, box.sx, box.sy, box.sw, box.sh, ax + (aw - w) / 2, ay + (ah - h) / 2, w, h);
+        } else if (storyImg) {
             const s = Math.max(ps / storyImg.naturalWidth, ps / storyImg.naturalHeight);
             const w = storyImg.naturalWidth * s, h = storyImg.naturalHeight * s;
             ctx.drawImage(storyImg, px + (ps - w) / 2, py + (ps - h) / 2, w, h);
@@ -2715,9 +2761,10 @@
         // Text block
         ctx.textAlign = 'center';
         y = py + ps + 90;
-        if (p.brand) { ctx.fillStyle = '#00f0ff'; ctx.font = `700 34px ${B}`; ctx.fillText(p.brand.toUpperCase().split('').join(String.fromCharCode(8202)), W / 2, y); y += 70; }
+        const name = storyName(p);
+        if (p.brand && name) { ctx.fillStyle = '#00f0ff'; ctx.font = `700 34px ${B}`; ctx.fillText(p.brand.toUpperCase().split('').join(String.fromCharCode(8202)), W / 2, y); y += 70; }
         ctx.fillStyle = '#fff'; ctx.font = `700 60px ${B}`;
-        wrapLines(ctx, p.name, 940, 2).forEach(l => { ctx.fillText(l, W / 2, y); y += 72; });
+        wrapLines(ctx, name || String(p.brand || p.name || '').toUpperCase(), 940, 2).forEach(l => { ctx.fillText(l, W / 2, y); y += 72; });
         y += 34;
         const price = pkr(p.price), was = off && $('stWas').checked ? pkr(p.original_price) : '';
         ctx.font = `900 92px ${D}`; const pw = ctx.measureText(price).width;

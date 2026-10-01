@@ -38,17 +38,32 @@
 //   POST ?action=sellStatus          { id, status }
 //   POST ?action=deleteSell          { id }
 //   GET  ?action=visitors&days=7     visitor stats
+//   --- batch 3 (api/_lib/admin-more.js) ---
+//   GET  ?action=customers           customer list + blocked list
+//   POST ?action=blockCustomer       { uid?, email?, phone?, phones?, name?, reason? }
+//   POST ?action=unblockCustomer     { id } or { uid?, email?, phone?, phones? }
+//   POST ?action=addNote / deleteNote  private order notes
+//   POST ?action=confirmSent         { id } WhatsApp confirmation link was sent
+//   GET  ?action=waTemplates         WhatsApp quick messages + safety settings
+//   POST ?action=saveWaTemplates / saveSafety
+//   GET  ?action=staff  POST saveStaff / deleteStaff   (owner only)
+//   GET  ?action=posts  POST savePost / deletePost / previewPost   (blog)
+// Owners = ADMIN_EMAILS. Staff = Admin → Staff, with ticked permissions.
 import { route, getBody, getQuery, HttpError, requireMethod } from './_lib/http.js';
 import { getDb, BUCKET, storagePath } from './_lib/db.js';
-import { getAdmin } from './_lib/auth.js';
+import { getMember, requireAction, can } from './_lib/staff.js';
+import { MORE_ACTIONS, handleMore } from './_lib/admin-more.js';
+import { loadHistory, loadBlocked, riskContext, computeRisk, cleanSafety, mapsLink } from './_lib/safety.js';
 import { isUuid, COUPON_RE, normalizeOffers } from './_lib/shop.js';
 import {
-    COURIERS, notifyStatusChange, notifyStatus, connectTelegram, sendTestAlert, siteUrl,
+    COURIERS, trackingLink, notifyStatusChange, notifyStatus, connectTelegram, sendTestAlert, siteUrl,
     readSetting, writeSetting, notifyRestock, emailPriceDrop, emailSellOffer, emailReady
 } from './_lib/notify.js';
 import { runCartReminders } from './_lib/reminders.js';
 
-const STATUSES = ['Pending', 'Confirmed', 'Shipped', 'Delivered', 'Cancelled'];
+const STATUSES = ['Pending', 'Confirmed', 'Shipped', 'Delivered', 'Cancelled', 'Returned'];
+// Orders that count as sales (not cancelled, parcel not returned)
+const isLive = (o) => o.status !== 'Cancelled' && o.status !== 'Returned';
 const PRODUCT_STATUSES = ['Active', 'Draft', 'Sold'];
 const REVIEW_STATUSES = ['Pending', 'Approved', 'Hidden'];
 const SELL_STATUSES = ['New', 'Offered', 'Accepted', 'Declined', 'Rejected', 'Bought'];
@@ -218,7 +233,7 @@ async function referralStats(db) {
         db.from('orders').select('id, status, total, referrer_uid').not('referrer_uid', 'is', null).limit(5000),
         db.from('credits').select('amount, used_order_id').limit(5000)
     ]);
-    const live = (orders.data || []).filter(o => o.status !== 'Cancelled');
+    const live = (orders.data || []).filter(isLive);
     const cr = credits.data || [];
     return {
         codes: codes.count || 0,
@@ -248,7 +263,7 @@ async function dashboard(db) {
 
     const products = productsRes.data || [];
     const orders = ordersRes.data || [];
-    const live = orders.filter(o => o.status !== 'Cancelled');
+    const live = orders.filter(isLive);
     const today = dayKey(Date.now());
 
     // Last 7 days sales chart
@@ -278,6 +293,7 @@ async function dashboard(db) {
             shippedOrders: orders.filter(o => o.status === 'Shipped').length,
             deliveredOrders: orders.filter(o => o.status === 'Delivered').length,
             cancelledOrders: orders.filter(o => o.status === 'Cancelled').length,
+            returnedOrders: orders.filter(o => o.status === 'Returned').length,
             customers: new Set(orders.map(o => o.user_uid)).size,
             avgOrderValue: live.length ? Math.round(revenue / live.length) : 0,
             pairsSold: live.reduce((s, o) => s + (o.items?.length || 0), 0),
@@ -298,18 +314,32 @@ async function dashboard(db) {
     };
 }
 
+// Staff without "Sales numbers" don't see money; without "Orders" don't see order rows
+function dashboardFor(member, d) {
+    if (!can(member, 'stats')) {
+        for (const k of ['revenue', 'revenueDelivered', 'revenueToday', 'avgOrderValue']) d.stats[k] = null;
+        d.salesChart = d.salesChart.map(x => ({ ...x, revenue: 0 }));
+        d.recentOrders = d.recentOrders.map(o => ({ ...o, total: null }));
+    }
+    if (!can(member, 'orders')) { d.recentOrders = []; d.latestOrderId = null; }
+    return d;
+}
+
 export default route(async (req, res) => {
-    const admin = await getAdmin(req);
-    const { action, status } = getQuery(req);
     const db = getDb();
+    const admin = await getMember(req, db);
+    const { action, status } = getQuery(req);
+    requireAction(admin, action);
+
+    if (MORE_ACTIONS.has(action)) return handleMore(action, req, res, db, admin);
 
     switch (action) {
         case 'whoami':
-            return res.status(200).json({ email: admin.email });
+            return res.status(200).json({ email: admin.email, role: admin.role, perms: admin.perms, name: admin.staffName || admin.name || '' });
 
         case 'dashboard':
             requireMethod(req, 'GET');
-            return res.status(200).json(await dashboard(db));
+            return res.status(200).json(dashboardFor(admin, await dashboard(db)));
 
         case 'products': {
             requireMethod(req, 'GET');
@@ -391,7 +421,16 @@ export default route(async (req, res) => {
             if (status && STATUSES.includes(status)) q = q.eq('status', status);
             const { data, error } = await q;
             if (error) throw error;
-            return res.status(200).json({ orders: data || [] });
+            // Fake-order risk flags for every order
+            let list = data || [];
+            try {
+                const [history, blocked, safety] = await Promise.all([loadHistory(db), loadBlocked(db), readSetting('safety')]);
+                const ctx = riskContext(history, blocked.list, cleanSafety(safety || {}));
+                list = list.map(o => ({ ...o, risk: computeRisk(o, ctx), map_link: mapsLink(o.location), tracking_link: trackingLink(o) }));
+            } catch (e) {
+                console.error('[risk]', e.message);
+            }
+            return res.status(200).json({ orders: list });
         }
 
         case 'orderStatus': {
@@ -403,13 +442,22 @@ export default route(async (req, res) => {
             const { data: before, error: beforeError } = await db.from('orders').select('id, status').eq('id', id).maybeSingle();
             if (beforeError) throw beforeError;
             if (!before) throw new HttpError(404, 'Order not found.');
-            if (hasTracking(body) && before.status !== 'Cancelled') await saveTracking(db, id, sanitizeTracking(body));
+            if (hasTracking(body) && isLive(before)) await saveTracking(db, id, sanitizeTracking(body));
             const { data, error } = await db.rpc('set_order_status', {
                 p_order_id: id, p_status: newStatus, p_by: admin.email
             });
             if (error) {
                 if ((error.message || '').includes('ALREADY_CANCELLED')) {
                     throw new HttpError(400, 'This order was cancelled and its pairs went back into stock. Ask the customer to place a new order.');
+                }
+                if ((error.message || '').includes('ALREADY_RETURNED')) {
+                    throw new HttpError(400, 'This parcel was already marked as returned and its pairs went back into stock.');
+                }
+                if ((error.message || '').includes('BAD_TRANSITION')) {
+                    throw new HttpError(400, 'Only a confirmed, shipped or delivered order can be marked as returned / refused. Use Cancel for a pending order.');
+                }
+                if ((error.message || '').includes('orders_status_check') || (newStatus === 'Returned' && /BAD_STATUS/.test(error.message || ''))) {
+                    throw new HttpError(400, 'Run the latest supabase-setup.sql in Supabase (SQL Editor) to enable the Returned status.');
                 }
                 if ((error.message || '').includes('ORDER_NOT_FOUND')) throw new HttpError(404, 'Order not found.');
                 throw error;
@@ -430,7 +478,7 @@ export default route(async (req, res) => {
                 throw beforeError;
             }
             if (!before) throw new HttpError(404, 'Order not found.');
-            if (before.status === 'Cancelled') throw new HttpError(400, 'This order is cancelled.');
+            if (before.status === 'Cancelled' || before.status === 'Returned') throw new HttpError(400, `This order is ${before.status.toLowerCase()}.`);
             const tracking = sanitizeTracking(body);
             const order = await saveTracking(db, body.id, tracking);
             const changed = (before.tracking_no || null) !== tracking.tracking_no || (before.courier || null) !== tracking.courier;
@@ -735,7 +783,7 @@ export default route(async (req, res) => {
             const { data, error } = await db.rpc('visitor_stats', { p_days: days, p_tz: TIMEZONE });
             if (error) throw missingTable(error, 'visitor_stats|page_views');
             const since = new Date(Date.now() - days * 86400000).toISOString();
-            const { data: orders } = await db.from('orders').select('user_uid, total, status').gte('created_at', since).neq('status', 'Cancelled').limit(5000);
+            const { data: orders } = await db.from('orders').select('user_uid, total, status').gte('created_at', since).not('status', 'in', '(Cancelled,Returned)').limit(5000);
             return res.status(200).json({
                 days,
                 ...(data || {}),

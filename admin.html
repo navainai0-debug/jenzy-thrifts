@@ -174,7 +174,7 @@
         .st-Confirmed { background: rgba(0,240,255,.1); color: var(--accent-2); border-color: rgba(0,240,255,.3); }
         .st-Shipped { background: rgba(160,120,255,.12); color: var(--purple); border-color: rgba(160,120,255,.35); }
         .st-Delivered, .st-Active { background: rgba(57,255,20,.1); color: var(--accent); border-color: rgba(57,255,20,.3); }
-        .st-Cancelled, .st-Sold { background: rgba(255,77,79,.1); color: var(--danger); border-color: rgba(255,77,79,.3); }
+        .st-Cancelled, .st-Sold, .st-Returned, .st-Blocked { background: rgba(255,77,79,.1); color: var(--danger); border-color: rgba(255,77,79,.3); }
         .st-Draft { background: rgba(124,124,134,.12); color: var(--text-2); border-color: var(--border-2); }
         select.status-select { height: 32px; font-size: 12.5px; padding: 0 30px 0 10px; border-radius: 8px; width: auto; }
 
@@ -352,6 +352,84 @@
             .sr-offer { grid-template-columns: 1fr; }
             .card-list { padding: 12px; }
         }
+        /* ----- Batch 3: risk, notes, WhatsApp, customers, staff, blog ----- */
+        .risk { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; letter-spacing: .4px; text-transform: uppercase; padding: 2px 8px; border-radius: 6px; border: 1px solid; white-space: nowrap; }
+        .risk-low { color: var(--accent); border-color: rgba(57,255,20,.3); background: rgba(57,255,20,.07); }
+        .risk-medium { color: #ffb020; border-color: rgba(255,176,32,.35); background: rgba(255,176,32,.08); }
+        .risk-high { color: var(--danger); border-color: rgba(255,77,79,.4); background: rgba(255,77,79,.09); }
+        .o-flags { display: flex; gap: 6px; align-items: center; margin-top: 4px; flex-wrap: wrap; }
+        .o-flags .ic { font-size: 11.5px; color: var(--text-3); display: inline-flex; gap: 4px; align-items: center; }
+        .o-flags .ic.ok { color: var(--accent); }
+        .o-flags .ic.warn { color: var(--yellow); }
+        .risk-box { margin-top: 18px; padding: 14px 16px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg); }
+        .risk-box.high { border-color: rgba(255,77,79,.45); }
+        .risk-box.medium { border-color: rgba(255,176,32,.4); }
+        .risk-head { display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 8px; }
+        .risk-head h5, .box-title { font-size: 11.5px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-3); display: flex; gap: 8px; align-items: center; }
+        .risk-flags { display: grid; gap: 5px; font-size: 13px; color: var(--text-2); }
+        .risk-flags .bad i { color: var(--danger); } .risk-flags .warn i { color: #ffb020; } .risk-flags .good i { color: var(--accent); } .risk-flags .info i { color: var(--text-3); }
+        .risk-flags i { width: 16px; text-align: center; }
+        .wa-box { margin-top: 18px; padding: 14px 16px; border-radius: 12px; border: 1px solid rgba(37,211,102,.3); background: rgba(37,211,102,.04); }
+        .wa-confirm { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin: 10px 0 12px; font-size: 13.5px; color: var(--text-2); }
+        .wa-confirm.ok { color: var(--accent); }
+        .btn-wa { background: #25d366; color: #04230f; border-color: #25d366; }
+        .btn-wa:hover:not(:disabled) { filter: brightness(1.08); }
+        .wa-quick { display: flex; flex-wrap: wrap; gap: 6px; }
+        .wa-quick .btn { font-size: 12.5px; }
+        .loc-line { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 8px; font-size: 13px; }
+        .loc-line a { color: var(--accent-2); }
+        .loc-line.warn { color: var(--yellow); }
+        .notes-box { margin-top: 18px; padding: 14px 16px; border-radius: 12px; border: 1px dashed var(--border-2); background: var(--bg); }
+        .note { padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 13.5px; }
+        .note:last-of-type { border-bottom: 0; }
+        .note p { color: var(--text); white-space: pre-wrap; overflow-wrap: anywhere; }
+        .note small { color: var(--text-3); font-size: 11.5px; display: flex; gap: 8px; align-items: center; margin-top: 3px; }
+        .note .link-btn { font-size: 11.5px; color: var(--danger); }
+        .note-add { display: flex; gap: 8px; margin-top: 10px; }
+        .note-add textarea { flex: 1; min-height: 42px; height: 42px; resize: vertical; }
+        .cust-stats { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+        .cust-stats span { font-size: 11.5px; padding: 2px 8px; border-radius: 6px; background: var(--surface-2); border: 1px solid var(--border); color: var(--text-2); }
+        .cust-stats .bad { color: var(--danger); border-color: rgba(255,77,79,.35); }
+        .cust-stats .good { color: var(--accent); border-color: rgba(57,255,20,.3); }
+        .phones { white-space: normal !important; min-width: 120px; }
+        .perm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px 16px; margin: 6px 0 4px; }
+        .perm-grid .check { align-items: flex-start; font-size: 13px; line-height: 1.4; }
+        .staff-row { display: flex; gap: 14px; align-items: flex-start; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+        .staff-row:last-child { border-bottom: 0; }
+        .staff-row .perm-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+        .staff-row .perm-tags span { font-size: 11.5px; padding: 2px 8px; border-radius: 6px; background: rgba(0,240,255,.07); color: var(--accent-2); border: 1px solid rgba(0,240,255,.25); }
+        .tpl-row { border: 1px solid var(--border); border-radius: 12px; padding: 12px; display: grid; gap: 8px; background: var(--bg); }
+        .tpl-row + .tpl-row { margin-top: 10px; }
+        .tpl-row .tpl-top { display: flex; gap: 8px; align-items: center; }
+        .tpl-row .tpl-top .input { flex: 1; }
+        .tpl-row textarea { min-height: 90px; }
+        .ph-list { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 14px; }
+        .ph-list code { background: var(--surface-2); border: 1px solid var(--border); padding: 2px 7px; border-radius: 6px; font-size: 12px; color: var(--text); }
+        .blog-editor { display: grid; gap: 14px; }
+        .blog-editor textarea.body { min-height: 380px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13.5px; line-height: 1.6; }
+        .blog-tabs { display: flex; gap: 6px; }
+        .md-help { font-size: 12.5px; color: var(--text-3); line-height: 1.7; }
+        .md-help code { background: var(--surface-2); padding: 1px 6px; border-radius: 5px; color: var(--text-2); }
+        .preview { border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; background: var(--bg); min-height: 380px; color: var(--text-2); line-height: 1.75; overflow-wrap: anywhere; }
+        .preview h2, .preview h3 { color: var(--text); margin: 1.2em 0 .5em; } .preview h2:first-child { margin-top: 0; }
+        .preview p, .preview ul, .preview ol, .preview table, .preview blockquote { margin-bottom: .9em; }
+        .preview ul, .preview ol { padding-left: 1.3em; }
+        .preview a { color: var(--accent); }
+        .preview img { max-width: 100%; border-radius: 10px; }
+        .preview table { border-collapse: collapse; } .preview th, .preview td { border: 1px solid var(--border); padding: 6px 10px; }
+        .preview blockquote { border-left: 3px solid var(--accent); padding-left: 12px; }
+        .preview code { background: var(--surface-2); padding: 1px 5px; border-radius: 5px; }
+        .cover-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+        .cover-row img { width: 120px; height: 68px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); }
+        .post-row-title { white-space: normal !important; min-width: 220px; }
+        .post-row-title small { display: block; color: var(--text-3); font-size: 12px; margin-top: 2px; }
+        body.limited .owner-only { display: none !important; }
+        [hidden] { display: none !important; }
+        @media (max-width: 520px) {
+            .note-add { flex-direction: column; }
+            .wa-confirm .btn { width: 100%; }
+            .staff-row .row-actions { width: 100%; }
+        }
         @media (max-width: 520px) { .ref-stats { grid-template-columns: 1fr 1fr 1fr; gap: 6px; } .ref-stats strong { font-size: 15px; } }
 
         @media (max-width: 1200px) { .stats { grid-template-columns: repeat(2, 1fr); } .grid-2 { grid-template-columns: 1fr; } }
@@ -399,7 +477,7 @@
     <div class="login-box">
         <div class="logo">JENZY<small>ADMIN PANEL</small></div>
         <h1>Sign in</h1>
-        <p>Only the shop owner's account can open this panel.</p>
+        <p>Only the shop owner and staff accounts can open this panel.</p>
         <div class="alert" id="loginAlert"></div>
         <form id="loginForm" novalidate>
             <div class="field"><label class="lbl" for="loginEmail">Email</label><input class="input" id="loginEmail" type="email" autocomplete="username" required></div>
@@ -433,14 +511,19 @@
             <a href="#products" data-view="products"><i class="fas fa-shoe-prints"></i>Products<span class="nav-badge zero" id="badgeProducts" style="background:var(--surface-2);color:var(--text-2)">0</span></a>
             <a href="#add" data-view="add"><i class="fas fa-circle-plus"></i>Add Product</a>
             <div class="sec">Customers</div>
+            <a href="#customers" data-view="customers"><i class="fas fa-users"></i>Customers</a>
             <a href="#messages" data-view="messages"><i class="fas fa-envelope"></i>Messages<span class="nav-badge zero" id="badgeMessages">0</span></a>
             <a href="#waitlist" data-view="waitlist"><i class="fas fa-user-clock"></i>Waiting list<span class="nav-badge zero" id="badgeWaitlist">0</span></a>
             <a href="#reviews" data-view="reviews"><i class="fas fa-star"></i>Reviews<span class="nav-badge zero" id="badgeReviews">0</span></a>
             <a href="#sell" data-view="sell"><i class="fas fa-hand-holding-dollar"></i>Sell requests<span class="nav-badge zero" id="badgeSell">0</span></a>
-            <div class="sec">Settings</div>
-            <a href="#alerts" data-view="alerts"><i class="fas fa-bell"></i>Order Alerts</a>
+            <div class="sec" data-sec="content">Content</div>
+            <a href="#blog" data-view="blog"><i class="fas fa-book-open"></i>Blog / Guides</a>
+            <div class="sec owner-only">Settings</div>
+            <a href="#safety" data-view="safety" class="owner-only"><i class="fab fa-whatsapp"></i>WhatsApp &amp; Safety</a>
+            <a href="#staff" data-view="staff" class="owner-only"><i class="fas fa-user-shield"></i>Staff</a>
+            <a href="#alerts" data-view="alerts" class="owner-only"><i class="fas fa-bell"></i>Order Alerts</a>
         </nav>
-        <div class="side-foot"><div class="av" id="adminAvatar">A</div><div style="min-width:0"><div style="font-size:13px;font-weight:600">Admin</div><div class="em" id="adminEmail"></div></div></div>
+        <div class="side-foot"><div class="av" id="adminAvatar">A</div><div style="min-width:0"><div style="font-size:13px;font-weight:600" id="adminRole">Admin</div><div class="em" id="adminEmail"></div></div></div>
     </aside>
     <div class="scrim" id="scrim"></div>
 
@@ -462,7 +545,7 @@
             <section class="view" id="view-dashboard">
                 <div class="stats" id="statsGrid"></div>
                 <div class="grid-2">
-                    <div class="panel">
+                    <div class="panel" id="salesPanel">
                         <div class="panel-head"><h3><i class="fas fa-chart-column"></i> Sales — last 7 days</h3><span class="muted" id="chartTotal"></span></div>
                         <div class="panel-body"><div class="chart" id="salesChart"></div></div>
                     </div>
@@ -471,7 +554,7 @@
                         <div class="panel-body"><div class="breakdown" id="statusBreakdown"></div></div>
                     </div>
                 </div>
-                <div class="panel">
+                <div class="panel" id="recentPanel">
                     <div class="panel-head"><h3><i class="fas fa-clock"></i> Recent orders</h3><a href="#orders" class="btn btn-outline btn-sm">View all</a></div>
                     <div class="table-wrap"><table class="tbl"><thead><tr><th>Order</th><th>Date</th><th>Customer</th><th>City</th><th>Items</th><th>Total</th><th>Status</th></tr></thead><tbody id="recentOrders"></tbody></table></div>
                 </div>
@@ -517,7 +600,7 @@
                         <form id="productForm" novalidate>
                             <div class="form-grid">
                                 <div class="full"><label class="lbl" for="pName">Product name <span class="req">*</span></label><input class="input" id="pName" maxlength="120" placeholder="e.g. Nike Air Force 1 '07 White"></div>
-                                <div><label class="lbl" for="pBrand">Brand</label><input class="input" id="pBrand" list="brandList" maxlength="60" placeholder="Nike"><datalist id="brandList"><option>Nike</option><option>Adidas</option><option>Jordan</option><option>New Balance</option><option>Puma</option><option>Converse</option><option>Vans</option><option>Reebok</option><option>Asics</option><option>Skechers</option><option>Fila</option></datalist></div>
+                                <div><label class="lbl" for="pBrand">Brand</label><input class="input" id="pBrand" list="brandList" maxlength="60" placeholder="Pick from the list or type any brand"><datalist id="brandList"><option>Nike</option><option>Jordan</option><option>Adidas</option><option>New Balance</option><option>Puma</option><option>Converse</option><option>Vans</option><option>Reebok</option><option>Asics</option><option>Skechers</option><option>Fila</option><option>Under Armour</option><option>Yeezy</option><option>Onitsuka Tiger</option><option>Hoka</option><option>On</option><option>Salomon</option><option>Saucony</option><option>Brooks</option><option>Mizuno</option><option>Timberland</option><option>Dr. Martens</option><option>Clarks</option><option>Crocs</option><option>Birkenstock</option><option>Lacoste</option><option>Tommy Hilfiger</option><option>Calvin Klein</option><option>Hush Puppies</option><option>Ecco</option><option>Geox</option><option>Diadora</option><option>Kappa</option><option>Champion</option><option>Le Coq Sportif</option><option>Lotto</option><option>Umbro</option><option>Merrell</option><option>Columbia</option><option>The North Face</option><option>Caterpillar</option><option>Steve Madden</option><option>Aldo</option><option>Balenciaga</option><option>Gucci</option><option>Off-White</option><option>Golden Goose</option><option>Alexander McQueen</option><option>Louis Vuitton</option><option>Prada</option><option>Valentino</option><option>Dior</option><option>Versace</option><option>Hugo Boss</option><option>Polo Ralph Lauren</option><option>Levi's</option><option>Superga</option><option>Veja</option><option>K-Swiss</option><option>DC Shoes</option><option>Etnies</option><option>Ellesse</option><option>Karrimor</option><option>Li-Ning</option><option>Anta</option><option>Bata</option><option>Service</option></datalist></div>
                                 <div><label class="lbl" for="pGender">For <span class="req">*</span></label><select class="select" id="pGender"><option value="Men">Men</option><option value="Women">Women</option><option value="Unisex">Unisex (Men &amp; Women)</option><option value="Kids">Kids</option></select></div>
                                 <div><label class="lbl" for="pCategory">Category</label><select class="select" id="pCategory"><option value="">Select</option><option>Sneakers</option><option>Running</option><option>Basketball</option><option>Casual</option><option>Skate</option><option>Boots</option><option>Slides</option><option>Formal</option></select></div>
                                 <div><label class="lbl" for="pCondition">Condition</label><select class="select" id="pCondition"><option value="Excellent">Excellent — barely worn</option><option value="Good">Good — light wear</option><option value="Fair">Fair — visible wear</option></select></div>
@@ -689,6 +772,122 @@
             </section>
 
             <!-- VISITORS -->
+            <!-- CUSTOMERS -->
+            <section class="view" id="view-customers">
+                <div class="panel">
+                    <div class="tabs" id="custTabs"></div>
+                    <div class="toolbar" style="border-bottom:1px solid var(--border);margin-top:14px">
+                        <div class="search"><i class="fas fa-magnifying-glass"></i><input class="input" id="custSearch" placeholder="Search name, phone, email, city"></div>
+                        <select class="select" id="custSort" aria-label="Sort">
+                            <option value="last">Latest order</option><option value="spent">Most spent</option><option value="orders">Most orders</option><option value="returned">Most refused</option>
+                        </select>
+                        <button class="btn btn-outline btn-sm" id="blockPhoneBtn"><i class="fas fa-ban"></i> Block a number</button>
+                    </div>
+                    <div class="alert info" id="custSql" style="margin:14px 20px 0">Run the latest <strong>supabase-setup.sql</strong> in Supabase (SQL Editor) to turn on blocking.</div>
+                    <div class="table-wrap"><table class="tbl"><thead><tr><th>Customer</th><th>Phone</th><th>City</th><th>Orders</th><th>Spent (delivered)</th><th>Last order</th><th style="text-align:right">Actions</th></tr></thead><tbody id="custTable"></tbody></table></div>
+                </div>
+                <div class="panel" id="blockedPanel">
+                    <div class="panel-head"><h3><i class="fas fa-ban"></i> Blocked numbers &amp; accounts</h3><span class="muted" style="font-size:13px">They can't place orders on the website</span></div>
+                    <div class="table-wrap"><table class="tbl"><thead><tr><th>Phone / account</th><th>Reason</th><th>Blocked</th><th style="text-align:right">Actions</th></tr></thead><tbody id="blockedTable"></tbody></table></div>
+                </div>
+            </section>
+
+            <!-- BLOG -->
+            <section class="view" id="view-blog">
+                <div class="panel" id="blogListPanel">
+                    <div class="panel-head"><h3><i class="fas fa-book-open"></i> Blog posts &amp; guides</h3>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn btn-outline btn-sm" href="/blog" target="_blank" rel="noopener"><i class="fas fa-arrow-up-right-from-square"></i> View blog</a><button class="btn btn-primary btn-sm" id="newPostBtn"><i class="fas fa-plus"></i> New post</button></div></div>
+                    <div class="alert info" id="blogSql" style="margin:14px 20px 0">Run the latest <strong>supabase-setup.sql</strong> in Supabase (SQL Editor) to turn on the blog.</div>
+                    <div class="table-wrap"><table class="tbl"><thead><tr><th>Title</th><th>Status</th><th>Published</th><th style="text-align:right">Actions</th></tr></thead><tbody id="postsTable"></tbody></table></div>
+                </div>
+                <div class="panel" id="blogEditPanel" hidden>
+                    <div class="panel-head"><h3><i class="fas fa-pen-to-square"></i> <span id="postEditTitle">New post</span></h3><button class="btn btn-outline btn-sm" id="postBack"><i class="fas fa-arrow-left"></i> All posts</button></div>
+                    <div class="panel-body blog-editor">
+                        <div class="alert" id="postAlert"></div>
+                        <div><label class="lbl" for="postTitle">Title <span class="req">*</span></label><input class="input" id="postTitle" maxlength="140" placeholder="e.g. How to spot fake Jordans"></div>
+                        <div class="form-grid">
+                            <div><label class="lbl" for="postSlug">Web address</label><div class="muted" style="font-size:12px;margin-bottom:4px">jenzythrifts.com/blog/<strong id="slugPreview">…</strong></div><input class="input" id="postSlug" maxlength="80" placeholder="made from the title" autocomplete="off" spellcheck="false"></div>
+                            <div><label class="lbl" for="postTags">Tags (comma separated)</label><input class="input" id="postTags" maxlength="200" placeholder="Nike, Authenticity"><div class="muted" style="font-size:12px;margin-top:4px">A brand name as a tag shows this post on that brand's page.</div></div>
+                        </div>
+                        <div><label class="lbl" for="postExcerpt">Short summary (shown on Google &amp; the blog list)</label><textarea class="input" id="postExcerpt" maxlength="300" style="min-height:60px" placeholder="One or two sentences"></textarea></div>
+                        <div><label class="lbl">Cover photo (optional)</label>
+                            <div class="cover-row"><img id="coverImg" alt="" hidden><input type="file" id="coverFile" accept="image/*" hidden>
+                                <button class="btn btn-outline btn-sm" type="button" id="coverBtn"><i class="fas fa-image"></i> <span>Choose photo</span></button>
+                                <button class="btn btn-outline btn-sm" type="button" id="coverRemove" hidden><i class="fas fa-xmark"></i> Remove</button></div></div>
+                        <div>
+                            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+                                <label class="lbl" for="postBody" style="margin:0">Post <span class="req">*</span></label>
+                                <div class="blog-tabs"><button type="button" class="tab active" data-ptab="write">Write</button><button type="button" class="tab" data-ptab="preview">Preview</button></div>
+                            </div>
+                            <textarea class="input body" id="postBody" placeholder="Write your post here…"></textarea>
+                            <div class="preview" id="postPreview" hidden></div>
+                            <p class="md-help"><code>## Heading</code> &nbsp;<code>### Small heading</code> &nbsp;<code>**bold**</code> &nbsp;<code>*italic*</code> &nbsp;<code>- list item</code> &nbsp;<code>1. step</code> &nbsp;<code>[link text](/brand/nike)</code> &nbsp;<code>![photo](https://…)</code> &nbsp;<code>&gt; tip</code> &nbsp;<code>| table | row |</code> — leave an empty line between paragraphs.</p>
+                        </div>
+                        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+                            <button class="btn btn-primary" id="postPublish" type="button"><i class="fas fa-globe"></i> Publish</button>
+                            <button class="btn btn-outline" id="postDraft" type="button"><i class="fas fa-floppy-disk"></i> Save as draft</button>
+                            <a class="btn btn-outline" id="postView" target="_blank" rel="noopener" hidden><i class="fas fa-arrow-up-right-from-square"></i> View post</a>
+                            <button class="btn btn-danger" id="postDelete" type="button" hidden style="margin-left:auto"><i class="fas fa-trash"></i> Delete</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- WHATSAPP & SAFETY -->
+            <section class="view" id="view-safety">
+                <div class="panel">
+                    <div class="panel-head"><h3><i class="fab fa-whatsapp"></i> Quick WhatsApp messages</h3></div>
+                    <div class="panel-body">
+                        <p class="alert-lead">These buttons appear in every order. One tap opens WhatsApp with the message filled in for that customer. The words in curly brackets are replaced automatically:</p>
+                        <div class="ph-list"><code>{name}</code><code>{order}</code><code>{total}</code><code>{items}</code><code>{address}</code><code>{city}</code><code>{courier}</code><code>{tracking}</code><code>{tracking_link}</code><code>{confirm_link}</code><code>{review_link}</code><code>{shop}</code></div>
+                        <p class="muted" style="font-size:13px;margin:-4px 0 14px">A message with <code>{confirm_link}</code> is the <strong>confirmation message</strong>: when the customer taps the link and presses Confirm, the order shows <strong>"Customer confirmed ✓"</strong>.</p>
+                        <div id="tplList"></div>
+                        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
+                            <button class="btn btn-outline btn-sm" id="tplAdd" type="button"><i class="fas fa-plus"></i> Add message</button>
+                            <button class="btn btn-outline btn-sm" id="tplReset" type="button"><i class="fas fa-rotate-left"></i> Reset to defaults</button>
+                            <button class="btn btn-primary btn-sm" id="tplSave" type="button" style="margin-left:auto"><i class="fas fa-floppy-disk"></i> Save messages</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel">
+                    <div class="panel-head"><h3><i class="fas fa-shield-halved"></i> Fake order protection</h3></div>
+                    <div class="panel-body">
+                        <p class="alert-lead">Every order gets a risk level — <span class="risk risk-low">Low</span> <span class="risk risk-medium">Medium</span> <span class="risk risk-high">High</span> — from: past refused parcels, new customer, high order value, a phone that isn't a Pakistani mobile, the same phone on several accounts, many orders in a day, no house number, no map pin, and whether the customer confirmed on WhatsApp.</p>
+                        <div class="form-grid">
+                            <div><label class="lbl" for="sfHigh">"High order value" from (PKR)</label><input class="input" id="sfHigh" type="number" min="1000" step="500" inputmode="numeric"></div>
+                            <div><label class="lbl" for="sfAuto">Automatically refuse orders after…</label><select class="select" id="sfAuto"><option value="0">Never (just show a warning)</option><option value="1">1 refused parcel</option><option value="2">2 refused parcels</option><option value="3">3 refused parcels</option></select></div>
+                        </div>
+                        <p class="muted" style="font-size:12.5px;margin-top:10px">A parcel counts as refused when you mark the order <strong>Returned</strong>. Blocked numbers and accounts (Customers page) can never order.</p>
+                        <button class="btn btn-primary btn-sm" id="sfSave" type="button" style="margin-top:14px"><i class="fas fa-floppy-disk"></i> Save</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- STAFF -->
+            <section class="view" id="view-staff">
+                <div class="panel">
+                    <div class="panel-head"><h3><i class="fas fa-user-shield"></i> Staff accounts</h3></div>
+                    <div class="panel-body">
+                        <p class="alert-lead">Give helpers their own login. They open <strong id="staffUrl">/admin</strong> and sign in with <strong>Google</strong> using the email you add here. They only see the pages you tick. Settings (this page, WhatsApp &amp; Safety, Order Alerts) are always owner-only.</p>
+                        <div class="alert" id="staffAlert"></div>
+                        <div class="form-grid">
+                            <div><label class="lbl" for="stEmail">Their Gmail address <span class="req">*</span></label><input class="input" id="stEmail" type="email" maxlength="200" placeholder="helper@gmail.com" autocomplete="off"></div>
+                            <div><label class="lbl" for="stName">Name</label><input class="input" id="stName" maxlength="60" placeholder="e.g. Ali (packing)"></div>
+                        </div>
+                        <label class="lbl" style="margin-top:14px">They can use:</label>
+                        <div class="perm-grid" id="permGrid"></div>
+                        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
+                            <button class="btn btn-primary btn-sm" id="stSave" type="button"><i class="fas fa-user-plus"></i> <span>Add staff</span></button>
+                            <button class="btn btn-outline btn-sm" id="stCancel" type="button" hidden>Cancel editing</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel">
+                    <div class="panel-head"><h3><i class="fas fa-users-gear"></i> Who has access</h3></div>
+                    <div id="staffList"></div>
+                </div>
+            </section>
+
             <section class="view" id="view-visitors">
                 <div class="visit-head">
                     <div class="tabs" id="visitRange" style="padding:0;border:0">
@@ -729,6 +928,14 @@
     <div class="modal-card">
         <div class="modal-head"><h3 id="omTitle">Order</h3><button class="icon-btn" data-close-modal aria-label="Close"><i class="fas fa-xmark"></i></button></div>
         <div class="modal-body" id="omBody"></div>
+    </div>
+</div>
+
+<!-- Customer detail -->
+<div class="modal" id="custModal">
+    <div class="modal-card">
+        <div class="modal-head"><h3 id="cmTitle">Customer</h3><button class="icon-btn" data-close-modal aria-label="Close"><i class="fas fa-xmark"></i></button></div>
+        <div class="modal-body" id="cmBody"></div>
     </div>
 </div>
 
@@ -780,11 +987,17 @@
     const auth = firebase.auth();
     const sb = supabase.createClient(CFG.supabaseUrl, CFG.supabaseAnonKey);
     const BUCKET = 'product-images';
-    const STATUSES = ['Pending', 'Confirmed', 'Shipped', 'Delivered', 'Cancelled'];
+    const STATUSES = ['Pending', 'Confirmed', 'Shipped', 'Delivered', 'Cancelled', 'Returned'];
+    const isClosed = (o) => o.status === 'Cancelled' || o.status === 'Returned';
+    const NEXT_STATUS = { Pending: ['Confirmed', 'Cancelled'], Confirmed: ['Shipped', 'Returned', 'Cancelled'], Shipped: ['Delivered', 'Returned', 'Cancelled'], Delivered: ['Returned'] };
     const COURIER_NAMES = ['TCS', 'Leopards', 'PostEx', 'Trax', 'M&P', 'Call Courier', 'BlueEx', 'Pakistan Post', 'Other'];
-    const STATUS_COLORS = { Pending: 'var(--yellow)', Confirmed: 'var(--accent-2)', Shipped: 'var(--purple)', Delivered: 'var(--accent)', Cancelled: 'var(--danger)' };
+    const STATUS_COLORS = { Pending: 'var(--yellow)', Confirmed: 'var(--accent-2)', Shipped: 'var(--purple)', Delivered: 'var(--accent)', Cancelled: 'var(--danger)', Returned: '#ff8a3d' };
     const DEFAULT_SIZES = ['5', '6', '6.5', '7', '7.5', '8', '8.5', '9', '9.5', '10', '10.5', '11', '12', '13'];
-    const VIEW_TITLES = { dashboard: 'Dashboard', orders: 'Orders', promotions: 'Promotions', products: 'Products', add: 'Add Product', messages: 'Messages', waitlist: 'Waiting list', alerts: 'Order Alerts', reviews: 'Reviews', sell: 'Sell requests', visitors: 'Visitors' };
+    const VIEW_TITLES = { dashboard: 'Dashboard', orders: 'Orders', promotions: 'Promotions', products: 'Products', add: 'Add Product', messages: 'Messages', waitlist: 'Waiting list', alerts: 'Order Alerts', reviews: 'Reviews', sell: 'Sell requests', visitors: 'Visitors', customers: 'Customers', blog: 'Blog / Guides', safety: 'WhatsApp & Safety', staff: 'Staff' };
+    // Which permission each page needs (staff accounts). 'owner' = shop owner only.
+    const VIEW_PERMS = { dashboard: 'any', orders: 'orders', customers: 'customers', promotions: 'promotions', visitors: 'stats', products: 'products', add: 'products', messages: 'messages', waitlist: 'messages', reviews: 'reviews', sell: 'sell', blog: 'blog', safety: 'owner', staff: 'owner', alerts: 'owner' };
+    const canUse = (perm) => !!admin && (admin.role === 'owner' || perm === 'any' || (perm !== 'owner' && (admin.perms || []).includes(perm)));
+    const canView = (view) => canUse(VIEW_PERMS[view] || 'owner');
 
     const $ = (id) => document.getElementById(id);
     const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -866,7 +1079,7 @@
             }
             if (e.status === 403) {
                 await auth.signOut();
-                return showLogin(`<strong>${esc(user.email)}</strong> is not an admin account. Sign in with the shop owner's email.`);
+                return showLogin(`<strong>${esc(user.email)}</strong> doesn't have access. Sign in with the shop owner's email, or ask the owner to add you under <strong>Staff</strong>.`);
             }
             await auth.signOut();
             return showLogin(esc(e.message));
@@ -876,6 +1089,7 @@
         $('layout').classList.add('show');
         $('adminEmail').textContent = admin.email;
         $('adminAvatar').textContent = (admin.email || 'A').charAt(0).toUpperCase();
+        applyPermissions();
         // Don't count the owner's own visits in Visitors
         try { localStorage.setItem('jenzyNoTrack', '1'); } catch { /* ignore */ }
         buildSizeChips([]);
@@ -950,10 +1164,27 @@
         showLogin('You have been signed out.', 'ok');
     });
 
+    // Staff only see the pages the owner ticked for them
+    function applyPermissions() {
+        const owner = admin.role === 'owner';
+        document.body.classList.toggle('limited', !owner);
+        $('adminRole').textContent = owner ? 'Owner' : (admin.name ? admin.name + ' • Staff' : 'Staff');
+        document.querySelectorAll('.side-nav a[data-view]').forEach(a => { a.hidden = !canView(a.dataset.view); });
+        // hide section titles with nothing visible under them
+        document.querySelectorAll('.side-nav .sec').forEach(sec => {
+            let n = sec.nextElementSibling, any = false;
+            while (n && !n.classList.contains('sec')) { if (!n.hidden && getComputedStyle(n).display !== 'none') any = true; n = n.nextElementSibling; }
+            sec.hidden = !any;
+        });
+        $('salesPanel').hidden = !canUse('stats');
+        $('recentPanel').hidden = !canUse('orders');
+    }
+
     // ---------- Navigation ----------
     function route() {
         let view = (location.hash || '#dashboard').slice(1);
         if (!VIEW_TITLES[view]) view = 'dashboard';
+        if (admin && !canView(view)) view = 'dashboard';
         currentView = view;
         document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + view));
         document.querySelectorAll('.side-nav a').forEach(a => a.classList.toggle('active', a.dataset.view === view));
@@ -971,6 +1202,10 @@
         if (view === 'reviews') loadReviews();
         if (view === 'sell') loadSell();
         if (view === 'visitors') loadVisitors();
+        if (view === 'customers') loadCustomers();
+        if (view === 'blog') loadPosts();
+        if (view === 'safety') loadSafety();
+        if (view === 'staff') loadStaff();
     }
     window.addEventListener('hashchange', route);
     const closeSidebar = () => { $('sidebar').classList.remove('open'); $('scrim').classList.remove('show'); };
@@ -987,7 +1222,7 @@
 
     async function refreshAll(first) {
         await loadDashboard(first);
-        if (currentView === 'orders') loadOrders(true);
+        if (currentView === 'orders' && canUse('orders')) loadOrders(true);
         if (currentView === 'messages' && !first) loadMessages(true);
     }
 
@@ -1008,7 +1243,7 @@
         // New order alert
         if (knownLatestOrder && dash.latestOrderId && dash.latestOrderId !== knownLatestOrder) {
             const o = dash.recentOrders[0];
-            toast('New order received!', o ? `${orderNo(o.order_no)} • ${o.customer_name} • ${pkr(o.total)}` : '', 'order');
+            toast('New order received!', o ? `${orderNo(o.order_no)} • ${o.customer_name}${o.total === null ? '' : ' • ' + pkr(o.total)}` : '', 'order');
             if (currentView === 'orders') loadOrders(true);
         }
         knownLatestOrder = dash.latestOrderId;
@@ -1031,13 +1266,14 @@
                 <div class="stat-value">${value}</div>
                 <div class="stat-sub">${sub}</div>
             </div>`;
+        const money = s.revenue !== null && s.revenue !== undefined;
         $('statsGrid').innerHTML = [
-            card('Total revenue', pkrShort(s.revenue), `${pkr(s.revenueDelivered)} delivered`, 'fa-coins', 'var(--accent)'),
-            card('Orders today', s.ordersToday, `${pkr(s.revenueToday)} today`, 'fa-bag-shopping', 'var(--accent-2)'),
+            money ? card('Total revenue', pkrShort(s.revenue), `${pkr(s.revenueDelivered)} delivered`, 'fa-coins', 'var(--accent)') : '',
+            card('Orders today', s.ordersToday, money ? `${pkr(s.revenueToday)} today` : 'New orders today', 'fa-bag-shopping', 'var(--accent-2)'),
             card('Pending orders', s.pendingOrders, s.pendingOrders ? 'Need confirmation' : 'All caught up', 'fa-hourglass-half', 'var(--yellow)'),
-            card('Total orders', s.totalOrders, `${s.deliveredOrders} delivered • ${s.cancelledOrders} cancelled`, 'fa-receipt', 'var(--purple)'),
+            card('Total orders', s.totalOrders, `${s.deliveredOrders} delivered • ${s.cancelledOrders} cancelled${s.returnedOrders ? ` • ${s.returnedOrders} returned` : ''}`, 'fa-receipt', 'var(--purple)'),
             card('Customers', s.customers, 'Unique buyers', 'fa-users', 'var(--pink)'),
-            card('Avg. order value', pkr(s.avgOrderValue), `${s.pairsSold} ${s.pairsSold === 1 ? 'pair' : 'pairs'} ordered`, 'fa-chart-simple', 'var(--accent-2)'),
+            money ? card('Avg. order value', pkr(s.avgOrderValue), `${s.pairsSold} ${s.pairsSold === 1 ? 'pair' : 'pairs'} ordered`, 'fa-chart-simple', 'var(--accent-2)') : '',
             card('Products in store', s.activeProducts, `${s.soldProducts} sold • ${s.draftProducts} draft`, 'fa-shoe-prints', 'var(--accent)'),
             card('Unread messages', s.unreadMessages, 'From the contact form', 'fa-envelope', 'var(--yellow)')
         ].join('');
@@ -1058,7 +1294,7 @@
         }).join('');
 
         // Breakdown
-        const counts = { Pending: s.pendingOrders, Confirmed: s.confirmedOrders, Shipped: s.shippedOrders, Delivered: s.deliveredOrders, Cancelled: s.cancelledOrders };
+        const counts = { Pending: s.pendingOrders, Confirmed: s.confirmedOrders, Shipped: s.shippedOrders, Delivered: s.deliveredOrders, Cancelled: s.cancelledOrders, Returned: s.returnedOrders || 0 };
         const all = Math.max(1, s.totalOrders);
         $('statusBreakdown').innerHTML = STATUSES.map(st => `
             <div class="bd-row"><span>${st}</span><div class="bd-track"><div class="bd-fill" style="width:${counts[st] / all * 100}%;background:${STATUS_COLORS[st]}"></div></div><strong style="text-align:right">${counts[st]}</strong></div>`).join('');
@@ -1071,7 +1307,7 @@
                 <td>${esc(o.customer_name)}</td>
                 <td>${esc(o.city)}</td>
                 <td>${o.itemCount}</td>
-                <td class="price">${pkr(o.total)}</td>
+                <td class="price">${o.total === null ? '—' : pkr(o.total)}</td>
                 <td>${pill(o.status)}</td>
             </tr>`).join('') : `<tr><td colspan="7"><div class="empty"><i class="fas fa-receipt"></i>No orders yet. New orders from the website will appear here automatically.</div></td></tr>`;
         $('recentOrders').querySelectorAll('[data-order]').forEach(tr => tr.addEventListener('click', () => openOrder(tr.dataset.order)));
@@ -1093,11 +1329,12 @@
     function renderOrders() {
         const counts = { All: orders.length };
         STATUSES.forEach(s => counts[s] = orders.filter(o => o.status === s).length);
-        $('orderTabs').innerHTML = ['All', ...STATUSES].map(s => `<button class="tab ${orderFilter === s ? 'active' : ''}" data-tab="${s}">${s}<span class="c">${counts[s]}</span></button>`).join('');
+        counts.Risky = orders.filter(isRisky).length;
+        $('orderTabs').innerHTML = ['All', 'Risky', ...STATUSES].filter(s => s !== 'Returned' || counts.Returned).map(s => `<button class="tab ${orderFilter === s ? 'active' : ''}" data-tab="${s}">${s}<span class="c">${counts[s]}</span></button>`).join('');
         $('orderTabs').querySelectorAll('[data-tab]').forEach(b => b.addEventListener('click', () => { orderFilter = b.dataset.tab; renderOrders(); }));
 
         const q = $('orderSearch').value.trim().toLowerCase().replace(/^jt-?/, '');
-        const list = orders.filter(o => (orderFilter === 'All' || o.status === orderFilter) &&
+        const list = orders.filter(o => (orderFilter === 'All' || o.status === orderFilter || (orderFilter === 'Risky' && isRisky(o))) &&
             (!q || `${o.order_no} ${o.customer_name} ${o.phone} ${o.city} ${o.user_email || ''}`.toLowerCase().includes(q)));
         visibleOrders = list;
         const ids = new Set(orders.map(o => o.id));
@@ -1112,14 +1349,14 @@
                 <td class="chk-col" data-stop><input type="checkbox" class="row-chk" data-sel="${esc(o.id)}" ${selectedOrders.has(o.id) ? 'checked' : ''} aria-label="Select order"></td>
                 <td><strong>${orderNo(o.order_no)}</strong></td>
                 <td class="muted">${fmtDate(o.created_at)}</td>
-                <td>${esc(o.customer_name)}<div class="muted" style="font-size:12px">${esc(o.user_email || '')}</div></td>
+                <td>${esc(o.customer_name)}<div class="muted" style="font-size:12px">${esc(o.user_email || '')}</div>${orderFlags(o)}</td>
                 <td><a href="tel:${esc(o.phone)}" data-stop>${esc(o.phone)}</a></td>
                 <td>${esc(o.city)}</td>
                 <td>${(o.items || []).length}</td>
                 <td class="price">${pkr(o.total)}</td>
-                <td data-stop>${o.status === 'Cancelled' ? pill('Cancelled') : `
+                <td data-stop>${isClosed(o) ? pill(o.status) : `
                     <select class="select status-select" data-status="${esc(o.id)}">
-                        ${STATUSES.map(s => `<option ${s === o.status ? 'selected' : ''}>${s}</option>`).join('')}
+                        ${[o.status, ...(NEXT_STATUS[o.status] || [])].map(s => `<option ${s === o.status ? 'selected' : ''}>${s}</option>`).join('')}
                     </select>`}${o.tracking_no ? `<div class="track-line"><i class="fas fa-truck-fast"></i> ${esc(o.courier || '')} ${esc(o.tracking_no)}</div>` : ''}</td>
             </tr>`).join('');
         $('ordersTable').querySelectorAll('tr[data-order]').forEach(tr => tr.addEventListener('click', (e) => {
@@ -1132,12 +1369,27 @@
             updateBulk();
         }));
     }
+    // ----- Risk + confirmation flags -----
+    const isRisky = (o) => !!o.risk && o.risk.level !== 'low' && (o.status === 'Pending' || o.status === 'Confirmed');
+    const RISK_LABEL = { low: 'Low risk', medium: 'Check', high: 'High risk' };
+    const riskBadge = (r) => r ? `<span class="risk risk-${esc(r.level)}" title="Fake order check — score ${r.score}"><i class="fas ${r.level === 'low' ? 'fa-shield-halved' : 'fa-triangle-exclamation'}"></i> ${RISK_LABEL[r.level] || r.level}</span>` : '';
+    function orderFlags(o) {
+        const open = o.status === 'Pending' || o.status === 'Confirmed';
+        const parts = [];
+        if (o.risk && open) parts.push(riskBadge(o.risk));
+        if (o.customer_confirmed_at) parts.push('<span class="ic ok" title="Customer confirmed on WhatsApp"><i class="fas fa-circle-check"></i> Confirmed</span>');
+        else if (o.confirm_sent_at && open) parts.push('<span class="ic warn" title="Confirmation link sent — not tapped yet"><i class="fab fa-whatsapp"></i> Sent</span>');
+        if ((o.admin_notes || []).length) parts.push(`<span class="ic" title="Private notes"><i class="fas fa-note-sticky"></i> ${o.admin_notes.length}</span>`);
+        if (o.location) parts.push('<span class="ic" title="Customer pinned their location"><i class="fas fa-location-dot"></i> Pin</span>');
+        return parts.length ? `<div class="o-flags">${parts.join('')}</div>` : '';
+    }
+
     // ----- Selection, printing, courier export -----
     let visibleOrders = [];
     const selectedOrders = new Set();
     function bulkTargets() {
         if (selectedOrders.size) return orders.filter(o => selectedOrders.has(o.id));
-        return visibleOrders.filter(o => o.status !== 'Cancelled');
+        return visibleOrders.filter(o => !isClosed(o));
     }
     function updateBulk() {
         const n = selectedOrders.size;
@@ -1174,7 +1426,7 @@
     const itemsText = (o) => (o.items || []).map(it => `${it.brand ? it.brand + ' ' : ''}${it.name} (US ${it.size})`).join(', ');
 
     function printDoc(title, body, kind) {
-        const page = kind === 'label' ? '@page { size: 100mm 150mm; margin: 0; }' : '@page { size: A5; margin: 10mm; }';
+        const page = kind === 'label' ? '@page { size: 100mm 150mm; margin: 0; }' : kind === 'cert' ? '@page { size: 105mm 148mm; margin: 0; }' : '@page { size: A5; margin: 10mm; }';
         const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${esc(title)}</title><style>
             ${page}
             * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1211,6 +1463,28 @@
             .inv-sum div { display: flex; justify-content: space-between; padding: 1mm 0; }
             .inv-sum .tot { border-top: 2px solid #000; margin-top: 1mm; padding-top: 2mm; font-size: 15px; font-weight: 900; }
             .inv-foot { margin-top: 6mm; font-size: 10.5px; color: #333; text-align: center; line-height: 1.5; }
+            .cert { width: 105mm; height: 148mm; padding: 5mm; page-break-after: always; overflow: hidden; }
+            .cert:last-child { page-break-after: auto; }
+            .cert-in { height: 100%; border: 1.5px solid #000; outline: 0.6mm solid #000; outline-offset: -2.4mm; padding: 7mm 6mm 5mm; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 2.6mm; }
+            .cert-brand { font-weight: 900; font-size: 17px; letter-spacing: 3px; }
+            .cert-brand span { font-weight: 400; font-size: 10px; letter-spacing: 4px; margin-left: 2px; }
+            .cert-seal { width: 15mm; height: 15mm; border-radius: 50%; border: 2px solid #000; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 900; margin-top: 1mm; }
+            .cert h1 { font-size: 13.5px; letter-spacing: 2px; font-weight: 900; line-height: 1.25; }
+            .cert-sub { font-size: 10.5px; font-style: italic; margin-top: -1.5mm; }
+            .cert-item { width: 100%; border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 2.5mm 0; }
+            .cert-item small, .cert-meta small { display: block; font-size: 7.5px; letter-spacing: 1.5px; font-weight: 700; color: #444; }
+            .cert-item strong { display: block; font-size: 14px; line-height: 1.25; margin: .6mm 0; word-break: break-word; }
+            .cert-item span { font-size: 10.5px; }
+            .tick { display: inline-block; width: 2.2mm; height: 3.6mm; border: solid #000; border-width: 0 .55mm .55mm 0; transform: rotate(45deg); margin: 0 2.4mm .6mm .6mm; vertical-align: middle; }
+            .tick.big { width: 4.6mm; height: 8mm; border-width: 0 1.1mm 1.1mm 0; margin: -2mm 0 0; }
+            .cert-note { font-size: 8.5px; color: #444; line-height: 1.45; max-width: 80mm; }
+            .cert-checks { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 1.2mm 4mm; font-size: 9.5px; text-align: left; width: 100%; }
+            .cert-meta { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 2mm; width: 100%; font-size: 10px; }
+            .cert-meta b { font-size: 10px; word-break: break-all; }
+            .cert-verify { font-size: 8.5px; color: #333; line-height: 1.4; }
+            .cert-sign { margin-top: auto; width: 100%; display: flex; align-items: flex-end; gap: 3mm; font-size: 9px; }
+            .cert-sign i { flex: 1; border-bottom: 1px solid #000; height: 5mm; }
+            @media screen { .cert { background: #fff; margin: 0 auto 10px; box-shadow: 0 2px 10px rgba(0,0,0,.2); } }
             @media screen { body { background: #e5e5e5; padding: 10px; } .lbl-page, .inv { background: #fff; margin: 0 auto 10px; box-shadow: 0 2px 10px rgba(0,0,0,.2); } .inv { width: 148mm; padding: 10mm; } }
         </style></head><body>${body}<script>window.onload = function () { setTimeout(function () { window.print(); }, 250); };<\/script></body></html>`;
         const w = window.open('', '_blank');
@@ -1225,6 +1499,29 @@
         f.contentDocument.open(); f.contentDocument.write(html.replace(/<script>[\s\S]*?<\/script>/, '')); f.contentDocument.close();
         setTimeout(() => { f.contentWindow.focus(); f.contentWindow.print(); setTimeout(() => f.remove(), 60000); }, 400);
     }
+    // "Verified Authentic by JENZY" card — one per pair
+    const certCode = (o) => `JT${o.order_no}-${String(o.confirm_token || '').slice(-6).toUpperCase()}`;
+    function certHtml(o) {
+        const host = SHOP.site.replace(/^www\./, '');
+        const day = new Date(o.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+        return (o.items || []).map(it => {
+            const p = products.find(x => x.id === it.product_id);
+            const cond = p && p.condition ? ` • Condition: ${esc(p.condition)}` : '';
+            return `<div class="cert"><div class="cert-in">
+                <div class="cert-brand">JENZY<span>THRIFTS</span></div>
+                <div class="cert-seal"><b class="tick big"></b></div>
+                <h1>CERTIFICATE OF<br>AUTHENTICITY</h1>
+                <div class="cert-sub">Verified Authentic by JENZY</div>
+                <div class="cert-item"><small>ITEM</small><strong>${esc(it.brand && !String(it.name).toLowerCase().startsWith(String(it.brand).toLowerCase()) ? it.brand + ' ' : '')}${esc(it.name)}</strong><span>Size US ${esc(it.size)}${cond}</span></div>
+                <ul class="cert-checks"><li><b class="tick"></b>Size tag &amp; style code</li><li><b class="tick"></b>Stitching &amp; materials</li><li><b class="tick"></b>Shape &amp; sole</li><li><b class="tick"></b>Logos &amp; print quality</li></ul>
+                <p class="cert-note">Checked by hand before packing. Pre-loved pair — small signs of wear are described on the product page.</p>
+                <div class="cert-meta"><div><small>CERTIFICATE NO.</small><b>${o.confirm_token ? esc(certCode(o)) : esc(orderNo(o.order_no))}</b></div><div><small>ORDER</small><b>${esc(orderNo(o.order_no))}</b></div><div><small>DATE</small><b>${esc(day)}</b></div></div>
+                ${o.confirm_token ? `<div class="cert-verify">Check this card online:<br><b>${esc(host)}/verify/${esc(certCode(o))}</b></div>` : ''}
+                <div class="cert-sign"><span>Inspected by</span><i></i></div>
+            </div></div>`;
+        }).join('');
+    }
+
     function labelHtml(o) {
         const items = o.items || [];
         return `<div class="lbl-page">
@@ -1291,10 +1588,14 @@
             if (control) control.value = o.status;
             return;
         }
+        if (status === 'Returned' && !confirm(`Mark ${orderNo(o.order_no)} as returned / refused?\n\nThe pairs go back into stock, and this counts as a refused parcel for this customer's phone and account.`)) {
+            if (control) control.value = o.status;
+            return;
+        }
         if (control) control.disabled = true;
         try {
             await api('orderStatus', { method: 'POST', body: { id, status, ...extra } });
-            toast(`Order ${orderNo(o.order_no || '')} → ${status}`, status === 'Cancelled' ? 'Pairs returned to stock' : '');
+            toast(`Order ${orderNo(o.order_no || '')} → ${status}`, status === 'Cancelled' || status === 'Returned' ? 'Pairs returned to stock' : '');
             await Promise.all([loadOrders(true), loadDashboard()]);
             if ($('orderModal').classList.contains('open')) openOrder(id);
         } catch (e) {
@@ -1309,18 +1610,25 @@
         if (!o) return toast('Order not found', '', 'error');
         const items = o.items || [];
         $('omTitle').innerHTML = `${orderNo(o.order_no)} &nbsp;${pill(o.status)}`;
-        const next = { Pending: ['Confirmed', 'Cancelled'], Confirmed: ['Shipped', 'Cancelled'], Shipped: ['Delivered', 'Cancelled'], Delivered: [], Cancelled: [] }[o.status] || [];
+        const next = NEXT_STATUS[o.status] || [];
+        const open = o.status === 'Pending' || o.status === 'Confirmed';
+        const tpls = await getWaTemplates();
         $('omBody').innerHTML = `
             <div class="od-grid">
                 <div class="od-block"><h5>Customer</h5><p><strong style="color:var(--text)">${esc(o.customer_name)}</strong><br>${esc(o.user_email || '')}<br>
                     <a href="tel:${esc(o.phone)}" style="color:var(--accent-2)"><i class="fas fa-phone"></i> ${esc(o.phone)}</a> &nbsp;
                     <a href="${waLink(o.phone)}" target="_blank" rel="noopener" style="color:var(--accent)"><i class="fab fa-whatsapp"></i> WhatsApp</a></p></div>
-                <div class="od-block"><h5>Delivery address</h5><p>${esc(o.address)}<br>${esc(o.city)}</p></div>
+                <div class="od-block"><h5>Delivery address</h5><p>${esc(o.address)}<br>${esc(o.city)}</p>
+                    ${o.map_link ? `<div class="loc-line"><i class="fas fa-location-dot"></i><a href="${esc(o.map_link)}" target="_blank" rel="noopener">Open customer's map pin</a>${o.location && o.location.acc ? `<span class="muted">±${Math.round(o.location.acc)} m</span>` : ''}</div>`
+                        : `<div class="loc-line warn"><i class="fas fa-location-crosshairs"></i> No map pin — check the address on the call</div>`}</div>
                 <div class="od-block"><h5>Placed</h5><p>${fmtDateLong(o.created_at)}</p></div>
                 <div class="od-block"><h5>Payment</h5><p>Cash on Delivery</p></div>
                 ${o.notes ? `<div class="od-block" style="grid-column:1/-1"><h5>Customer notes</h5><p>${esc(o.notes)}</p></div>` : ''}
             </div>
-            <div class="od-items">
+            ${riskBoxHtml(o, open)}
+            ${waBoxHtml(o, tpls)}
+            ${notesBoxHtml(o)}
+            <div class="od-items" style="margin-top:18px">
                 ${items.map(it => `<div class="od-item"><img src="${esc(it.image || '')}" alt=""><div><strong>${esc(it.name)}</strong><div class="muted" style="font-size:12.5px">${esc(it.brand || '')} • Size US ${esc(it.size)}</div></div><span class="price">${pkr(it.price)}</span></div>`).join('')}
             </div>
             <div style="max-width:320px;margin-left:auto">
@@ -1345,8 +1653,10 @@
             <div class="print-actions">
                 <button class="btn btn-outline btn-sm" id="omInvoice" type="button"><i class="fas fa-file-invoice"></i> Print invoice</button>
                 <button class="btn btn-outline btn-sm" id="omLabel" type="button"><i class="fas fa-tag"></i> Print label</button>
+                <button class="btn btn-outline btn-sm" id="omCert" type="button" title="A6 'Verified Authentic by JENZY' card to put in the box"><i class="fas fa-certificate"></i> Authenticity card</button>
+                ${canUse('customers') ? `<button class="btn btn-outline btn-sm" id="omBlock" type="button" style="color:var(--danger)"><i class="fas fa-ban"></i> Block customer</button>` : ''}
             </div>
-            ${next.length ? `<div class="status-actions">${next.map(s => `<button class="btn ${s === 'Cancelled' ? 'btn-danger' : 'btn-primary'} btn-sm" data-set="${s}"><i class="fas ${s === 'Cancelled' ? 'fa-xmark' : 'fa-check'}"></i> Mark ${s}</button>`).join('')}</div>` : ''}
+            ${next.length ? `<div class="status-actions">${next.map(s => `<button class="btn ${s === 'Cancelled' || s === 'Returned' ? 'btn-danger' : 'btn-primary'} btn-sm" data-set="${s}"><i class="fas ${s === 'Cancelled' ? 'fa-xmark' : s === 'Returned' ? 'fa-rotate-left' : 'fa-check'}"></i> ${s === 'Returned' ? 'Mark Returned / Refused' : 'Mark ' + s}</button>`).join('')}</div>` : ''}
             <div class="history">${(o.status_history || []).map(h => `<div><i class="fas fa-circle" style="font-size:6px;vertical-align:middle"></i> ${esc(h.status)} — ${fmtDateLong(h.at)}${h.by ? ' • by ' + esc(h.by) : ''}</div>`).join('')}</div>`;
         const trackingFields = () => $('omCourier') ? {
             courier: $('omCourier').value, tracking_no: $('omTrackNo').value.trim(), tracking_url: $('omTrackUrl').value.trim()
@@ -1359,6 +1669,14 @@
         }));
         $('omInvoice').addEventListener('click', () => printDoc(`Invoice ${orderNo(o.order_no)}`, invoiceHtml(o), 'invoice'));
         $('omLabel').addEventListener('click', () => printDoc(`Label ${orderNo(o.order_no)}`, labelHtml(o), 'label'));
+        $('omCert').addEventListener('click', async () => {
+            // product condition comes from the product list — load it once if needed
+            if (!productsLoaded && canUse('products')) await loadProducts(true).catch(() => {});
+            printDoc(`Authenticity ${orderNo(o.order_no)}`, certHtml(o), 'cert');
+        });
+        $('omBlock')?.addEventListener('click', () => blockFromOrder(o));
+        $('omCust')?.addEventListener('click', () => openCustomer(o.user_uid));
+        wireOrderExtras(o, tpls);
         $('omSaveTrack')?.addEventListener('click', async () => {
             const btn = $('omSaveTrack');
             btn.disabled = true;
@@ -1374,6 +1692,465 @@
         });
         $('orderModal').classList.add('open');
     }
+
+    // ---------- Order extras: risk, WhatsApp, notes ----------
+    let waCache = null;
+    async function getWaTemplates(force) {
+        if (waCache && !force) return waCache;
+        try { waCache = await api('waTemplates'); }
+        catch (e) { if (!waCache) return { templates: [], defaults: [], safety: {}, cities: [] }; }
+        return waCache;
+    }
+    const FLAG_ICON = { bad: 'fa-circle-xmark', warn: 'fa-triangle-exclamation', good: 'fa-circle-check', info: 'fa-circle-info' };
+    function riskBoxHtml(o, open) {
+        const r = o.risk;
+        if (!r) return '';
+        const st = r.stats || {};
+        return `<div class="risk-box ${esc(r.level)}">
+            <div class="risk-head"><h5><i class="fas fa-shield-halved"></i> Fake order check</h5>${open ? riskBadge(r) : `<span class="muted" style="font-size:12px">${esc(o.status)}</span>`}</div>
+            ${(r.flags || []).length ? `<div class="risk-flags">${r.flags.map(f => `<div class="${esc(f.tone)}"><i class="fas ${FLAG_ICON[f.tone] || 'fa-circle-info'}"></i> ${esc(f.text)}</div>`).join('')}</div>` : '<div class="muted" style="font-size:13px">Nothing unusual.</div>'}
+            <div class="cust-stats">
+                <span>${st.orders || 0} other ${st.orders === 1 ? 'order' : 'orders'}</span>
+                <span class="${st.delivered ? 'good' : ''}">${st.delivered || 0} delivered</span>
+                <span class="${st.refused ? 'bad' : ''}">${st.refused || 0} refused</span>
+                <span>${st.cancelled || 0} cancelled</span>
+                ${canUse('customers') && o.user_uid ? `<button class="link-btn" id="omCust" type="button">Customer history →</button>` : ''}
+            </div>
+        </div>`;
+    }
+    const hasConfirmTpl = (t) => /\{confirm_link\}/.test(t.text);
+    function waBoxHtml(o, data) {
+        const list = data.templates || [];
+        const confirmTpl = list.find(hasConfirmTpl);
+        const open = o.status === 'Pending' || o.status === 'Confirmed';
+        let state;
+        if (o.customer_confirmed_at) state = `<div class="wa-confirm ok"><span><i class="fas fa-circle-check"></i> Customer confirmed on WhatsApp — ${fmtDateLong(o.customer_confirmed_at)}</span></div>`;
+        else if (!o.confirm_token) state = `<div class="wa-confirm"><span class="muted">Run the latest <strong>supabase-setup.sql</strong> in Supabase to turn on WhatsApp confirmation links.</span></div>`;
+        else if (open) state = `<div class="wa-confirm"><span>${o.confirm_sent_at ? `<i class="fas fa-clock" style="color:var(--yellow)"></i> Link sent ${fmtDate(o.confirm_sent_at)} — not confirmed yet` : '<i class="fas fa-circle-info"></i> Not confirmed by the customer yet'}</span>
+            ${confirmTpl ? `<button class="btn btn-wa btn-sm" id="omSendConfirm" type="button"><i class="fab fa-whatsapp"></i> ${o.confirm_sent_at ? 'Send again' : 'Send confirmation link'}</button>` : ''}</div>`;
+        else state = '';
+        const others = list.filter(t => t !== confirmTpl || !open || o.customer_confirmed_at);
+        return `<div class="wa-box">
+            <div class="box-title"><i class="fab fa-whatsapp" style="color:#25d366"></i> WhatsApp</div>
+            ${state}
+            <div class="wa-quick" style="${state ? '' : 'margin-top:10px'}">${others.map(t => `<button class="btn btn-outline btn-sm" type="button" data-tpl="${list.indexOf(t)}">${esc(t.label)}</button>`).join('')}
+                <a class="btn btn-outline btn-sm" href="${waLink(o.phone)}" target="_blank" rel="noopener"><i class="fas fa-comment"></i> Empty chat</a></div>
+        </div>`;
+    }
+    function notesBoxHtml(o) {
+        const notes = o.admin_notes || [];
+        return `<div class="notes-box">
+            <div class="box-title"><i class="fas fa-note-sticky"></i> Private notes <span style="text-transform:none;letter-spacing:0;font-weight:400">— only the shop team sees these</span></div>
+            <div id="omNotes">${notes.length ? notes.map(n => `<div class="note"><p>${esc(n.text)}</p><small>${esc(n.by || '')} • ${fmtDate(n.at)}${admin.role === 'owner' || n.by === admin.email ? ` <button class="link-btn" type="button" data-del-note="${esc(n.at)}">Delete</button>` : ''}</small></div>`).join('') : '<div class="muted" style="font-size:13px;margin-top:6px">No notes yet — e.g. "called, will pay on Friday", "wants box packing".</div>'}</div>
+            <div class="note-add"><textarea class="input" id="omNoteText" maxlength="1000" placeholder="Write a note…"></textarea><button class="btn btn-outline btn-sm" id="omNoteAdd" type="button">Add</button></div>
+        </div>`;
+    }
+    // Fill {placeholders}; drop lines whose only content was an empty placeholder
+    function fillTemplate(text, o) {
+        const vals = {
+            name: String(o.customer_name || '').split(' ')[0] || 'there', shop: SHOP.name, order: orderNo(o.order_no),
+            items: itemsText(o), total: pkr(o.total), address: o.address || '', city: o.city || '',
+            courier: o.courier || '', tracking: o.tracking_no || '', tracking_link: o.tracking_link || '',
+            confirm_link: o.confirm_token ? `${location.origin}/c/${o.confirm_token}` : '',
+            review_link: `${location.origin}/orders.html`
+        };
+        return String(text).split('\n').map(line => {
+            let hadEmpty = false;
+            const out = line.replace(/\{(\w+)\}/g, (m, k) => {
+                if (!(k in vals)) return m;
+                if (!vals[k]) hadEmpty = true;
+                return vals[k];
+            });
+            return hadEmpty && !out.replace(/[^\p{L}\p{N}]/gu, '').length ? null : (hadEmpty && /^[^:]+:\s*$/.test(out.trim()) ? null : out);
+        }).filter(l => l !== null).join('\n').replace(/\n{3,}/g, '\n\n').trim();
+    }
+    const openWa = (o, text) => window.open(`${waLink(o.phone)}?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
+    function wireOrderExtras(o, data) {
+        const list = data.templates || [];
+        const markSent = async () => {
+            try { await api('confirmSent', { method: 'POST', body: { id: o.id } }); await loadOrders(true); if ($('orderModal').classList.contains('open')) openOrder(o.id); }
+            catch (e) { /* not important */ }
+        };
+        $('omSendConfirm')?.addEventListener('click', () => {
+            const t = list.find(hasConfirmTpl);
+            openWa(o, fillTemplate(t.text, o));
+            markSent();
+        });
+        $('omBody').querySelectorAll('[data-tpl]').forEach(b => b.addEventListener('click', () => {
+            const t = list[+b.dataset.tpl];
+            if (!t) return;
+            openWa(o, fillTemplate(t.text, o));
+            if (hasConfirmTpl(t) && o.confirm_token && !o.customer_confirmed_at) markSent();
+        }));
+        $('omNoteAdd').addEventListener('click', async () => {
+            const text = $('omNoteText').value.trim();
+            if (!text) return $('omNoteText').focus();
+            $('omNoteAdd').disabled = true;
+            try {
+                const r = await api('addNote', { method: 'POST', body: { id: o.id, text } });
+                o.admin_notes = r.notes;
+                await loadOrders(true);
+                openOrder(o.id);
+            } catch (e) { toast('Could not save note', e.message, 'error'); $('omNoteAdd').disabled = false; }
+        });
+        $('omNotes').querySelectorAll('[data-del-note]').forEach(b => b.addEventListener('click', async () => {
+            if (!confirm('Delete this note?')) return;
+            try {
+                const r = await api('deleteNote', { method: 'POST', body: { id: o.id, at: b.dataset.delNote } });
+                o.admin_notes = r.notes;
+                await loadOrders(true);
+                openOrder(o.id);
+            } catch (e) { toast('Could not delete note', e.message, 'error'); }
+        }));
+    }
+    async function blockFromOrder(o) {
+        const reason = prompt(`Block ${o.customer_name} (${o.phone})?\nThey won't be able to order from the website with this phone number or Google account.\n\nReason (only you see this):`, o.status === 'Returned' ? 'Refused parcel' : '');
+        if (reason === null) return;
+        try {
+            await api('blockCustomer', { method: 'POST', body: { uid: o.user_uid, email: o.user_email, phone: o.phone, name: o.customer_name, reason } });
+            toast('Customer blocked', 'They can no longer place orders');
+            custData = null;
+            loadOrders(true).then(() => $('orderModal').classList.contains('open') && openOrder(o.id));
+        } catch (e) { toast('Could not block', e.message, 'error'); }
+    }
+
+    // ---------- Customers ----------
+    let custData = null, custFilter = 'all';
+    async function loadCustomers(silent) {
+        if (!silent && !custData) $('custTable').innerHTML = `<tr><td colspan="7"><div class="empty"><div class="spinner" style="margin:0 auto"></div></div></td></tr>`;
+        try {
+            custData = await api('customers');
+            renderCustomers();
+        } catch (e) {
+            $('custTable').innerHTML = `<tr><td colspan="7"><div class="alert show" style="margin:16px">${esc(e.message)}</div></td></tr>`;
+        }
+        return custData;
+    }
+    const CUST_TABS = { all: ['All', () => true], repeat: ['Repeat', c => c.orders > 1], refused: ['Refused', c => c.returned > 0], blocked: ['Blocked', c => c.blocked], shared: ['Shared phone', c => c.sharedPhone] };
+    function renderCustomers() {
+        const d = custData;
+        $('custSql').classList.toggle('show', !!d.needsSql);
+        const cs = d.customers || [];
+        $('custTabs').innerHTML = Object.entries(CUST_TABS).map(([k, [label, fn]]) => `<button class="tab ${custFilter === k ? 'active' : ''}" data-ctab="${k}">${label}<span class="c">${cs.filter(fn).length}</span></button>`).join('');
+        $('custTabs').querySelectorAll('[data-ctab]').forEach(b => b.addEventListener('click', () => { custFilter = b.dataset.ctab; renderCustomers(); }));
+        const q = $('custSearch').value.trim().toLowerCase();
+        const qd = q.replace(/\D/g, '');
+        const sort = $('custSort').value;
+        const list = cs.filter(CUST_TABS[custFilter][1]).filter(c => !q ||
+            [c.name, c.email, ...(c.cities || [])].some(v => String(v || '').toLowerCase().includes(q)) ||
+            (qd.length >= 3 && (c.phones || []).some(p => p.replace(/\D/g, '').includes(qd.replace(/^92/, '0').replace(/^3/, '03'))))
+        ).sort((a, b) => sort === 'spent' ? b.spent - a.spent : sort === 'orders' ? b.orders - a.orders : sort === 'returned' ? b.returned - a.returned || b.orders - a.orders : String(b.lastOrder).localeCompare(String(a.lastOrder)));
+        $('custTable').innerHTML = list.length ? list.slice(0, 500).map(c => `
+            <tr class="clickable" data-cust="${esc(c.uid)}">
+                <td><strong>${esc(c.name)}</strong>${c.blocked ? ' ' + pill('Blocked') : ''}<div class="muted" style="font-size:12px">${esc(c.email || '')}</div>
+                    <div class="cust-stats">${c.returned ? `<span class="bad">${c.returned} refused</span>` : ''}${c.delivered ? `<span class="good">${c.delivered} delivered</span>` : ''}${c.confirmed ? `<span>${c.confirmed} confirmed on WhatsApp</span>` : ''}${c.sharedPhone ? '<span class="bad">Phone used on another account</span>' : ''}</div></td>
+                <td class="phones">${(c.phones || []).map(p => `<div>${esc(p)}</div>`).join('')}</td>
+                <td>${esc((c.cities || []).join(', '))}</td>
+                <td>${c.orders}${c.open ? `<div class="muted" style="font-size:12px">${c.open} open</div>` : ''}</td>
+                <td class="price">${pkr(c.spent)}</td>
+                <td class="muted" style="font-size:12.5px">${fmtDate(c.lastOrder)}</td>
+                <td data-stop style="text-align:right;white-space:nowrap">
+                    ${c.phones && c.phones[0] ? `<a class="icon-btn" href="${waLink(c.phones[0])}" target="_blank" rel="noopener" title="WhatsApp" style="display:inline-flex"><i class="fab fa-whatsapp"></i></a>` : ''}
+                    <button class="btn btn-outline btn-sm" type="button" data-cblock="${esc(c.uid)}" ${d.needsSql ? 'disabled' : ''}>${c.blocked ? 'Unblock' : 'Block'}</button>
+                </td>
+            </tr>`).join('') : `<tr><td colspan="7"><div class="empty"><i class="fas fa-users"></i>${cs.length ? 'No customers match.' : 'Customers appear here after their first order.'}</div></td></tr>`;
+        $('custTable').querySelectorAll('[data-cust]').forEach(tr => tr.addEventListener('click', (e) => { if (!e.target.closest('[data-stop]')) openCustomer(tr.dataset.cust); }));
+        $('custTable').querySelectorAll('[data-cblock]').forEach(b => b.addEventListener('click', () => toggleBlock(cs.find(c => c.uid === b.dataset.cblock))));
+        const bl = d.blocked || [];
+        $('blockedPanel').hidden = !!d.needsSql;
+        $('blockedTable').innerHTML = bl.length ? bl.map(x => `<tr>
+            <td>${x.phone ? `<strong>${esc(x.phone)}</strong>` : ''}${x.email ? `<div class="muted" style="font-size:12px">${esc(x.email)}</div>` : ''}${!x.phone && !x.email && x.user_uid ? '<span class="muted">Google account</span>' : ''}${x.name ? `<div style="font-size:12.5px">${esc(x.name)}</div>` : ''}</td>
+            <td style="white-space:normal;max-width:280px">${esc(x.reason || '—')}</td>
+            <td class="muted" style="font-size:12.5px">${fmtDate(x.created_at)}${x.blocked_by ? `<div>by ${esc(x.blocked_by)}</div>` : ''}</td>
+            <td style="text-align:right"><button class="btn btn-outline btn-sm" type="button" data-unblock="${esc(x.id)}">Unblock</button></td>
+        </tr>`).join('') : `<tr><td colspan="4"><div class="empty" style="padding:24px"><i class="fas fa-circle-check"></i>Nobody is blocked.</div></td></tr>`;
+        $('blockedTable').querySelectorAll('[data-unblock]').forEach(b => b.addEventListener('click', async () => {
+            b.disabled = true;
+            try { await api('unblockCustomer', { method: 'POST', body: { id: b.dataset.unblock } }); toast('Unblocked'); loadCustomers(true); }
+            catch (e) { toast('Could not unblock', e.message, 'error'); b.disabled = false; }
+        }));
+    }
+    async function toggleBlock(c) {
+        if (!c) return;
+        try {
+            if (c.blocked) {
+                if (!confirm(`Unblock ${c.name}? They will be able to order again.`)) return;
+                const r = await api('unblockCustomer', { method: 'POST', body: { uid: c.uid, email: c.email, phones: c.phones } });
+                toast('Unblocked', r.removed ? `${r.removed} block ${r.removed === 1 ? 'entry' : 'entries'} removed` : '');
+            } else {
+                const reason = prompt(`Block ${c.name}?\nTheir Google account and phone number(s) ${(c.phones || []).join(', ')} won't be able to order.\n\nReason (only you see this):`, c.returned ? 'Refused parcel' : '');
+                if (reason === null) return;
+                await api('blockCustomer', { method: 'POST', body: { uid: c.uid, email: c.email, phone: (c.phones || [])[0], phones: c.phones, name: c.name, reason } });
+                toast('Customer blocked', 'They can no longer place orders');
+            }
+            await loadCustomers(true);
+            if ($('custModal').classList.contains('open')) openCustomer(c.uid);
+        } catch (e) { toast('Could not update', e.message, 'error'); }
+    }
+    $('custSearch').addEventListener('input', () => custData && renderCustomers());
+    $('custSort').addEventListener('change', () => custData && renderCustomers());
+    $('blockPhoneBtn').addEventListener('click', async () => {
+        const phone = prompt('Phone number to block (e.g. 0300 1234567):');
+        if (!phone || !phone.trim()) return;
+        const reason = prompt('Reason (only you see this):', 'Fake / refused orders');
+        if (reason === null) return;
+        try { await api('blockCustomer', { method: 'POST', body: { phone: phone.trim(), reason } }); toast('Number blocked'); loadCustomers(true); }
+        catch (e) { toast('Could not block', e.message, 'error'); }
+    });
+    async function openCustomer(uid) {
+        if (!custData) await loadCustomers(true);
+        const c = (custData?.customers || []).find(x => x.uid === uid);
+        if (!c) return toast('Customer not found', '', 'error');
+        $('cmTitle').innerHTML = `${esc(c.name)} ${c.blocked ? pill('Blocked') : ''}`;
+        $('cmBody').innerHTML = `
+            <div class="od-grid">
+                <div class="od-block"><h5>Contact</h5><p>${esc(c.email || '')}${(c.phones || []).map(p => `<br><a href="tel:${esc(p)}" style="color:var(--accent-2)"><i class="fas fa-phone"></i> ${esc(p)}</a> &nbsp;<a href="${waLink(p)}" target="_blank" rel="noopener" style="color:var(--accent)"><i class="fab fa-whatsapp"></i></a>`).join('')}</p></div>
+                <div class="od-block"><h5>Cities</h5><p>${esc((c.cities || []).join(', ') || '—')}</p></div>
+                <div class="od-block"><h5>Customer since</h5><p>${fmtDateLong(c.firstOrder)}</p></div>
+                <div class="od-block"><h5>Spent (delivered)</h5><p class="price">${pkr(c.spent)}</p></div>
+            </div>
+            <div class="cust-stats" style="margin:4px 0 16px">
+                <span>${c.orders} ${c.orders === 1 ? 'order' : 'orders'}</span><span class="${c.delivered ? 'good' : ''}">${c.delivered} delivered</span>
+                <span class="${c.returned ? 'bad' : ''}">${c.returned} refused</span><span>${c.cancelled} cancelled</span><span>${c.open} open</span>
+                ${c.confirmed ? `<span class="good">${c.confirmed} confirmed on WhatsApp</span>` : ''}${c.sharedPhone ? '<span class="bad">Phone also used on another account</span>' : ''}
+            </div>
+            <div class="table-wrap"><table class="tbl"><thead><tr><th>Order</th><th>Date</th><th>Total</th><th>Status</th></tr></thead><tbody>
+                ${(c.recent || []).map(r => `<tr class="${canUse('orders') ? 'clickable' : ''}" data-cm-order="${esc(r.id)}"><td><strong>${orderNo(r.order_no)}</strong>${r.confirmed ? ' <i class="fas fa-circle-check" style="color:var(--accent)" title="Confirmed on WhatsApp"></i>' : ''}</td><td class="muted">${fmtDate(r.created_at)}</td><td class="price">${pkr(r.total)}</td><td>${pill(r.status)}</td></tr>`).join('')}
+            </tbody></table></div>
+            ${c.orders > (c.recent || []).length ? `<p class="muted" style="font-size:12.5px;margin-top:8px">Showing the latest ${(c.recent || []).length} orders.</p>` : ''}
+            <div class="print-actions" style="margin-top:16px">
+                <button class="btn ${c.blocked ? 'btn-outline' : 'btn-danger'} btn-sm" id="cmBlock" type="button" ${custData.needsSql ? 'disabled title="Run the latest supabase-setup.sql first"' : ''}><i class="fas fa-ban"></i> ${c.blocked ? 'Unblock customer' : 'Block customer'}</button>
+            </div>`;
+        $('cmBlock').addEventListener('click', () => toggleBlock(c));
+        if (canUse('orders')) $('cmBody').querySelectorAll('[data-cm-order]').forEach(tr => tr.addEventListener('click', () => { $('custModal').classList.remove('open'); openOrder(tr.dataset.cmOrder); }));
+        $('custModal').classList.add('open');
+    }
+
+    // ---------- Blog ----------
+    let posts = [], editingPost = null, coverUrl = null, slugTouched = false;
+    async function loadPosts() {
+        showPostList();
+        if (!posts.length) $('postsTable').innerHTML = `<tr><td colspan="4"><div class="empty"><div class="spinner" style="margin:0 auto"></div></div></td></tr>`;
+        try {
+            const r = await api('posts');
+            posts = r.posts || [];
+            $('blogSql').classList.toggle('show', !!r.needsSql);
+            $('newPostBtn').disabled = !!r.needsSql;
+            renderPosts();
+        } catch (e) {
+            $('postsTable').innerHTML = `<tr><td colspan="4"><div class="alert show" style="margin:16px">${esc(e.message)}</div></td></tr>`;
+        }
+    }
+    function renderPosts() {
+        $('postsTable').innerHTML = posts.length ? posts.map(p => `<tr class="clickable" data-post="${esc(p.id)}">
+            <td class="post-row-title"><strong>${esc(p.title)}</strong><small>/blog/${esc(p.slug)}${(p.tags || []).length ? ' • ' + esc(p.tags.join(', ')) : ''}</small></td>
+            <td>${p.status === 'Published' ? '<span class="pill st-Delivered">Published</span>' : '<span class="pill st-Pending">Draft</span>'}</td>
+            <td class="muted" style="font-size:12.5px">${p.published_at ? fmtDate(p.published_at) : '—'}</td>
+            <td data-stop style="text-align:right;white-space:nowrap">${p.status === 'Published' ? `<a class="icon-btn" style="display:inline-flex" href="/blog/${esc(p.slug)}" target="_blank" rel="noopener" title="View"><i class="fas fa-arrow-up-right-from-square"></i></a>` : ''}
+                <button class="btn btn-outline btn-sm" type="button" data-edit-post="${esc(p.id)}">Edit</button></td>
+        </tr>`).join('') : `<tr><td colspan="4"><div class="empty"><i class="fas fa-book-open"></i>No posts yet.</div></td></tr>`;
+        $('postsTable').querySelectorAll('[data-post]').forEach(tr => tr.addEventListener('click', (e) => { if (!e.target.closest('a')) editPost(tr.dataset.post); }));
+    }
+    function showPostList() { $('blogEditPanel').hidden = true; $('blogListPanel').hidden = false; }
+    const slugify = (t) => String(t || '').toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80).replace(/-+$/, '');
+    function updateSlugPreview() { $('slugPreview').textContent = slugify($('postSlug').value || $('postTitle').value) || '…'; }
+    function setCover(url) {
+        coverUrl = url || null;
+        $('coverImg').hidden = !coverUrl;
+        if (coverUrl) $('coverImg').src = coverUrl; else $('coverImg').removeAttribute('src');
+        $('coverRemove').hidden = !coverUrl;
+        $('coverBtn').querySelector('span').textContent = coverUrl ? 'Change photo' : 'Choose photo';
+    }
+    function setPostTab(tab) {
+        document.querySelectorAll('[data-ptab]').forEach(b => b.classList.toggle('active', b.dataset.ptab === tab));
+        $('postBody').hidden = tab !== 'write';
+        $('postPreview').hidden = tab !== 'preview';
+        if (tab === 'preview') {
+            $('postPreview').innerHTML = '<div class="spinner"></div>';
+            api('previewPost', { method: 'POST', body: { title: $('postTitle').value, body: $('postBody').value } })
+                .then(r => { $('postPreview').innerHTML = `<h2>${esc($('postTitle').value)}</h2>` + (r.html || '<p class="muted">Nothing written yet.</p>'); })
+                .catch(e => { $('postPreview').innerHTML = `<div class="alert show">${esc(e.message)}</div>`; });
+        }
+    }
+    function editPost(id) {
+        editingPost = id ? posts.find(p => p.id === id) || null : null;
+        const p = editingPost || {};
+        $('postEditTitle').textContent = editingPost ? 'Edit post' : 'New post';
+        $('postTitle').value = p.title || '';
+        $('postSlug').value = p.slug || '';
+        slugTouched = !!editingPost;
+        $('postTags').value = (p.tags || []).join(', ');
+        $('postExcerpt').value = p.excerpt || '';
+        $('postBody').value = p.body || '';
+        setCover(p.cover_image);
+        updateSlugPreview();
+        setPostTab('write');
+        $('postAlert').className = 'alert';
+        $('postView').hidden = !(editingPost && editingPost.status === 'Published');
+        if (editingPost) $('postView').href = `/blog/${editingPost.slug}`;
+        $('postDelete').hidden = !editingPost;
+        $('postPublish').innerHTML = `<i class="fas fa-globe"></i> ${editingPost && editingPost.status === 'Published' ? 'Update' : 'Publish'}`;
+        $('postDraft').innerHTML = `<i class="fas fa-floppy-disk"></i> ${editingPost && editingPost.status === 'Published' ? 'Unpublish (draft)' : 'Save as draft'}`;
+        $('blogListPanel').hidden = true;
+        $('blogEditPanel').hidden = false;
+        window.scrollTo(0, 0);
+    }
+    async function savePost(status) {
+        const btns = [$('postPublish'), $('postDraft')];
+        $('postAlert').className = 'alert';
+        btns.forEach(b => b.disabled = true);
+        try {
+            const r = await api('savePost', { method: 'POST', body: { id: editingPost?.id, post: {
+                title: $('postTitle').value, slug: slugify($('postSlug').value || $('postTitle').value), tags: $('postTags').value,
+                excerpt: $('postExcerpt').value, body: $('postBody').value, cover_image: coverUrl, status
+            } } });
+            const i = posts.findIndex(p => p.id === r.post.id);
+            if (i >= 0) posts[i] = r.post; else posts.unshift(r.post);
+            toast(status === 'Published' ? 'Post published' : 'Draft saved', status === 'Published' ? `jenzythrifts.com/blog/${r.post.slug}` : 'Not visible on the website yet');
+            editPost(r.post.id);
+        } catch (e) {
+            $('postAlert').textContent = e.message;
+            $('postAlert').className = 'alert show';
+            $('postAlert').scrollIntoView({ block: 'center', behavior: 'smooth' });
+        } finally { btns.forEach(b => b.disabled = false); }
+    }
+    $('newPostBtn').addEventListener('click', () => editPost(null));
+    $('postBack').addEventListener('click', () => { showPostList(); renderPosts(); });
+    $('postPublish').addEventListener('click', () => savePost('Published'));
+    $('postDraft').addEventListener('click', () => savePost('Draft'));
+    $('postDelete').addEventListener('click', async () => {
+        if (!editingPost || !confirm(`Delete "${editingPost.title}"? This can't be undone.`)) return;
+        try { await api('deletePost', { method: 'POST', body: { id: editingPost.id } }); posts = posts.filter(p => p.id !== editingPost.id); toast('Post deleted'); showPostList(); renderPosts(); }
+        catch (e) { toast('Could not delete', e.message, 'error'); }
+    });
+    $('postTitle').addEventListener('input', () => { if (!slugTouched) $('postSlug').value = slugify($('postTitle').value); updateSlugPreview(); });
+    $('postSlug').addEventListener('input', () => { slugTouched = true; updateSlugPreview(); });
+    document.querySelectorAll('[data-ptab]').forEach(b => b.addEventListener('click', () => setPostTab(b.dataset.ptab)));
+    $('coverBtn').addEventListener('click', () => $('coverFile').click());
+    $('coverRemove').addEventListener('click', () => setCover(null));
+    $('coverFile').addEventListener('change', async () => {
+        const f = $('coverFile').files[0];
+        $('coverFile').value = '';
+        if (!f || !f.type.startsWith('image/')) return;
+        const btn = $('coverBtn');
+        btn.disabled = true; btn.querySelector('span').textContent = 'Uploading…';
+        try {
+            const small = await resizeImage(f, 1600);
+            const ext = (small.type || '').includes('png') ? 'png' : (small.type || '').includes('webp') ? 'webp' : 'jpg';
+            setCover(await uploadBlob(small, ext));
+        } catch (e) { toast('Upload failed', e.message, 'error'); setCover(coverUrl); }
+        finally { btn.disabled = false; }
+    });
+
+    // ---------- WhatsApp & Safety (owner) ----------
+    let tplDraft = [];
+    async function loadSafety() {
+        const d = await getWaTemplates(true);
+        tplDraft = (d.templates || []).map(t => ({ ...t }));
+        renderTpls();
+        $('sfHigh').value = d.safety?.highTotal ?? 15000;
+        $('sfAuto').value = String(d.safety?.autoBlockRefusals ?? 0);
+    }
+    function renderTpls() {
+        $('tplList').innerHTML = tplDraft.map((t, i) => `<div class="tpl-row">
+            <div class="tpl-top"><input class="input" data-tl="${i}" maxlength="40" value="${esc(t.label)}" placeholder="Button name">
+                <button class="icon-btn" type="button" data-tup="${i}" title="Move up" ${i ? '' : 'disabled'}><i class="fas fa-arrow-up"></i></button>
+                <button class="icon-btn" type="button" data-tdel="${i}" title="Remove"><i class="fas fa-trash"></i></button></div>
+            <textarea class="input" data-tt="${i}" maxlength="1200" placeholder="Message">${esc(t.text)}</textarea>
+            ${hasConfirmTpl(t) ? '<div class="muted" style="font-size:12px"><i class="fas fa-circle-check" style="color:var(--accent)"></i> Confirmation message (has {confirm_link})</div>' : ''}
+        </div>`).join('') || '<div class="muted">No messages — add one.</div>';
+        $('tplList').querySelectorAll('[data-tl]').forEach(el => el.addEventListener('input', () => { tplDraft[+el.dataset.tl].label = el.value; }));
+        $('tplList').querySelectorAll('[data-tt]').forEach(el => el.addEventListener('input', () => { tplDraft[+el.dataset.tt].text = el.value; }));
+        $('tplList').querySelectorAll('[data-tdel]').forEach(b => b.addEventListener('click', () => { tplDraft.splice(+b.dataset.tdel, 1); renderTpls(); }));
+        $('tplList').querySelectorAll('[data-tup]').forEach(b => b.addEventListener('click', () => { const i = +b.dataset.tup; [tplDraft[i - 1], tplDraft[i]] = [tplDraft[i], tplDraft[i - 1]]; renderTpls(); }));
+    }
+    $('tplAdd').addEventListener('click', () => { tplDraft.push({ label: '', text: 'Hi {name}, ' }); renderTpls(); $('tplList').querySelector('.tpl-row:last-child input')?.focus(); });
+    $('tplReset').addEventListener('click', () => { if (!confirm('Replace your messages with the default ones?')) return; tplDraft = (waCache?.defaults || []).map(t => ({ ...t })); renderTpls(); });
+    $('tplSave').addEventListener('click', async () => {
+        const b = $('tplSave'); b.disabled = true;
+        try { const r = await api('saveWaTemplates', { method: 'POST', body: { templates: tplDraft } }); tplDraft = r.templates.map(t => ({ ...t })); if (waCache) waCache.templates = r.templates; renderTpls(); toast('Messages saved', 'The buttons in every order are updated'); }
+        catch (e) { toast('Could not save', e.message, 'error'); }
+        finally { b.disabled = false; }
+    });
+    $('sfSave').addEventListener('click', async () => {
+        const b = $('sfSave'); b.disabled = true;
+        try { const r = await api('saveSafety', { method: 'POST', body: { safety: { highTotal: +$('sfHigh').value, autoBlockRefusals: +$('sfAuto').value } } }); if (waCache) waCache.safety = r.safety; $('sfHigh').value = r.safety.highTotal; toast('Saved', r.safety.autoBlockRefusals ? `Orders are refused after ${r.safety.autoBlockRefusals} refused ${r.safety.autoBlockRefusals === 1 ? 'parcel' : 'parcels'}` : 'Risky orders are only flagged'); }
+        catch (e) { toast('Could not save', e.message, 'error'); }
+        finally { b.disabled = false; }
+    });
+
+    // ---------- Staff (owner) ----------
+    let staffData = null, editingStaff = null;
+    async function loadStaff() {
+        $('staffUrl').textContent = location.host + '/admin';
+        try { staffData = await api('staff'); }
+        catch (e) { $('staffList').innerHTML = `<div class="alert show" style="margin:16px">${esc(e.message)}</div>`; return; }
+        if (staffData.needsSql) { $('staffAlert').innerHTML = 'Run the latest <strong>supabase-setup.sql</strong> in Supabase (SQL Editor) to turn on staff accounts.'; $('staffAlert').className = 'alert info show'; }
+        else if (!editingStaff) $('staffAlert').className = 'alert';
+        if (!$('permGrid').children.length) {
+            $('permGrid').innerHTML = Object.entries(staffData.perms || {}).map(([k, label]) => `<label class="check"><input type="checkbox" value="${esc(k)}"> <span>${esc(label)}</span></label>`).join('');
+        }
+        renderStaff();
+    }
+    function renderStaff() {
+        const d = staffData, perms = d.perms || {};
+        const shortPerm = (k) => String(perms[k] || k).split(/\s+[—&(]/)[0];
+        $('staffList').innerHTML = (d.owners || []).map(e => `<div class="staff-row"><div><strong>${esc(e)}</strong>${e === admin.email ? ' <span class="muted">(you)</span>' : ''}<div class="perm-tags"><span style="color:var(--accent);border-color:rgba(57,255,20,.3);background:rgba(57,255,20,.07)">Owner — full access</span></div></div></div>`).join('')
+            + (d.staff || []).map(m => `<div class="staff-row"><div style="min-width:0"><strong>${esc(m.name || m.email)}</strong>${m.active ? '' : ' <span class="pill st-Cancelled">Paused</span>'}
+                ${m.name ? `<div class="muted" style="font-size:12.5px">${esc(m.email)}</div>` : ''}
+                <div class="perm-tags">${(m.perms || []).map(k => `<span>${esc(shortPerm(k))}</span>`).join('')}</div></div>
+                <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn btn-outline btn-sm" type="button" data-st-edit="${esc(m.email)}">Edit</button>
+                <button class="btn btn-outline btn-sm" type="button" data-st-pause="${esc(m.email)}">${m.active ? 'Pause' : 'Resume'}</button>
+                <button class="btn btn-outline btn-sm" type="button" data-st-del="${esc(m.email)}" style="color:var(--danger)">Remove</button></div></div>`).join('')
+            + (!(d.staff || []).length ? '<div class="empty" style="padding:22px"><i class="fas fa-user-plus"></i>No staff yet — add a helper above.</div>' : '');
+        const find = (e) => d.staff.find(m => m.email === e);
+        $('staffList').querySelectorAll('[data-st-edit]').forEach(b => b.addEventListener('click', () => startEditStaff(find(b.dataset.stEdit))));
+        $('staffList').querySelectorAll('[data-st-pause]').forEach(b => b.addEventListener('click', async () => {
+            const m = find(b.dataset.stPause);
+            try { await api('saveStaff', { method: 'POST', body: { staff: { ...m, active: !m.active } } }); toast(m.active ? 'Paused' : 'Resumed', m.active ? `${m.email} can't open the admin panel now` : ''); loadStaff(); }
+            catch (e) { toast('Could not update', e.message, 'error'); }
+        }));
+        $('staffList').querySelectorAll('[data-st-del]').forEach(b => b.addEventListener('click', async () => {
+            if (!confirm(`Remove ${b.dataset.stDel}? They lose access to the admin panel.`)) return;
+            try { await api('deleteStaff', { method: 'POST', body: { email: b.dataset.stDel } }); toast('Staff removed'); if (editingStaff === b.dataset.stDel) resetStaffForm(); loadStaff(); }
+            catch (e) { toast('Could not remove', e.message, 'error'); }
+        }));
+    }
+    function startEditStaff(m) {
+        if (!m) return;
+        editingStaff = m.email;
+        $('stEmail').value = m.email; $('stEmail').disabled = true;
+        $('stName').value = m.name || '';
+        $('permGrid').querySelectorAll('input').forEach(i => { i.checked = (m.perms || []).includes(i.value); });
+        $('stSave').querySelector('span').textContent = 'Save changes';
+        $('stCancel').hidden = false;
+        $('staffAlert').className = 'alert';
+        $('stEmail').scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
+    function resetStaffForm() {
+        editingStaff = null;
+        $('stEmail').value = ''; $('stEmail').disabled = false; $('stName').value = '';
+        $('permGrid').querySelectorAll('input').forEach(i => { i.checked = false; });
+        $('stSave').querySelector('span').textContent = 'Add staff';
+        $('stCancel').hidden = true;
+    }
+    $('stCancel').addEventListener('click', () => { resetStaffForm(); $('staffAlert').className = 'alert'; });
+    $('stSave').addEventListener('click', async () => {
+        const perms = [...$('permGrid').querySelectorAll('input:checked')].map(i => i.value);
+        const prev = editingStaff ? staffData.staff.find(m => m.email === editingStaff) : null;
+        $('staffAlert').className = 'alert';
+        $('stSave').disabled = true;
+        try {
+            const r = await api('saveStaff', { method: 'POST', body: { staff: { email: $('stEmail').value.trim(), name: $('stName').value.trim(), perms, active: prev ? prev.active : true } } });
+            $('staffAlert').innerHTML = editingStaff ? 'Saved. Changes apply the next time they open the admin panel.' : `Added. <strong>${esc(r.staff.email)}</strong> can now open <strong>${esc(location.host)}/admin</strong> and sign in with Google.`;
+            $('staffAlert').className = 'alert ok show';
+            resetStaffForm();
+            loadStaff();
+        } catch (e) {
+            $('staffAlert').textContent = e.message;
+            $('staffAlert').className = 'alert show';
+        } finally { $('stSave').disabled = false; }
+    });
 
     // ---------- Order alerts (Telegram + email) ----------
     const state = (ok, text) => `<span class="state ${ok ? 'ok' : 'warn'}"><i class="fas ${ok ? 'fa-circle-check' : 'fa-circle-exclamation'}"></i> ${text}</span>`;

@@ -80,6 +80,8 @@
         <a class="m-link" href="wishlist.html"><i class="fas fa-heart"></i>Wishlist<span class="m-count" id="wishCountM"></span></a>
         <a class="m-link" href="orders.html"><i class="fas fa-box"></i>My Orders</a>
         <a class="m-link" href="orders.html#invite"><i class="fas fa-gift"></i>Invite friends</a>
+        <a class="m-link" href="/brands"><i class="fas fa-tags"></i>Shop by brand</a>
+        <a class="m-link" href="/blog"><i class="fas fa-book-open"></i>Guides &amp; tips</a>
         <a class="m-link" href="sell.html"><i class="fas fa-hand-holding-dollar"></i>Sell your sneakers</a>
         <a class="m-link" href="index.html#about"><i class="fas fa-circle-info"></i>About</a>
         <a class="m-link" href="index.html#contact"><i class="fas fa-envelope"></i>Contact</a>
@@ -128,6 +130,7 @@
                         <li><a href="index.html#shop">All Shoes</a></li>
                         <li><a href="index.html?gender=Men#shop">Men</a></li>
                         <li><a href="index.html?gender=Women#shop">Women</a></li>
+                        <li><a href="/brands">Shop by brand</a></li>
                         <li><a href="sell.html">Sell your sneakers</a></li>
                         <li><a href="orders.html#invite">Invite friends</a></li>
                     </ul>
@@ -138,6 +141,7 @@
                         <li><a href="orders.html">My Orders</a></li>
                         <li><a href="wishlist.html">Wishlist</a></li>
                         <li><a href="index.html#how">How to Order</a></li>
+                        <li><a href="/blog">Guides &amp; tips</a></li>
                         <li><a href="index.html#about">About Us</a></li>
                         <li><a href="index.html#contact">Contact</a></li>
                     </ul>

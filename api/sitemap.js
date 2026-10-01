@@ -1,8 +1,10 @@
 // /sitemap.xml  →  list of every page Google should show in search
-// (home page, "Sell your sneakers" and every shoe that is for sale).
+// (home page, shoes for sale, brand + city pages and blog guides).
 // Rewrite is in vercel.json. Updates itself when you add or sell shoes.
 import { getDb } from './_lib/db.js';
 import { siteUrl } from './_lib/notify.js';
+import { ensureStarterPosts, publishedPosts, brandsFromProducts } from './_lib/content.js';
+import { CITY_INFO } from './_lib/seo-content.js';
 
 const xmlEsc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' }[c]));
 const day = (d) => { const t = d ? new Date(d) : null; return t && !isNaN(t) ? t.toISOString().slice(0, 10) : ''; };
@@ -24,16 +26,34 @@ export default async function handler(req, res) {
     if (gsv) return googleVerification(req, res, gsv);
     const urls = [
         { loc: `${origin}/`, freq: 'daily', priority: '1.0' },
-        { loc: `${origin}/sell.html`, freq: 'monthly', priority: '0.5' }
+        { loc: `${origin}/sell.html`, freq: 'monthly', priority: '0.5' },
+        { loc: `${origin}/brands`, freq: 'weekly', priority: '0.7' },
+        { loc: `${origin}/blog`, freq: 'weekly', priority: '0.6' }
     ];
+    const db = getDb();
+    // Blog guides
     try {
-        const { data, error } = await getDb()
+        await ensureStarterPosts(db);
+        for (const p of await publishedPosts(db, { limit: 1000, fields: 'slug, published_at, updated_at' })) {
+            urls.push({ loc: `${origin}/blog/${encodeURIComponent(p.slug)}`, lastmod: day(p.updated_at || p.published_at), freq: 'monthly', priority: '0.6' });
+        }
+    } catch (e) {
+        console.error('[sitemap] could not load posts', e.message);
+    }
+    // City pages
+    for (const slug of Object.keys(CITY_INFO)) urls.push({ loc: `${origin}/city/${slug}`, freq: 'weekly', priority: '0.6' });
+    try {
+        const { data, error } = await db
             .from('products')
-            .select('id, created_at, updated_at, images')
+            .select('id, created_at, updated_at, images, brand, sizes')
             .eq('status', 'Active')
             .order('created_at', { ascending: false })
             .limit(5000);
         if (error) throw error;
+        // Brand pages (only brands with shoes in stock)
+        for (const b of brandsFromProducts((data || []).filter(p => (p.sizes || []).length))) {
+            urls.push({ loc: `${origin}/brand/${b.slug}`, freq: 'daily', priority: '0.8' });
+        }
         for (const p of data || []) {
             urls.push({
                 loc: `${origin}/shoe/${encodeURIComponent(p.id)}`,

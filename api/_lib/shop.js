@@ -5,6 +5,7 @@
 // Coupon codes, the "buy 2+" deal and invite-friends offer are set in the
 // admin panel (Promotions) and stored in Supabase.
 import { HttpError } from './http.js';
+import { normPhone } from './safety.js';
 
 function intEnv(name, fallback) {
     const n = parseInt(process.env[name], 10);
@@ -165,16 +166,19 @@ function cleanText(v, max) {
 
 export function validateCustomer(c = {}) {
     const name = cleanText(c.name, 80);
-    const phone = String(c.phone ?? '').replace(/[^\d+]/g, '');
+    const phone = normPhone(c.phone);
     const city = cleanText(c.city, 60);
-    const address = cleanText(c.address, 300);
+    const area = cleanText(c.area, 80);
+    const landmark = cleanText(c.landmark, 80);
+    let address = cleanText(c.address, 220);
     const notes = cleanText(c.notes, 300);
-    const digits = phone.replace(/\D/g, '');
     if (name.length < 2) throw new HttpError(400, 'Please enter your full name.');
-    if (digits.length < 10 || digits.length > 15) throw new HttpError(400, 'Please enter a valid phone number, e.g. 03001234567.');
+    if (!phone) throw new HttpError(400, 'Please enter a valid Pakistani mobile number, e.g. 03001234567.');
     if (city.length < 2) throw new HttpError(400, 'Please enter your city.');
     if (address.length < 10) throw new HttpError(400, 'Please enter your full delivery address (house, street, area).');
-    return { name, phone, city, address, notes };
+    if (area && !address.toLowerCase().includes(area.toLowerCase())) address += ', ' + area;
+    if (landmark) address += ` (near ${landmark})`;
+    return { name, phone, city, address: address.slice(0, 300), notes };
 }
 
 export function isUuid(v) {

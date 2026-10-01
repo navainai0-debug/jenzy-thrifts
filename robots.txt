@@ -6,4 +6,6 @@ Disallow: /checkout
 Disallow: /orders
 Disallow: /wishlist
 Disallow: /api/
+Disallow: /c/
+Disallow: /verify/
 Sitemap: https://www.jenzythrifts.com/sitemap.xml

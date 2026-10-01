@@ -247,6 +247,38 @@ Counts visitors, page views, where they came from (Instagram, WhatsApp, Google�
 
 ---
 
+## 13. Batch 3 features
+
+**First:** run the latest `supabase-setup.sql` again (step 2). It adds the order columns (notes, map pin, WhatsApp confirm link) and the tables for blocked customers, staff and blog posts. It's safe to run more than once.
+
+### WhatsApp confirm link (admin → Orders → open an order)
+Press **Send confirmation link**. WhatsApp opens with the message filled in. When the customer taps the link and presses **Confirm**, the order shows **Confirmed ✓**. If they press "I didn't order this", the order is cancelled. It's free: no SMS and no paid plan.
+
+### Quick WhatsApp messages (admin → WhatsApp & Safety)
+Each order has buttons such as "Order confirmed", "Shipped + tracking" and "Rider will call today". Change the wording, add or remove buttons here. Lines with an empty value (e.g. no tracking number yet) are left out automatically.
+
+### Fake order protection
+Every open order gets **Low / Check / High risk**, with the reasons listed (refused parcels before, new customer, phone used on several accounts, high value, no house number, no map pin, not confirmed). The **Risky** tab in Orders lists them. Mark refused parcels as **Returned**: the pairs go back into stock and the refusal counts against that phone and account. In WhatsApp & Safety you can choose to refuse orders automatically after 1, 2 or 3 refused parcels.
+
+### Customers (admin → Customers)
+Every buyer with their phones, cities, orders, spending and refused parcels. Tabs: Repeat, Refused, Blocked, Shared phone. **Block** stops a Google account and its phone numbers from ordering. You can also block a number by hand.
+
+### Private notes and staff accounts
+Every order has private notes that only the shop team sees. **Staff** (owner only) lets you add helpers by Gmail address and tick what they may use (orders, products, blog, …). They open `/admin` and sign in with Google. Settings pages and money totals stay hidden unless you allow "Sales numbers".
+
+### Authenticity card (admin → open an order → Authenticity card)
+Prints a small A6 "Verified Authentic by JENZY" card for each pair to put in the box. The card number can be checked at `jenzythrifts.com/verify/<number>`.
+
+### Blog, brand and city pages (good for Google)
+- `/blog`: six starter guides are added automatically. Write more in **admin → Blog / Guides** (Preview, Publish, Draft). A brand name as a tag shows the post on that brand's page.
+- `/brands` and `/brand/nike`, `/brand/jordan`, …: a page per brand with its shoes.
+- `/city/lahore`, `/city/karachi`, …: delivery pages for 14 cities.
+
+All of these are in the sitemap automatically.
+
+### Checkout
+Customers now enter area/sector and nearest landmark and can tap **Pin my location**, so riders find them more easily. The phone must be a Pakistani mobile number.
+
 ## How orders work
 
 1. The customer opens a shoe, picks a size, and clicks **Buy Now** or **Add to Cart**.
@@ -278,4 +310,7 @@ Every number on the dashboard (revenue, orders, customers and so on) is calculat
 | "Run the latest supabase-setup.sql…" in Reviews, Sell requests, Visitors or Promotions | Do step 2 again |
 | Cart reminders never arrive | Check Gmail (step 6) is set up and cart reminders are on in Order Alerts. Vercel → your project → **Settings → Cron Jobs** shows the daily job. |
 | Shoe links (`/shoe/…`) show "404" | Make sure `vercel.json` and `api/shoe.js` were uploaded |
+| "Run the latest supabase-setup.sql…" in Customers, Blog, Staff or an order | Do step 2 again (batch 3 tables) |
+| A helper sees "doesn't have access" | Add their exact Gmail in admin → Staff, and make sure they're not paused |
+| Order shows "Run the latest supabase-setup.sql to turn on WhatsApp confirmation links" | Do step 2 again |
 | Google login fails inside Instagram or TikTok | Open the site in Chrome or Safari (tap ⋮ → Open in browser) |

@@ -51,16 +51,23 @@
                     <p class="card-sub">Ordering as <strong id="accountEmail"></strong></p>
                     <div class="form-grid">
                         <div class="field"><label for="fName">Full name <span class="req">*</span></label><input class="input" id="fName" autocomplete="name" maxlength="80" required></div>
-                        <div class="field"><label for="fPhone">Phone number <span class="req">*</span></label><input class="input" id="fPhone" type="tel" autocomplete="tel" placeholder="03001234567" maxlength="20" required><div class="hint">Our rider will call this number.</div></div>
+                        <div class="field"><label for="fPhone">Mobile number <span class="req">*</span></label><input class="input" id="fPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="03001234567" maxlength="20" required><div class="hint">We'll WhatsApp you a link to confirm the order. The rider will call this number.</div></div>
                     </div>
                 </div>
 
                 <div class="card checkout-section">
                     <h3><span class="n">2</span> Delivery address</h3>
                     <div class="form-grid" style="margin-top:16px">
-                        <div class="field"><label for="fCity">City <span class="req">*</span></label><input class="input" id="fCity" autocomplete="address-level2" maxlength="60" required></div>
-                        <div class="field"><label for="fArea">Area / Landmark</label><input class="input" id="fArea" maxlength="80" placeholder="Optional"></div>
-                        <div class="field full"><label for="fAddress">Full address <span class="req">*</span></label><textarea id="fAddress" autocomplete="street-address" maxlength="220" style="min-height:80px" placeholder="House #, street, block, area" required></textarea></div>
+                        <div class="field"><label for="fCity">City <span class="req">*</span></label><input class="input" id="fCity" list="pkCities" autocomplete="address-level2" maxlength="60" placeholder="Start typing, e.g. Lahore" required><datalist id="pkCities"><option value="Karachi"><option value="Lahore"><option value="Islamabad"><option value="Rawalpindi"><option value="Faisalabad"><option value="Multan"><option value="Peshawar"><option value="Quetta"><option value="Gujranwala"><option value="Sialkot"><option value="Hyderabad"><option value="Bahawalpur"><option value="Abbottabad"><option value="Ahmedpur East"><option value="Arifwala"><option value="Attock"><option value="Badin"><option value="Bahawalnagar"><option value="Bannu"><option value="Batkhela"><option value="Bhakkar"><option value="Burewala"><option value="Chakwal"><option value="Chaman"><option value="Charsadda"><option value="Chichawatni"><option value="Chiniot"><option value="Chishtian"><option value="Chitral"><option value="Dadu"><option value="Daska"><option value="Depalpur"><option value="Dera Ghazi Khan"><option value="Dera Ismail Khan"><option value="Dina"><option value="Fateh Jang"><option value="Ferozwala"><option value="Fort Abbas"><option value="Ghotki"><option value="Gilgit"><option value="Gojra"><option value="Gujar Khan"><option value="Gujrat"><option value="Gwadar"><option value="Hafizabad"><option value="Hangu"><option value="Haripur"><option value="Hasilpur"><option value="Hub"><option value="Jacobabad"><option value="Jampur"><option value="Jaranwala"><option value="Jauharabad"><option value="Jhang"><option value="Jhelum"><option value="Kabirwala"><option value="Kamalia"><option value="Kamoke"><option value="Karak"><option value="Kasur"><option value="Khairpur"><option value="Khanewal"><option value="Khanpur"><option value="Kharian"><option value="Khushab"><option value="Khuzdar"><option value="Kohat"><option value="Kot Abdul Malik"><option value="Kot Addu"><option value="Kotri"><option value="Lakki Marwat"><option value="Lalamusa"><option value="Larkana"><option value="Layyah"><option value="Liaquatpur"><option value="Lodhran"><option value="Loralai"><option value="Mandi Bahauddin"><option value="Mansehra"><option value="Mardan"><option value="Mian Channu"><option value="Mianwali"><option value="Mingora"><option value="Mirpur"><option value="Mirpur Khas"><option value="Muridke"><option value="Murree"><option value="Muzaffarabad"><option value="Muzaffargarh"><option value="Nankana Sahib"><option value="Narowal"><option value="Nawabshah"><option value="Nowshera"><option value="Okara"><option value="Pakpattan"><option value="Pasrur"><option value="Pattoki"><option value="Phalia"><option value="Pindi Bhattian"><option value="Rahim Yar Khan"><option value="Rajanpur"><option value="Renala Khurd"><option value="Sadiqabad"><option value="Sahiwal"><option value="Samundri"><option value="Sargodha"><option value="Shahdadkot"><option value="Shakargarh"><option value="Sheikhupura"><option value="Shikarpur"><option value="Sibi"><option value="Skardu"><option value="Sukkur"><option value="Swabi"><option value="Talagang"><option value="Tando Adam"><option value="Tando Allahyar"><option value="Tank"><option value="Taunsa"><option value="Taxila"><option value="Thatta"><option value="Timergara"><option value="Toba Tek Singh"><option value="Turbat"><option value="Umerkot"><option value="Vehari"><option value="Wah Cantt"><option value="Wazirabad"><option value="Yazman"><option value="Zhob"></datalist><div class="field-warn" id="cityWarn" hidden></div></div>
+                        <div class="field"><label for="fArea">Area / Sector / Block <span class="req">*</span></label><input class="input" id="fArea" autocomplete="address-level3" maxlength="80" placeholder="e.g. DHA Phase 5, G-11/2, Gulshan Block 13" required></div>
+                        <div class="field full"><label for="fAddress">House / street address <span class="req">*</span></label><textarea id="fAddress" autocomplete="street-address" maxlength="220" style="min-height:80px" placeholder="House # 12, Street 4 (flat / floor if any)" required></textarea><div class="field-warn" id="addrWarn" hidden><i class="fas fa-triangle-exclamation"></i> Add your house / flat / street number so the rider can find you.</div></div>
+                        <div class="field"><label for="fLandmark">Nearest landmark</label><input class="input" id="fLandmark" maxlength="80" placeholder="Optional — e.g. near Imtiaz, opposite mosque"></div>
+                        <div class="field"><label>Map location</label>
+                            <div class="pin-box" id="pinBox">
+                                <span class="pin-text" id="pinText">Optional — helps the rider find you faster.</span>
+                                <button type="button" class="btn btn-outline btn-sm" id="pinBtn"><i class="fas fa-location-crosshairs"></i> <span>Pin my location</span></button>
+                            </div>
+                        </div>
                         <div class="field full"><label for="fNotes">Order notes</label><input class="input" id="fNotes" maxlength="300" placeholder="Optional — e.g. best time to call"></div>
                     </div>
                 </div>
@@ -239,6 +246,8 @@
             fill('fCity', saved.city);
             fill('fArea', saved.area);
             fill('fAddress', saved.address);
+            fill('fLandmark', saved.landmark);
+            checkCity(); checkAddress();
         }
         updateButton();
         // Logged in / out changes invite codes and credit
@@ -259,16 +268,73 @@
     });
     $('couponInput').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('couponBtn').click(); } });
 
+    // ---------- Address helpers ----------
+    // Any Pakistani mobile -> 03001234567 (null if it isn't one)
+    function normPhone(v) {
+        let d = String(v || '').replace(/\D/g, '');
+        if (d.startsWith('0092')) d = d.slice(4);
+        else if (d.startsWith('92') && d.length === 12) d = d.slice(2);
+        if (d.length === 10 && d.startsWith('3')) d = '0' + d;
+        return /^03\d{9}$/.test(d) ? d : null;
+    }
+    const CITIES = new Set([...document.querySelectorAll('#pkCities option')].map(o => o.value.toLowerCase()));
+    function checkCity() {
+        const c = $('fCity').value.trim().toLowerCase().replace(/\s+/g, ' ');
+        const warn = c.length >= 3 && !CITIES.has(c);
+        $('cityWarn').hidden = !warn;
+        if (warn) $('cityWarn').textContent = "We couldn't find this city in our list — please check the spelling (smaller towns are fine).";
+    }
+    function checkAddress() {
+        const a = $('fAddress').value.trim();
+        $('addrWarn').hidden = !(a.length >= 6 && !/\d/.test(a));
+    }
+    $('fCity').addEventListener('change', checkCity);
+    $('fCity').addEventListener('blur', checkCity);
+    $('fAddress').addEventListener('blur', checkAddress);
+    $('fAddress').addEventListener('input', () => { if (!$('addrWarn').hidden) checkAddress(); });
+    $('fPhone').addEventListener('blur', () => { const n = normPhone($('fPhone').value); if (n) $('fPhone').value = n; });
+
+    // ---------- Pin my location (optional) ----------
+    let pin = null;
+    function renderPin() {
+        $('pinBox').classList.toggle('on', !!pin);
+        if (pin) {
+            $('pinText').innerHTML = `<strong><i class="fas fa-circle-check"></i> Location pinned</strong>${pin.acc ? ` (±${pin.acc} m)` : ''} · <a href="https://www.google.com/maps?q=${pin.lat},${pin.lng}" target="_blank" rel="noopener">View on map</a>`;
+            $('pinBtn').innerHTML = '<i class="fas fa-xmark"></i> <span>Remove</span>';
+        } else {
+            $('pinText').textContent = 'Optional — helps the rider find you faster.';
+            $('pinBtn').innerHTML = '<i class="fas fa-location-crosshairs"></i> <span>Pin my location</span>';
+        }
+    }
+    $('pinBtn').addEventListener('click', () => {
+        if (pin) { pin = null; return renderPin(); }
+        if (!navigator.geolocation) return Store.toast("Your browser can't share location — that's okay, it's optional.");
+        $('pinBtn').disabled = true;
+        $('pinBtn').innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Finding you…</span>';
+        navigator.geolocation.getCurrentPosition(pos => {
+            $('pinBtn').disabled = false;
+            pin = { lat: +pos.coords.latitude.toFixed(6), lng: +pos.coords.longitude.toFixed(6), acc: Math.round(pos.coords.accuracy || 0) };
+            renderPin();
+        }, err => {
+            $('pinBtn').disabled = false;
+            renderPin();
+            $('pinText').textContent = err.code === 1
+                ? 'Location permission was blocked. Allow it in your browser settings, or skip — it is optional.'
+                : "Couldn't get your location. Try again outside / with GPS on, or skip — it is optional.";
+        }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 });
+    });
+
     // ---------- Place order ----------
     function validate() {
         const name = $('fName').value.trim();
-        const phoneDigits = $('fPhone').value.replace(/\D/g, '');
         const city = $('fCity').value.trim();
+        const area = $('fArea').value.trim();
         const address = $('fAddress').value.trim();
         if (name.length < 2) return ['fName', 'Please enter your full name.'];
-        if (phoneDigits.length < 10 || phoneDigits.length > 15) return ['fPhone', 'Please enter a valid phone number, e.g. 03001234567.'];
+        if (!normPhone($('fPhone').value)) return ['fPhone', 'Please enter a valid Pakistani mobile number, e.g. 03001234567.'];
         if (city.length < 2) return ['fCity', 'Please enter your city.'];
-        if (address.length < 10) return ['fAddress', 'Please enter your full delivery address (house, street, area).'];
+        if (area.length < 2) return ['fArea', 'Please enter your area, sector or block.'];
+        if (address.length < 10) return ['fAddress', 'Please enter your house / street address.'];
         return null;
     }
 
@@ -287,12 +353,18 @@
             $(invalid[0]).scrollIntoView({ behavior: 'smooth', block: 'center' });
             return;
         }
+        if (!/\d/.test($('fAddress').value) && !confirm("Your address has no house or street number. Riders find you much faster with one.\n\nPlace the order anyway?")) {
+            $('fAddress').focus();
+            return;
+        }
         const area = $('fArea').value.trim();
+        const landmark = $('fLandmark').value.trim();
         const customer = {
             name: $('fName').value.trim(),
-            phone: $('fPhone').value.trim(),
+            phone: normPhone($('fPhone').value),
             city: $('fCity').value.trim(),
-            address: $('fAddress').value.trim() + (area ? ', ' + area : ''),
+            area, landmark,
+            address: $('fAddress').value.trim(),
             notes: $('fNotes').value.trim()
         };
         placing = true;
@@ -301,10 +373,10 @@
         try {
             const { order } = await api('/api/orders?action=place', {
                 method: 'POST', auth: true,
-                body: { items: items().map(i => ({ product_id: i.id, size: i.size })), customer, coupon: quote && quote.codeKind ? coupon : '' }
+                body: { items: items().map(i => ({ product_id: i.id, size: i.size })), customer, coupon: quote && quote.codeKind ? coupon : '', location: pin }
             });
             localStorage.setItem(savedKey(Store.user.uid), JSON.stringify({
-                name: customer.name, phone: customer.phone, city: customer.city, area, address: $('fAddress').value.trim()
+                name: customer.name, phone: customer.phone, city: customer.city, area, landmark, address: customer.address
             }));
             // Remove ordered pairs from the cart
             items().forEach(i => Store.cart.remove(i.id, i.size));

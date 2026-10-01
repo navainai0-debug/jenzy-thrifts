@@ -42,8 +42,10 @@
         Confirmed: 'Your order is confirmed and being packed.',
         Shipped: 'Your order is on the way.',
         Delivered: 'Delivered. Enjoy your new shoes!',
-        Cancelled: 'This order was cancelled.'
+        Cancelled: 'This order was cancelled.',
+        Returned: 'This parcel was returned to us. Message us on WhatsApp if you still want it.'
     };
+    const closed = (o) => o.status === 'Cancelled' || o.status === 'Returned';
     const placed = Store.qs('placed');
     let pollTimer = null;
     let lastJson = '';
@@ -60,7 +62,7 @@
                 <i class="fas fa-circle-check"></i>
                 <div>
                     <h3>Thank you! Your order ${esc(orderNo(placed))} has been placed.</h3>
-                    <p>We'll call you to confirm. Keep this page to track your order — you'll pay cash when it arrives.</p>
+                    <p>We'll send you a WhatsApp message to confirm — just tap the link in it. Keep this page to track your order; you'll pay cash when it arrives.</p>
                 </div>
             </div>`;
     }
@@ -68,7 +70,7 @@
     const fmtDate = (d) => new Date(d).toLocaleString('en-PK', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' });
 
     function tracker(o) {
-        if (o.status === 'Cancelled') return '';
+        if (closed(o)) return '';
         const idx = STEPS.indexOf(o.status);
         const when = {};
         (o.status_history || []).forEach(h => { if (h && h.status) when[h.status] = h.at; });
@@ -82,7 +84,7 @@
     }
 
     function trackBox(o) {
-        if (o.status === 'Cancelled' || (!o.tracking_no && !o.courier)) return '';
+        if (closed(o) || (!o.tracking_no && !o.courier)) return '';
         return `
             <div class="track-box">
                 <h5><i class="fas fa-truck-fast"></i> Track your parcel</h5>
@@ -108,7 +110,7 @@
                 <span class="status-pill st-${esc(o.status)}"><i class="fas fa-circle" style="font-size:7px"></i>${esc(o.status)}</span>
             </div>
             ${tracker(o)}
-            ${o.status === 'Cancelled' ? `<div class="cancelled-note" style="margin-top:18px">${STATUS_TEXT.Cancelled}</div>` : ''}
+            ${closed(o) ? `<div class="cancelled-note" style="margin-top:18px">${STATUS_TEXT[o.status]}</div>` : ''}
             <div class="order-body">
                 <div class="order-items">
                     ${items.map(it => `

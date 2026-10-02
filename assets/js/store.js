@@ -155,6 +155,13 @@
                     </ul>
                 </div>
             </div>
+            <nav class="footer-links" aria-label="Brands and cities">
+                <div><strong>Popular brands</strong>${[['nike', 'Nike'], ['jordan', 'Jordan'], ['adidas', 'Adidas'], ['new-balance', 'New Balance'], ['yeezy', 'Yeezy'], ['puma', 'Puma'], ['converse', 'Converse'], ['vans', 'Vans'], ['asics', 'Asics']]
+                    .map(([s, n]) => `<a href="/brand/${s}">${n}</a>`).join('')}<a href="/brands">All brands</a></div>
+                <div><strong>We deliver to</strong>${['Lahore', 'Karachi', 'Islamabad', 'Rawalpindi', 'Faisalabad', 'Multan', 'Peshawar', 'Gujranwala', 'Sialkot', 'Quetta', 'Hyderabad', 'Bahawalpur', 'Sargodha', 'Abbottabad']
+                    .map(c => `<a href="/city/${c.toLowerCase()}">${c}</a>`).join('')}</div>
+                <div><strong>Guides</strong><a href="/blog">Sneaker guides &amp; tips</a><a href="index.html#how">How ordering works</a><a href="sell.html">Sell your sneakers</a></div>
+            </nav>
             <div class="footer-bottom">
                 <span>© ${year} JENZY THRIFTS. All rights reserved.</span>
                 <span>Cash on Delivery • Delivery across Pakistan</span>

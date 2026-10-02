@@ -6,6 +6,8 @@ import path from 'node:path';
 import { getDb } from './_lib/db.js';
 import { isUuid } from './_lib/shop.js';
 import { siteUrl } from './_lib/notify.js';
+import { brandSlug, brandName, brandsFromProducts, publishedPosts } from './_lib/content.js';
+import { pickGuides, guideLinks, brandChips, cityChips } from './_lib/links.js';
 
 const SHOP = 'JENZY THRIFTS';
 let template = null;
@@ -72,7 +74,44 @@ export function buildMeta(p, origin, id) {
     };
 }
 
-export function injectMeta(html, m) {
+// Home › Brands › Nike › Air Force 1  (shown on the page and given to Google)
+export function crumbsFor(p, origin, id) {
+    const items = [{ name: 'Home', href: '/' }];
+    const slug = brandSlug(p?.brand);
+    if (slug) items.push({ name: 'Brands', href: '/brands' }, { name: brandName(slug, [p]), href: `/brand/${slug}` });
+    else items.push({ name: 'Shop', href: '/#shop' });
+    if (p && p.status !== 'Draft') items.push({ name: p.name, href: `/shoe/${encodeURIComponent(id)}` });
+    return items;
+}
+const crumbsHtml = (items) => items.map((c, i) => i < items.length - 1
+    ? `<a href="${esc(c.href)}">${esc(c.name)}</a><i class="fas fa-chevron-right"></i>` : `<span>${esc(c.name)}</span>`).join('');
+const crumbsLd = (items, origin) => ({
+    '@context': 'https://schema.org', '@type': 'BreadcrumbList',
+    itemListElement: items.map((c, i) => ({ '@type': 'ListItem', position: i + 1, name: c.name, item: origin + c.href }))
+});
+
+// "Keep exploring" block under the shoe: same-brand page, guides, brands, cities
+export function exploreHtml(p, { stock = [], posts = [] } = {}) {
+    const slug = brandSlug(p?.brand);
+    const brands = brandsFromProducts(stock);
+    const mine = brands.find(b => b.slug === slug);
+    const name = slug ? brandName(slug, [p]) : '';
+    const guides = pickGuides(posts, { brand: slug, slugOf: brandSlug, limit: 4 });
+    const cols = [];
+    if (slug) cols.push(`<div class="explore-col"><h3>More ${esc(name)}</h3><ul class="link-list">
+        <li><a href="/brand/${slug}"><i class="fas fa-shoe-prints"></i><span>All ${esc(name)} sneakers${mine ? ` (${mine.count} in stock)` : ''}</span></a></li>
+        <li><a href="/?brand=${encodeURIComponent(p.brand)}#shop"><i class="fas fa-sliders"></i><span>Filter ${esc(name)} by size &amp; price</span></a></li>
+        <li><a href="/#shop"><i class="fas fa-bag-shopping"></i><span>All shoes in the shop</span></a></li></ul></div>`);
+    if (guides.length) cols.push(`<div class="explore-col"><h3>Helpful guides</h3>${guideLinks(guides)}</div>`);
+    cols.push(`<div class="explore-col"><h3>Shop by brand</h3>${brandChips(brands, { skip: slug, limit: 8 })}</div>`);
+    cols.push(`<div class="explore-col"><h3>We deliver to</h3>${cityChips('', 8)}</div>`);
+    return `<section class="explore container" id="pdExplore">
+    <div class="related-head"><div><span class="eyebrow">Keep exploring</span><h2 class="section-title">Find your <span class="grad">next pair</span></h2></div></div>
+    <div class="explore-grid">${cols.join('\n')}</div>
+</section>`;
+}
+
+export function injectMeta(html, m, extra = {}) {
     const tags = [
         `<meta property="og:site_name" content="${SHOP}">`,
         `<meta property="og:type" content="${m.price ? 'product' : 'website'}">`,
@@ -85,10 +124,15 @@ export function injectMeta(html, m) {
         m.price ? `<meta property="product:price:currency" content="PKR">` : '',
         `<meta name="twitter:card" content="summary_large_image">`,
         `<link rel="canonical" href="${esc(m.url)}">`,
-        m.jsonLd ? `<script type="application/ld+json">${JSON.stringify(m.jsonLd).replace(/</g, '\\u003c')}</script>` : ''
+        m.jsonLd ? `<script type="application/ld+json">${JSON.stringify(m.jsonLd).replace(/</g, '\\u003c')}</script>` : '',
+        extra.crumbs ? `<script type="application/ld+json">${JSON.stringify(crumbsLd(extra.crumbs, extra.origin)).replace(/</g, '\\u003c')}</script>` : '',
+        extra.links ? `<script type="application/json" id="pdLinks">${JSON.stringify(extra.links).replace(/</g, '\\u003c')}</script>` : ''
     ].filter(Boolean).map(t => '    ' + t).join('\n');
 
-    return html
+    let out = html;
+    if (extra.crumbs) out = out.replace(/(<nav class="breadcrumb" id="breadcrumb"[^>]*>)[\s\S]*?(<\/nav>)/, `$1${crumbsHtml(extra.crumbs)}$2`);
+    if (extra.explore) out = out.replace(/<section class="explore container" id="pdExplore">[\s\S]*?<\/section>/, () => extra.explore);
+    return out
         // pages use relative links (assets/…, checkout.html) — resolve them from the site root
         .replace(/<head>/i, '<head>\n    <base href="/">')
         .replace(/<title>[\s\S]*?<\/title>/i, `<title>${esc(m.title)}</title>`)
@@ -123,23 +167,30 @@ export default async function handler(req, res) {
         return res.end();
     }
 
-    let product = null;
+    let product = null, stock = [], posts = [];
     if (isUuid(id)) {
-        try {
-            const { data } = await getDb()
-                .from('products')
-                .select('id, name, brand, price, original_price, condition, sizes, status, images')
-                .eq('id', id)
-                .maybeSingle();
-            product = data || null;
-        } catch (e) {
-            console.error('[shoe] could not load product', e.message);
-        }
+        const db = getDb();
+        const [one, many, guides] = await Promise.allSettled([
+            db.from('products').select('id, name, brand, price, original_price, condition, sizes, status, images').eq('id', id).maybeSingle(),
+            db.from('products').select('brand, sizes').eq('status', 'Active').limit(2000),
+            publishedPosts(db, { limit: 30, fields: 'slug, title, tags, published_at' })
+        ]);
+        if (one.status === 'fulfilled' && !one.value.error) product = one.value.data || null;
+        else console.error('[shoe] could not load product', one.reason?.message || one.value?.error?.message);
+        if (many.status === 'fulfilled' && !many.value.error) stock = (many.value.data || []).filter(p => (p.sizes || []).length);
+        if (guides.status === 'fulfilled') posts = guides.value || [];
     }
+    const visible = product && product.status !== 'Draft';
+    const crumbs = visible ? crumbsFor(product, origin, id) : null;
+    const slug = visible ? brandSlug(product.brand) : '';
 
     res.statusCode = 200;
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     // Cache at Vercel's edge for 5 min (the page itself always loads live stock)
     res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=300, stale-while-revalidate=86400');
-    res.end(injectMeta(html, buildMeta(product, origin, id)));
+    res.end(injectMeta(html, buildMeta(product, origin, id), visible ? {
+        origin, crumbs,
+        links: slug ? { brandSlug: slug, brandName: brandName(slug, [product]) } : {},
+        explore: exploreHtml(product, { stock, posts })
+    } : {}));
 }

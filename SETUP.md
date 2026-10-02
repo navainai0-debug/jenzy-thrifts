@@ -289,6 +289,19 @@ Nothing to set up; it all works on its own from your real data.
 - **Dates:** guides show "Published … • Updated …" (Updated only appears if you edited the guide on a later day). Shoe pages show "Listed …" (and "Updated …" when the pair changed). Shop, brand and city pages show "Stock updated …". The sitemap gives Google the same real dates.
 - To show a fresh "Updated" date on a guide, open it in admin → Blog, make your changes and save.
 
+## 15. UK sizes and extra owners
+
+**Sizes are UK.** Everything shows UK: the shop, the size guide (UK first, with US, EU and cm), cart, checkout, emails, invoices, the Instagram story and the sell form. When you add a shoe, tick the **UK** size from the tag.
+
+**One-time switch for old shoes:** after uploading, open the admin panel. A blue bar says **"Shoe sizes are now UK"**. Tap **Convert sizes to UK**:
+- Each shoe shows its US size and a suggested UK size. Nike, Jordan, Puma, Vans and most brands: US − 1. Adidas and New Balance: US − ½. Converse: the same number. Women's: about US − 2.
+- Check against the tag in the shoe and change any box (e.g. type `7, 8`), then tap **Convert**. Past orders, the waiting list and saved carts change too.
+- If your numbers were already UK, tap **My sizes are already UK** instead.
+- It only runs once.
+
+**Another owner:** Admin → **Staff** → enter their Gmail → tick **Owner — full access** → **Add owner**. They open `/admin` and sign in with Google using that Gmail. Owners can do everything, including settings and adding or removing people. You can Pause or Remove them any time. Nobody can remove themselves, and the main owner (ADMIN_EMAILS in Vercel) can't be removed from the panel.
+- Order alert emails still go to `NOTIFY_EMAIL` (or ADMIN_EMAILS). To send them to the new owner too, put both emails in `NOTIFY_EMAIL` separated by a comma. For Telegram alerts, they can join your alerts in **Order Alerts**.
+
 ## How orders work
 
 1. The customer opens a shoe, picks a size, and clicks **Buy Now** or **Add to Cart**.

@@ -179,7 +179,7 @@
                 <a href="${Store.productUrl(it.product_id)}"><img src="${esc(it.image || Store.firstImage({}))}" alt=""></a>
                 <div>
                     <h5>${esc(it.name)}</h5>
-                    <small>${esc(it.brand || '')} • US ${esc(it.size)}</small>
+                    <small>${esc(it.brand || '')} • UK ${esc(it.size)}</small>
                     ${it.available ? '' : `<span class="flag">${esc(it.reason || 'Sold out')}</span>`}
                     ${!it.available && !buyNow ? `<button class="rm" data-rm="${esc(it.product_id)}" data-size="${esc(it.size)}">Remove</button>` : ''}
                 </div>

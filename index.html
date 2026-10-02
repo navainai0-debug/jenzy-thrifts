@@ -372,7 +372,7 @@
         const sizes = sortSizes([...new Set(active.flatMap(p => p.sizes || []))]);
         const keep = (sel, val) => { sel.value = [...sel.options].some(o => o.value === val) ? val : ''; };
         $('brandFilter').innerHTML = '<option value="">All brands</option>' + brands.map(b => `<option>${esc(b)}</option>`).join('');
-        $('sizeFilter').innerHTML = '<option value="">All sizes</option>' + sizes.map(s => `<option value="${esc(s)}">US ${esc(s)}</option>`).join('');
+        $('sizeFilter').innerHTML = '<option value="">All sizes</option>' + sizes.map(s => `<option value="${esc(s)}">UK ${esc(s)}</option>`).join('');
         if (state.brand && !brands.includes(state.brand)) $('brandFilter').insertAdjacentHTML('beforeend', `<option>${esc(state.brand)}</option>`);
         keep($('brandFilter'), state.brand); state.brand = $('brandFilter').value;
         // Shop by brand chips

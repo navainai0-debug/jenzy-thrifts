@@ -279,6 +279,16 @@ All of these are in the sitemap automatically.
 ### Checkout
 Customers now enter area/sector and nearest landmark and can tap **Pin my location**, so riders find them more easily. The phone must be a Pakistani mobile number.
 
+## 14. Internal links and "last updated" dates (SEO)
+
+Nothing to set up; it all works on its own from your real data.
+
+- **Links between pages:** every shoe page links to its brand page (`/brand/nike`), helpful guides, other brands and city pages. Breadcrumbs (Home › Brands › Nike › shoe) are also given to Google.
+- **Guides:** the first mention of a brand in a guide becomes a link to that brand's page (only brands you have in stock). Brand tags on a guide are links too.
+- **Home page:** a new "Explore" box shows the brands in stock, the latest guides and city pages. The footer on every page links to the popular brands and all 14 city pages.
+- **Dates:** guides show "Published … • Updated …" (Updated only appears if you edited the guide on a later day). Shoe pages show "Listed …" (and "Updated …" when the pair changed). Shop, brand and city pages show "Stock updated …". The sitemap gives Google the same real dates.
+- To show a fresh "Updated" date on a guide, open it in admin → Blog, make your changes and save.
+
 ## How orders work
 
 1. The customer opens a shoe, picks a size, and clicks **Buy Now** or **Add to Cart**.

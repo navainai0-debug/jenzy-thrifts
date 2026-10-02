@@ -116,7 +116,7 @@
                     ${items.map(it => `
                         <div class="sum-item">
                             <a href="${Store.productUrl(it.product_id)}"><img src="${esc(it.image || Store.firstImage({}))}" alt=""></a>
-                            <div><h5>${esc(it.name)}</h5><small>${esc(it.brand || '')} • US ${esc(it.size)}</small></div>
+                            <div><h5>${esc(it.name)}</h5><small>${esc(it.brand || '')} • UK ${esc(it.size)}</small></div>
                             <span class="price">${pkr(it.price)}</span>
                         </div>`).join('')}
                 </div>

@@ -120,6 +120,7 @@
                 <span class="eyebrow">Shop</span>
                 <h2 class="section-title" id="shopTitle">Latest <span class="grad">Arrivals</span></h2>
                 <p class="section-sub">Every pair is one of a kind. When it's gone, it's gone.</p>
+                <p class="fresh-line" id="shopUpdated" hidden></p>
                 <div class="deal-pill" id="dealPill" hidden></div>
             </div>
 
@@ -219,6 +220,30 @@
                 <div class="step"><span class="step-no">STEP 02</span><h4>Log in</h4><p>Log in with your Google account in one tap — no passwords to remember.</p></div>
                 <div class="step"><span class="step-no">STEP 03</span><h4>Place your order</h4><p>Enter your delivery address and confirm. Your order number appears instantly.</p></div>
                 <div class="step"><span class="step-no">STEP 04</span><h4>Pay on delivery</h4><p>We confirm and ship your order. Track it in My Orders and pay cash on arrival.</p></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- EXPLORE: brand pages, guides and city pages (links help Google and shoppers) -->
+    <section class="section explore-home" id="explore">
+        <div class="container">
+            <div class="section-head">
+                <span class="eyebrow">Explore</span>
+                <h2 class="section-title">Find <span class="grad">your pair</span></h2>
+            </div>
+            <div class="explore-grid">
+                <div class="explore-col">
+                    <h3>Shop by brand</h3>
+                    <div class="chip-links" id="exploreBrands"><a href="/brand/nike">Nike</a><a href="/brand/jordan">Jordan</a><a href="/brand/adidas">Adidas</a><a href="/brand/new-balance">New Balance</a><a href="/brands">All brands <i class="fas fa-arrow-right"></i></a></div>
+                </div>
+                <div class="explore-col">
+                    <h3>Sneaker guides</h3>
+                    <ul class="link-list" id="exploreGuides"><li><a href="/blog"><i class="fas fa-book-open"></i><span>How to spot fakes, size charts, cleaning tips and more</span></a></li></ul>
+                </div>
+                <div class="explore-col">
+                    <h3>We deliver to</h3>
+                    <div class="chip-links"><a href="/city/lahore">Lahore</a><a href="/city/karachi">Karachi</a><a href="/city/islamabad">Islamabad</a><a href="/city/rawalpindi">Rawalpindi</a><a href="/city/faisalabad">Faisalabad</a><a href="/city/multan">Multan</a><a href="/city/peshawar">Peshawar</a><a href="/city/gujranwala">Gujranwala</a><a href="/city/sialkot">Sialkot</a><a href="/city/hyderabad">Hyderabad</a></div>
+                </div>
             </div>
         </div>
     </section>
@@ -616,6 +641,33 @@
         $('cMessage').value = ''; $('cPhone').value = '';
         show("Thanks! Your message has been sent. We'll get back to you soon.", true);
     });
+})();
+</script>
+<script>
+/* Explore box + "Stock updated" date — real brands in stock, latest guides and
+   the time the stock last changed (from /api/pages?type=nav). Separate script,
+   so a problem here can never break the shop above. */
+(function () {
+    const esc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const day = (d) => new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Karachi' });
+    fetch('/api/pages?type=nav').then(r => r.ok ? r.json() : null).then(nav => {
+        if (!nav) return;
+        const brands = document.getElementById('exploreBrands');
+        if (brands && (nav.brands || []).length) {
+            brands.innerHTML = nav.brands.slice(0, 10).map(b => `<a href="/brand/${esc(b.slug)}">${esc(b.name)} <small>${Number(b.count) || 0}</small></a>`).join('') +
+                '<a href="/brands">All brands <i class="fas fa-arrow-right"></i></a>';
+        }
+        const guides = document.getElementById('exploreGuides');
+        if (guides && (nav.posts || []).length) {
+            guides.innerHTML = nav.posts.slice(0, 4).map(p => `<li><a href="/blog/${esc(p.slug)}"><i class="fas fa-book-open"></i><span>${esc(p.title)}</span></a></li>`).join('') +
+                '<li><a href="/blog"><i class="fas fa-arrow-right"></i><span>All guides</span></a></li>';
+        }
+        const upd = document.getElementById('shopUpdated');
+        if (upd && nav.stockUpdated && !isNaN(new Date(nav.stockUpdated))) {
+            upd.innerHTML = `<i class="fa-regular fa-clock"></i> Stock updated <time datetime="${esc(new Date(nav.stockUpdated).toISOString())}">${esc(day(nav.stockUpdated))}</time>`;
+            upd.hidden = false;
+        }
+    }).catch(() => {});
 })();
 </script>
 </body>

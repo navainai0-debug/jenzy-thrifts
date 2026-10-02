@@ -11,13 +11,13 @@ import { siteUrl, notifyOwner } from './_lib/notify.js';
 import { renderMarkdown, plainText, readingMinutes } from './_lib/markdown.js';
 import { ensureStarterPosts, publishedPosts, brandSlug, brandName, brandsFromProducts } from './_lib/content.js';
 import { BRAND_INFO, CITY_INFO } from './_lib/seo-content.js';
+import { fmtDay, newest, laterDay, timeTag, pubLine, freshLine, pickGuides, autoLinkBrands, cityChips, brandChips } from './_lib/links.js';
 
 const SHOP = 'JENZY THRIFTS';
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const pkr = (n) => 'PKR ' + Number(n || 0).toLocaleString('en-US');
-const fmtDay = (d) => new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Karachi' });
 const ld = (o) => `<script type="application/ld+json">${JSON.stringify(o).replace(/</g, '\\u003c')}</script>`;
-const PRODUCT_FIELDS = 'id, name, brand, price, original_price, condition, sizes, status, images, thumbs, tag, created_at';
+const PRODUCT_FIELDS = 'id, name, brand, price, original_price, condition, sizes, status, images, thumbs, tag, created_at, updated_at';
 
 function send(res, status, html, cache = 'public, max-age=0, s-maxage=300, stale-while-revalidate=86400') {
     res.statusCode = status;
@@ -29,7 +29,7 @@ function send(res, status, html, cache = 'public, max-age=0, s-maxage=300, stale
 // ---------------------------------------------------------------------
 // Page frame — the normal store header/footer come from store.js
 // ---------------------------------------------------------------------
-function shell({ title, description, canonical, body, jsonLd = [], noindex = false, image, origin, type = 'website' }) {
+function shell({ title, description, canonical, body, jsonLd = [], noindex = false, image, origin, type = 'website', head = '' }) {
     const img = image || `${origin}/assets/img/og-cover.jpg`;
     return `<!DOCTYPE html>
 <html lang="en">
@@ -49,6 +49,7 @@ function shell({ title, description, canonical, body, jsonLd = [], noindex = fal
     ${canonical ? `<meta property="og:url" content="${esc(canonical)}">` : ''}
     <meta property="og:image" content="${esc(img)}">
     <meta name="twitter:card" content="summary_large_image">
+    ${head}
     <link rel="icon" type="image/png" sizes="192x192" href="assets/img/icon-192.png">
     <link rel="apple-touch-icon" href="assets/img/icon-180.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -131,7 +132,7 @@ function postCard(p) {
             ${(p.tags || []).length ? `<div class="post-tags">${p.tags.slice(0, 3).map(t => `<span>${esc(t)}</span>`).join('')}</div>` : ''}
             <h3>${esc(p.title)}</h3>
             <p>${esc(p.excerpt || plainText(p.body).slice(0, 150) + '…')}</p>
-            <span class="post-meta">${p.published_at ? fmtDay(p.published_at) + ' • ' : ''}${readingMinutes(p.body)} min read</span>
+            <span class="post-meta">${laterDay(p.updated_at, p.published_at) ? 'Updated ' + timeTag(p.updated_at) + ' • ' : p.published_at ? timeTag(p.published_at) + ' • ' : ''}${readingMinutes(p.body)} min read</span>
         </div>
     </a>`;
 }
@@ -154,6 +155,15 @@ const itemListLd = (list, origin) => ({
     itemListElement: list.slice(0, 30).map((p, i) => ({ '@type': 'ListItem', position: i + 1, url: `${origin}/shoe/${p.id}`, name: (p.brand ? p.brand + ' ' : '') + p.name }))
 });
 
+// Tells Google what the page is and when its content last changed
+const pageLd = (name, url, modified, kind = 'CollectionPage') => ({
+    '@context': 'https://schema.org', '@type': kind, name, url,
+    ...(modified ? { dateModified: modified } : {}),
+    isPartOf: { '@type': 'WebSite', name: SHOP, url: url.replace(/^(https?:\/\/[^/]+).*$/, '$1') }
+});
+const POST_FIELDS = 'slug, title, tags, excerpt, body, published_at, updated_at, cover_image';
+const guideGrid = (title, list) => list.length ? `<section class="seo-section"><div class="section-row"><h2>${esc(title)}</h2><a href="/blog">All guides <i class="fas fa-arrow-right"></i></a></div><div class="post-grid">${list.map(postCard).join('')}</div></section>` : '';
+
 function notFound(res, origin, what = 'page') {
     return send(res, 404, shell({
         origin, title: `Not found | ${SHOP}`, description: 'This page does not exist.', noindex: true,
@@ -166,19 +176,21 @@ function notFound(res, origin, what = 'page') {
 // ---------------------------------------------------------------------
 async function blogList(db, origin, res) {
     await ensureStarterPosts(db);
-    const posts = await publishedPosts(db);
+    const [posts, products] = await Promise.all([publishedPosts(db), activeProducts(db).catch(() => [])]);
+    const updated = newest(posts, 'updated_at', 'published_at');
     const items = [{ name: 'Home', href: '/' }, { name: 'Guides', href: '/blog' }];
     const body = `${crumbs(items)}
-    <div class="page-head"><h1>Sneaker Guides &amp; Tips</h1><p>How to spot fakes, find your size, keep your kicks clean and shop smart in Pakistan.</p></div>
+    <div class="page-head"><h1>Sneaker Guides &amp; Tips</h1><p>How to spot fakes, find your size, keep your kicks clean and shop smart in Pakistan.</p>${freshLine(updated, 'Last updated')}</div>
     ${posts.length ? `<div class="post-grid">${posts.map(postCard).join('')}</div>`
         : `<div class="empty-state"><i class="fas fa-book-open"></i><p>Guides are coming soon.</p></div>`}
-    <div class="seo-cta"><h2>Looking for a pair?</h2><p>Original thrifted Nike, Jordan, Adidas and more — cash on delivery across Pakistan.</p><a href="/#shop" class="btn btn-primary"><i class="fas fa-bag-shopping"></i> Shop all shoes</a> <a href="/brands" class="btn btn-outline">Shop by brand</a></div>`;
+    <div class="seo-cta"><h2>Looking for a pair?</h2><p>Original thrifted Nike, Jordan, Adidas and more — cash on delivery across Pakistan.</p><a href="/#shop" class="btn btn-primary"><i class="fas fa-bag-shopping"></i> Shop all shoes</a> <a href="/brands" class="btn btn-outline">Shop by brand</a></div>
+    ${products.length ? `<section class="seo-section"><h2>Shop by brand</h2>${brandChips(brandsFromProducts(products))}</section>` : ''}`;
     return send(res, 200, shell({
         origin, title: `Sneaker Guides & Tips | ${SHOP}`, canonical: `${origin}/blog`,
         description: 'Guides from JENZY THRIFTS: how to spot fake Nikes, sneaker size charts, cleaning tips and how to buy thrifted sneakers in Pakistan.',
         body, jsonLd: [crumbsLd(items, origin), {
-            '@context': 'https://schema.org', '@type': 'Blog', name: `${SHOP} Guides`, url: `${origin}/blog`,
-            blogPost: posts.slice(0, 20).map(p => ({ '@type': 'BlogPosting', headline: p.title, url: `${origin}/blog/${p.slug}`, datePublished: p.published_at }))
+            '@context': 'https://schema.org', '@type': 'Blog', name: `${SHOP} Guides`, url: `${origin}/blog`, ...(updated ? { dateModified: updated } : {}),
+            blogPost: posts.slice(0, 20).map(p => ({ '@type': 'BlogPosting', headline: p.title, url: `${origin}/blog/${p.slug}`, datePublished: p.published_at, dateModified: p.updated_at || p.published_at }))
         }]
     }));
 }
@@ -191,6 +203,11 @@ async function blogPost(db, origin, res, slug) {
     const tagBrands = new Set((post.tags || []).map(brandSlug));
     const picks = [...products.filter(p => tagBrands.has(brandSlug(p.brand))), ...products.filter(p => !tagBrands.has(brandSlug(p.brand)))].slice(0, 4);
     const more = others.filter(p => p.slug !== post.slug).slice(0, 3);
+    const stock = brandsFromProducts(products);
+    const inStock = new Set(stock.map(b => b.slug));
+    // Brands this guide is about (from its tags) that have shoes in the shop
+    const postBrands = stock.filter(b => tagBrands.has(b.slug));
+    const modified = laterDay(post.updated_at, post.published_at) ? post.updated_at : post.published_at;
     const url = `${origin}/blog/${post.slug}`;
     const items = [{ name: 'Home', href: '/' }, { name: 'Guides', href: '/blog' }, { name: post.title, href: `/blog/${post.slug}` }];
     const description = post.excerpt || plainText(post.body).slice(0, 155);
@@ -198,25 +215,28 @@ async function blogPost(db, origin, res, slug) {
     const body = `${crumbs(items)}
     <article class="post">
         <header class="post-head">
-            ${(post.tags || []).length ? `<div class="post-tags">${post.tags.map(t => `<span>${esc(t)}</span>`).join('')}</div>` : ''}
+            ${(post.tags || []).length ? `<div class="post-tags">${post.tags.map(t => inStock.has(brandSlug(t)) ? `<a href="/brand/${esc(brandSlug(t))}">${esc(t)}</a>` : `<span>${esc(t)}</span>`).join('')}</div>` : ''}
             <h1>${esc(post.title)}</h1>
-            <p class="post-meta">${post.published_at ? `<time datetime="${esc(post.published_at)}">${fmtDay(post.published_at)}</time> • ` : ''}${readingMinutes(post.body)} min read</p>
+            <p class="post-meta">${pubLine(post.published_at, post.updated_at) ? pubLine(post.published_at, post.updated_at) + ' • ' : ''}${readingMinutes(post.body)} min read • By ${SHOP}</p>
         </header>
         ${post.cover_image ? `<img class="post-hero" src="${esc(post.cover_image)}" alt="">` : ''}
-        <div class="prose">${renderMarkdown(post.body)}</div>
+        <div class="prose">${autoLinkBrands(renderMarkdown(post.body), { inStock })}</div>
         <div class="post-share">
             <span>Share this guide:</span>
             <a class="btn btn-outline btn-sm" href="https://wa.me/?text=${share}" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> WhatsApp</a>
             <a class="btn btn-outline btn-sm" href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}" target="_blank" rel="noopener"><i class="fab fa-facebook"></i> Facebook</a>
         </div>
     </article>
-    ${picks.length ? `<section class="seo-section"><div class="section-row"><h2>Shop the look</h2><a href="/#shop">See all shoes <i class="fas fa-arrow-right"></i></a></div>${grid(picks)}</section>` : ''}
-    ${more.length ? `<section class="seo-section"><h2>More guides</h2><div class="post-grid">${more.map(postCard).join('')}</div></section>` : ''}`;
+    ${picks.length ? `<section class="seo-section"><div class="section-row"><h2>Shop the look</h2><a href="${postBrands.length === 1 ? `/brand/${postBrands[0].slug}` : '/#shop'}">${postBrands.length === 1 ? `All ${esc(postBrands[0].name)} shoes` : 'See all shoes'} <i class="fas fa-arrow-right"></i></a></div>${grid(picks)}</section>` : ''}
+    ${guideGrid('More guides', more)}
+    ${stock.length ? `<section class="seo-section"><h2>Shop by brand</h2>${brandChips([...postBrands, ...stock.filter(b => !tagBrands.has(b.slug))])}</section>` : ''}`;
     return send(res, 200, shell({
         origin, type: 'article', title: `${post.title} | ${SHOP}`, canonical: url, description, image: post.cover_image || undefined, body,
+        head: [post.published_at ? `<meta property="article:published_time" content="${esc(new Date(post.published_at).toISOString())}">` : '',
+            modified ? `<meta property="article:modified_time" content="${esc(new Date(modified).toISOString())}">` : ''].filter(Boolean).join('\n    '),
         jsonLd: [crumbsLd(items, origin), {
             '@context': 'https://schema.org', '@type': 'BlogPosting', headline: post.title, description,
-            datePublished: post.published_at, dateModified: post.updated_at || post.published_at,
+            datePublished: post.published_at, dateModified: modified || post.published_at,
             mainEntityOfPage: url, image: post.cover_image ? [post.cover_image] : [`${origin}/assets/img/og-cover.jpg`],
             author: { '@type': 'Organization', name: SHOP, url: origin },
             publisher: { '@type': 'Organization', name: SHOP, logo: { '@type': 'ImageObject', url: `${origin}/assets/img/icon-192.png` } }
@@ -237,16 +257,20 @@ const brandFaqs = (name) => [
 async function brandsIndex(db, origin, res) {
     const products = await activeProducts(db);
     const brands = brandsFromProducts(products);
+    const updated = newest(products, 'updated_at', 'created_at');
+    const { data: postsData } = await db.from('posts').select(POST_FIELDS).eq('status', 'Published').order('published_at', { ascending: false }).limit(50);
+    const guides = pickGuides(postsData || []);
     const items = [{ name: 'Home', href: '/' }, { name: 'Brands', href: '/brands' }];
     const body = `${crumbs(items)}
-    <div class="page-head"><h1>Shop by Brand</h1><p>Original thrifted sneakers from the world's top brands — checked, cleaned and delivered across Pakistan.</p></div>
+    <div class="page-head"><h1>Shop by Brand</h1><p>Original thrifted sneakers from the world's top brands — checked, cleaned and delivered across Pakistan.</p>${freshLine(updated)}</div>
     ${brands.length ? `<div class="brand-tiles">${brands.map(b => `<a class="brand-tile" href="/brand/${esc(b.slug)}"><strong>${esc(b.name)}</strong><span>${b.count} ${b.count === 1 ? 'pair' : 'pairs'}</span></a>`).join('')}</div>`
         : '<div class="empty-state"><i class="fas fa-shoe-prints"></i><p>New stock is on the way.</p></div>'}
-    <section class="seo-section"><h2>Shop by city</h2><div class="chip-links">${Object.entries(CITY_INFO).map(([s, c]) => `<a href="/city/${s}">${esc(c.name)}</a>`).join('')}</div></section>`;
+    ${guideGrid('Before you buy', guides)}
+    <section class="seo-section"><h2>Shop by city</h2>${cityChips()}</section>`;
     return send(res, 200, shell({
         origin, title: `Shop Sneakers by Brand — Nike, Jordan, Adidas & More | ${SHOP}`, canonical: `${origin}/brands`,
         description: `Original thrifted sneakers by brand: ${brands.slice(0, 8).map(b => b.name).join(', ') || 'Nike, Jordan, Adidas, New Balance'}. Cash on delivery across Pakistan.`,
-        body, jsonLd: [crumbsLd(items, origin)]
+        body, jsonLd: [crumbsLd(items, origin), pageLd('Shop sneakers by brand', `${origin}/brands`, updated)]
     }));
 }
 
@@ -258,8 +282,10 @@ async function brandPage(db, origin, res, slug) {
     if (!info && !list.length) return notFound(res, origin, 'brand');
     const name = brandName(slug, products);
     const min = list.length ? Math.min(...list.map(p => p.price)) : 0;
-    const { data: postsData } = await db.from('posts').select('slug, title, tags, excerpt, body, published_at, cover_image').eq('status', 'Published').limit(200);
-    const guides = (postsData || []).filter(p => (p.tags || []).some(t => brandSlug(t) === slug)).slice(0, 3);
+    const { data: postsData } = await db.from('posts').select(POST_FIELDS).eq('status', 'Published').order('published_at', { ascending: false }).limit(200);
+    const guides = pickGuides(postsData || [], { brand: slug, slugOf: brandSlug });
+    const ownGuides = guides.some(p => (p.tags || []).some(t => brandSlug(t) === slug));
+    const updated = newest(list, 'updated_at', 'created_at');
     const otherBrands = brandsFromProducts(products).filter(b => b.slug !== slug).slice(0, 12);
     const items = [{ name: 'Home', href: '/' }, { name: 'Brands', href: '/brands' }, { name, href: `/brand/${slug}` }];
     const faqs = brandFaqs(name);
@@ -271,12 +297,14 @@ async function brandPage(db, origin, res, slug) {
         <p>${esc(intro)}</p>
         ${info?.points ? `<ul class="seo-points">${info.points.map(t => `<li><i class="fas fa-check"></i> ${esc(t)}</li>`).join('')}</ul>` : ''}
         ${list.length ? `<p class="seo-count"><strong>${list.length}</strong> ${list.length === 1 ? 'pair' : 'pairs'} in stock from <strong>${pkr(min)}</strong></p>` : ''}
+        ${freshLine(updated)}
     </section>
     ${list.length ? grid(list) : `<div class="empty-state"><i class="fas fa-shoe-prints"></i><p>No ${esc(name)} pairs in stock right now — new pairs arrive often.<br>Message us on WhatsApp and we'll tell you when one comes in.</p><a href="/#shop" class="btn btn-primary" style="margin-top:18px">See all shoes</a></div>`}
     ${list.length > 0 ? `<p style="text-align:center;margin-top:26px"><a class="btn btn-outline" href="/?brand=${encodeURIComponent(name)}#shop"><i class="fas fa-sliders"></i> Filter ${esc(name)} by size &amp; price</a></p>` : ''}
-    ${guides.length ? `<section class="seo-section"><h2>${esc(name)} guides</h2><div class="post-grid">${guides.map(postCard).join('')}</div></section>` : ''}
+    ${guideGrid(ownGuides ? `${name} guides` : 'Helpful guides', guides)}
     ${faqBlock(faqs)}
-    ${otherBrands.length ? `<section class="seo-section"><h2>Other brands</h2><div class="chip-links">${otherBrands.map(b => `<a href="/brand/${esc(b.slug)}">${esc(b.name)}</a>`).join('')}</div></section>` : ''}`;
+    ${otherBrands.length ? `<section class="seo-section"><h2>Other brands</h2>${brandChips(otherBrands)}</section>` : ''}
+    <section class="seo-section"><h2>${esc(name)} delivery by city</h2>${cityChips()}</section>`;
     return send(res, 200, shell({
         origin, canonical: `${origin}/brand/${slug}`, noindex: !list.length,
         title: `${name} Shoes in Pakistan — Original Thrifted ${name} | ${SHOP}`,
@@ -284,7 +312,7 @@ async function brandPage(db, origin, res, slug) {
             ? `Shop original thrifted ${name} sneakers in Pakistan. ${list.length} ${list.length === 1 ? 'pair' : 'pairs'} in stock from ${pkr(min)}. Authenticity checked, real photos, cash on delivery.`
             : `Original thrifted ${name} sneakers in Pakistan — authenticity checked, cash on delivery.`,
         image: list[0]?.images?.[0], body,
-        jsonLd: [crumbsLd(items, origin), list.length ? itemListLd(list, origin) : null, faqLd(faqs)]
+        jsonLd: [crumbsLd(items, origin), pageLd(`${name} shoes in Pakistan`, `${origin}/brand/${slug}`, updated), list.length ? itemListLd(list, origin) : null, faqLd(faqs)]
     }));
 }
 
@@ -299,6 +327,9 @@ async function cityPage(db, origin, res, slug) {
         delivered = (data || []).reduce((s, o) => s + (o.items || []).length, 0);
     } catch { /* ignore */ }
     const brands = brandsFromProducts(products).slice(0, 10);
+    const updated = newest(products, 'updated_at', 'created_at');
+    const { data: postsData } = await db.from('posts').select(POST_FIELDS).eq('status', 'Published').order('published_at', { ascending: false }).limit(50);
+    const guides = pickGuides(postsData || []);
     const items = [{ name: 'Home', href: '/' }, { name: 'Brands', href: '/brands' }, { name: city.name, href: `/city/${slug}` }];
     const faqs = [
         { q: `Do you deliver sneakers to ${city.name}?`, a: `Yes. We deliver to every area of ${city.name} by courier. ${city.note}.` },
@@ -312,16 +343,18 @@ async function cityPage(db, origin, res, slug) {
         <p class="seo-sub">Original Nike, Jordan, Adidas &amp; more • Delivered in ${esc(city.name)} • Cash on delivery</p>
         <p>Get authentic branded sneakers delivered to your door in ${esc(city.name)} — ${esc(city.note.charAt(0).toLowerCase() + city.note.slice(1))}. Every pair is checked, cleaned and photographed, and you only pay when the parcel arrives.</p>
         ${delivered >= 3 ? `<p class="seo-count"><strong>${delivered}</strong> pairs already delivered to ${esc(city.name)}</p>` : ''}
+        ${freshLine(updated)}
     </section>
     ${products.length ? `<div class="section-row"><h2>Latest arrivals</h2><a href="/#shop">See all shoes <i class="fas fa-arrow-right"></i></a></div>${grid(products.slice(0, 12))}` : ''}
-    ${brands.length ? `<section class="seo-section"><h2>Popular brands</h2><div class="chip-links">${brands.map(b => `<a href="/brand/${esc(b.slug)}">${esc(b.name)}</a>`).join('')}</div></section>` : ''}
+    ${brands.length ? `<section class="seo-section"><h2>Popular brands</h2>${brandChips(brands)}</section>` : ''}
+    ${guideGrid('Before you buy', guides)}
     ${faqBlock(faqs)}
-    <section class="seo-section"><h2>Other cities</h2><div class="chip-links">${Object.entries(CITY_INFO).filter(([s]) => s !== slug).map(([s, c]) => `<a href="/city/${s}">${esc(c.name)}</a>`).join('')}</div></section>`;
+    <section class="seo-section"><h2>Other cities</h2>${cityChips(slug)}</section>`;
     return send(res, 200, shell({
         origin, canonical: `${origin}/city/${slug}`,
         title: `Thrifted Sneakers in ${city.name} — Original Nike, Jordan & Adidas | ${SHOP}`,
         description: `Original thrifted sneakers delivered in ${city.name}. Nike, Jordan, Adidas, New Balance and more — authenticity checked, cash on delivery.`,
-        body, jsonLd: [crumbsLd(items, origin), products.length ? itemListLd(products.slice(0, 12), origin) : null, faqLd(faqs)]
+        body, jsonLd: [crumbsLd(items, origin), pageLd(`Thrifted sneakers in ${city.name}`, `${origin}/city/${slug}`, updated), products.length ? itemListLd(products.slice(0, 12), origin) : null, faqLd(faqs)]
     }));
 }
 
@@ -427,6 +460,21 @@ async function verifyPage(db, origin, res, code) {
         <a class="btn btn-primary" href="${esc(origin)}/#shop">Shop authentic sneakers</a></div>`);
 }
 
+// Small JSON list for the home page "Explore" box: brands in stock, latest
+// guides and when the stock last changed. GET /api/pages?type=nav
+async function navJson(db, res) {
+    await ensureStarterPosts(db).catch(() => false);
+    const [products, posts] = await Promise.all([activeProducts(db).catch(() => []), publishedPosts(db, { limit: 6, fields: 'slug, title, published_at, updated_at' })]);
+    res.statusCode = 200;
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=300, stale-while-revalidate=3600');
+    res.end(JSON.stringify({
+        brands: brandsFromProducts(products).slice(0, 16),
+        posts: posts.map(p => ({ slug: p.slug, title: p.title, published_at: p.published_at, updated_at: p.updated_at })),
+        stockUpdated: newest(products, 'updated_at', 'created_at')
+    }));
+}
+
 export default async function handler(req, res) {
     const origin = siteUrl(req);
     const q = req.query || Object.fromEntries(new URL(req.url, origin).searchParams);
@@ -440,6 +488,7 @@ export default async function handler(req, res) {
             case 'city': return await cityPage(db, origin, res, q.slug);
             case 'confirm': return await confirmPage(req, db, origin, res, q.t);
             case 'verify': return await verifyPage(db, origin, res, q.code);
+            case 'nav': return await navJson(db, res);
             default: return notFound(res, origin);
         }
     } catch (e) {

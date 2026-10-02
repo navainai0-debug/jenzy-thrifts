@@ -58,6 +58,18 @@
     <div class="p-grid" id="recentGrid"></div>
 </section>
 
+<!-- Filled in by the server (api/shoe.js) with this shoe's brand, guides and more -->
+<section class="explore container" id="pdExplore">
+    <div class="related-head"><div><span class="eyebrow">Keep exploring</span><h2 class="section-title">Find your <span class="grad">next pair</span></h2></div></div>
+    <div class="explore-grid">
+        <div class="explore-col"><h3>Shop</h3><ul class="link-list">
+            <li><a href="/#shop"><i class="fas fa-bag-shopping"></i><span>All shoes in the shop</span></a></li>
+            <li><a href="/brands"><i class="fas fa-tags"></i><span>Shop by brand</span></a></li>
+            <li><a href="/blog"><i class="fas fa-book-open"></i><span>Sneaker guides &amp; tips</span></a></li></ul></div>
+        <div class="explore-col"><h3>We deliver to</h3><div class="chip-links"><a href="/city/lahore">Lahore</a><a href="/city/karachi">Karachi</a><a href="/city/islamabad">Islamabad</a><a href="/city/rawalpindi">Rawalpindi</a><a href="/city/faisalabad">Faisalabad</a><a href="/city/multan">Multan</a><a href="/city/peshawar">Peshawar</a><a href="/city/gujranwala">Gujranwala</a></div></div>
+    </div>
+</section>
+
 <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Photo viewer">
     <button class="icon-btn lb-close" id="lbClose" aria-label="Close"><i class="fas fa-xmark"></i></button>
     <button class="lb-nav prev" id="lbPrev" aria-label="Previous photo"><i class="fas fa-chevron-left"></i></button>
@@ -98,6 +110,23 @@
 (function () {
     const { db, esc, pkr, sortSizes, discountPct, productCard } = Store;
     const $ = (id) => document.getElementById(id);
+    // Brand page link from the server (e.g. "Air Jordan" → /brand/jordan)
+    const LINKS = (() => { try { return JSON.parse(($('pdLinks') || {}).textContent || '{}'); } catch { return {}; } })();
+    const brandHref = (p) => {
+        if (!p.brand) return '';
+        const slug = LINKS.brandSlug || String(p.brand).toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+        return slug ? '/brand/' + slug : '';
+    };
+    // "Listed 2 October 2026 • Updated 5 October 2026" — real dates from the database
+    const dayKey = (d) => new Date(d).toLocaleDateString('en-CA', { timeZone: 'Asia/Karachi' });
+    const niceDay = (d) => new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Karachi' });
+    const okDate = (d) => d && !isNaN(new Date(d));
+    function datesLine(p) {
+        if (!okDate(p.created_at)) return '';
+        const t = (d) => `<time datetime="${new Date(d).toISOString()}">${niceDay(d)}</time>`;
+        const upd = okDate(p.updated_at) && dayKey(p.updated_at) > dayKey(p.created_at);
+        return `<p class="pd-dates"><i class="fa-regular fa-calendar"></i> Listed ${t(p.created_at)}${upd ? ` <span aria-hidden="true">•</span> Updated ${t(p.updated_at)}` : ''}</p>`;
+    }
     // Works for both /shoe/<id> (share links) and product.html?id=<id>
     const id = Store.qs('id') || (location.pathname.match(/\/shoe\/([^/?#]+)/) || [])[1] || '';
     const root = $('productRoot');
@@ -162,8 +191,10 @@
         if (sizes.length === 1 && !sold) selectedSize = sizes[0];
 
         document.title = `${p.name} | JENZY THRIFTS`;
-        $('breadcrumb').innerHTML = `<a href="index.html">Home</a><i class="fas fa-chevron-right"></i><a href="index.html#shop">Shop</a>` +
-            (p.gender === 'Men' || p.gender === 'Women' ? `<i class="fas fa-chevron-right"></i><a href="index.html?gender=${p.gender}#shop">${p.gender}</a>` : '') +
+        const bHref = brandHref(p);
+        $('breadcrumb').innerHTML = `<a href="/">Home</a><i class="fas fa-chevron-right"></i>` +
+            (bHref ? `<a href="/brands">Brands</a><i class="fas fa-chevron-right"></i><a href="${esc(bHref)}">${esc(LINKS.brandName || p.brand)}</a>`
+                : `<a href="/#shop">Shop</a>`) +
             `<i class="fas fa-chevron-right"></i><span>${esc(p.name)}</span>`;
 
         const specs = [
@@ -192,13 +223,14 @@
             </div>
 
             <div class="pd-info">
-                ${p.brand ? `<a class="p-brand" href="index.html?brand=${encodeURIComponent(p.brand)}#shop">${esc(p.brand)}</a>` : ''}
+                ${p.brand ? `<a class="p-brand" href="${esc(bHref)}" title="All ${esc(p.brand)} sneakers">${esc(p.brand)}</a>` : ''}
                 <h1 class="pd-title">${esc(p.name)}</h1>
                 <div class="pd-tags">
                     ${p.condition ? `<span class="cond cond-${esc(p.condition)}">${esc(p.condition)} condition</span>` : ''}
                     ${p.gender ? `<span class="cond" style="border:1px solid var(--border-2);color:var(--text-2)">${esc(p.gender)}</span>` : ''}
                     ${p.category ? `<span class="cond" style="border:1px solid var(--border-2);color:var(--text-2)">${esc(p.category)}</span>` : ''}
                 </div>
+                ${datesLine(p)}
                 <div class="pd-price">
                     <span class="now">${pkr(p.price)}</span>
                     ${off > 0 ? `<span class="was">${pkr(p.original_price)}</span><span class="save">Save ${off}%</span>` : ''}

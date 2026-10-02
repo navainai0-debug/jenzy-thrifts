@@ -394,8 +394,26 @@
         .phones { white-space: normal !important; min-width: 120px; }
         .perm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px 16px; margin: 6px 0 4px; }
         .perm-grid .check { align-items: flex-start; font-size: 13px; line-height: 1.4; }
+        .size-banner { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 14px 18px; margin-bottom: 18px; border-radius: 14px; background: rgba(0,240,255,.06); border: 1px solid rgba(0,240,255,.3); color: var(--text); font-size: 13.5px; }
+        .size-banner[hidden] { display: none; }
+        .size-banner > i { color: var(--accent-2); font-size: 18px; }
+        .size-banner > div { flex: 1; min-width: 220px; }
+        .sz-list { display: grid; gap: 8px; max-height: 52vh; overflow-y: auto; }
+        .sz-row { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto 14px 120px; gap: 10px; align-items: center; padding: 8px 10px; border: 1px solid var(--border); border-radius: 10px; }
+        .sz-row img { width: 44px; height: 44px; object-fit: cover; border-radius: 8px; background: var(--surface-2); }
+        .sz-row strong { display: block; font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .sz-row small { color: var(--text-3); font-size: 12px; }
+        .sz-us { font-size: 13px; color: var(--text-2); white-space: nowrap; }
+        .sz-row > i { color: var(--text-3); font-size: 12px; }
+        .sz-row .input { padding: 8px 10px; font-weight: 600; }
+        .sz-row .input.bad { border-color: var(--danger); }
+        @media (max-width: 560px) { .sz-row { grid-template-columns: 40px minmax(0, 1fr) 96px; } .sz-row img { width: 40px; height: 40px; } .sz-us, .sz-row > i { display: none; } .sz-row small .us { display: inline; } }
+        .sz-row small .us { display: none; }
         .staff-row { display: flex; gap: 14px; align-items: flex-start; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
         .staff-row:last-child { border-bottom: 0; }
+        .owner-check { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border: 1px solid rgba(57,255,20,.3); background: rgba(57,255,20,.05); border-radius: 10px; font-size: 13.5px; cursor: pointer; }
+        .owner-check input { margin-top: 3px; accent-color: var(--accent); }
+        .perm-grid.disabled { opacity: .4; pointer-events: none; }
         .staff-row .perm-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
         .staff-row .perm-tags span { font-size: 11.5px; padding: 2px 8px; border-radius: 6px; background: rgba(0,240,255,.07); color: var(--accent-2); border: 1px solid rgba(0,240,255,.25); }
         .tpl-row { border: 1px solid var(--border); border-radius: 12px; padding: 12px; display: grid; gap: 8px; background: var(--bg); }
@@ -542,6 +560,11 @@
 
         <div class="content">
             <!-- DASHBOARD -->
+            <div class="size-banner" id="sizeBanner" hidden>
+                <i class="fas fa-ruler-horizontal"></i>
+                <div><strong>Shoe sizes are now UK.</strong> Your shoes were listed with US sizes. Check the UK sizes we suggest and convert them in one tap.</div>
+                <button class="btn btn-primary btn-sm" id="sizeOpen" type="button">Convert sizes to UK</button>
+            </div>
             <section class="view" id="view-dashboard">
                 <div class="stats" id="statsGrid"></div>
                 <div class="grid-2">
@@ -610,7 +633,7 @@
                                 <div><label class="lbl" for="pColor">Color</label><input class="input" id="pColor" maxlength="60" placeholder="White / Black"></div>
                                 <div><label class="lbl" for="pTag">Badge</label><select class="select" id="pTag"><option value="">None</option><option value="New">New</option><option value="Hot">Hot</option><option value="Sale">Sale</option></select></div>
                                 <div class="full">
-                                    <label class="lbl">Available sizes (US) <span class="req">*</span></label>
+                                    <label class="lbl">Available sizes (UK) <span class="req">*</span></label>
                                     <div class="sizes" id="sizeChips"></div>
                                     <div class="size-add"><input class="input" id="customSize" maxlength="6" placeholder="Other size, e.g. 5.5"><button class="btn btn-outline" type="button" id="addSizeBtn">Add</button></div>
                                     <div class="hint">When a pair is ordered, its size is removed automatically. When all sizes are sold, the product shows as Sold.</div>
@@ -866,15 +889,16 @@
             <!-- STAFF -->
             <section class="view" id="view-staff">
                 <div class="panel">
-                    <div class="panel-head"><h3><i class="fas fa-user-shield"></i> Staff accounts</h3></div>
+                    <div class="panel-head"><h3><i class="fas fa-user-shield"></i> Owners &amp; staff</h3></div>
                     <div class="panel-body">
-                        <p class="alert-lead">Give helpers their own login. They open <strong id="staffUrl">/admin</strong> and sign in with <strong>Google</strong> using the email you add here. They only see the pages you tick. Settings (this page, WhatsApp &amp; Safety, Order Alerts) are always owner-only.</p>
+                        <p class="alert-lead">Give helpers their own login. They open <strong id="staffUrl">/admin</strong> and sign in with <strong>Google</strong> using the email you add here. Staff only see the pages you tick. Tick <strong>Owner</strong> to give someone full access, the same as you: every page, settings, and adding or removing staff and owners.</p>
                         <div class="alert" id="staffAlert"></div>
                         <div class="form-grid">
                             <div><label class="lbl" for="stEmail">Their Gmail address <span class="req">*</span></label><input class="input" id="stEmail" type="email" maxlength="200" placeholder="helper@gmail.com" autocomplete="off"></div>
                             <div><label class="lbl" for="stName">Name</label><input class="input" id="stName" maxlength="60" placeholder="e.g. Ali (packing)"></div>
                         </div>
-                        <label class="lbl" style="margin-top:14px">They can use:</label>
+                        <label class="check owner-check" style="margin-top:14px"><input type="checkbox" id="stOwner"> <span><strong>Owner — full access</strong> (everything, including settings, Order Alerts, WhatsApp &amp; Safety, and adding or removing people)</span></label>
+                        <label class="lbl" style="margin-top:14px" id="permLbl">They can use:</label>
                         <div class="perm-grid" id="permGrid"></div>
                         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
                             <button class="btn btn-primary btn-sm" id="stSave" type="button"><i class="fas fa-user-plus"></i> <span>Add staff</span></button>
@@ -939,6 +963,23 @@
     </div>
 </div>
 
+<!-- One-time switch: US sizes → UK -->
+<div class="modal" id="sizeModal">
+    <div class="modal-card">
+        <div class="modal-head"><h3><i class="fas fa-ruler-horizontal"></i> Convert sizes to UK</h3><button class="icon-btn" data-close-modal aria-label="Close"><i class="fas fa-xmark"></i></button></div>
+        <div class="modal-body">
+            <p class="muted" style="font-size:13px;margin-bottom:12px">We suggest UK sizes from each brand's own chart. <strong>Nike, Jordan, Puma, Vans, Asics:</strong> US − 1. <strong>Adidas, New Balance:</strong> US − ½. <strong>Converse:</strong> same number. <strong>Women's:</strong> about US − 2. Check against the size tag inside the shoe and change any number before converting.</p>
+            <div class="alert" id="sizeAlert"></div>
+            <div class="sz-list" id="sizeList"><div class="empty"><div class="spinner" style="margin:0 auto"></div></div></div>
+            <p class="muted" style="font-size:12.5px;margin:12px 0 16px">Past orders, the waiting list and saved carts are converted too, so everything shows the same UK size. This can only be done once.</p>
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+                <button class="btn btn-primary" id="sizeConvert" type="button"><i class="fas fa-check"></i> <span>Convert to UK</span></button>
+                <button class="btn btn-outline" id="sizeSkip" type="button">My sizes are already UK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Confirm delete -->
 <div class="modal" id="confirmModal" style="align-items:center">
     <div class="modal-card sm">
@@ -992,7 +1033,7 @@
     const NEXT_STATUS = { Pending: ['Confirmed', 'Cancelled'], Confirmed: ['Shipped', 'Returned', 'Cancelled'], Shipped: ['Delivered', 'Returned', 'Cancelled'], Delivered: ['Returned'] };
     const COURIER_NAMES = ['TCS', 'Leopards', 'PostEx', 'Trax', 'M&P', 'Call Courier', 'BlueEx', 'Pakistan Post', 'Other'];
     const STATUS_COLORS = { Pending: 'var(--yellow)', Confirmed: 'var(--accent-2)', Shipped: 'var(--purple)', Delivered: 'var(--accent)', Cancelled: 'var(--danger)', Returned: '#ff8a3d' };
-    const DEFAULT_SIZES = ['5', '6', '6.5', '7', '7.5', '8', '8.5', '9', '9.5', '10', '10.5', '11', '12', '13'];
+    const DEFAULT_SIZES = ['4', '5', '5.5', '6', '6.5', '7', '7.5', '8', '8.5', '9', '9.5', '10', '11', '12'];   // UK
     const VIEW_TITLES = { dashboard: 'Dashboard', orders: 'Orders', promotions: 'Promotions', products: 'Products', add: 'Add Product', messages: 'Messages', waitlist: 'Waiting list', alerts: 'Order Alerts', reviews: 'Reviews', sell: 'Sell requests', visitors: 'Visitors', customers: 'Customers', blog: 'Blog / Guides', safety: 'WhatsApp & Safety', staff: 'Staff' };
     // Which permission each page needs (staff accounts). 'owner' = shop owner only.
     const VIEW_PERMS = { dashboard: 'any', orders: 'orders', customers: 'customers', promotions: 'promotions', visitors: 'stats', products: 'products', add: 'products', messages: 'messages', waitlist: 'messages', reviews: 'reviews', sell: 'sell', blog: 'blog', safety: 'owner', staff: 'owner', alerts: 'owner' };
@@ -1178,6 +1219,7 @@
         });
         $('salesPanel').hidden = !canUse('stats');
         $('recentPanel').hidden = !canUse('orders');
+        if (owner) checkSizeSystem();
     }
 
     // ---------- Navigation ----------
@@ -1423,7 +1465,7 @@
         const name = DISCOUNT_NAMES[t] || 'Discount';
         return (t === 'coupon' || t === 'referral') && o.coupon ? `${name} (${o.coupon})` : name;
     }
-    const itemsText = (o) => (o.items || []).map(it => `${it.brand ? it.brand + ' ' : ''}${it.name} (US ${it.size})`).join(', ');
+    const itemsText = (o) => (o.items || []).map(it => `${it.brand ? it.brand + ' ' : ''}${it.name} (UK ${it.size})`).join(', ');
 
     function printDoc(title, body, kind) {
         const page = kind === 'label' ? '@page { size: 100mm 150mm; margin: 0; }' : kind === 'cert' ? '@page { size: 105mm 148mm; margin: 0; }' : '@page { size: A5; margin: 10mm; }';
@@ -1512,7 +1554,7 @@
                 <div class="cert-seal"><b class="tick big"></b></div>
                 <h1>CERTIFICATE OF<br>AUTHENTICITY</h1>
                 <div class="cert-sub">Verified Authentic by JENZY</div>
-                <div class="cert-item"><small>ITEM</small><strong>${esc(it.brand && !String(it.name).toLowerCase().startsWith(String(it.brand).toLowerCase()) ? it.brand + ' ' : '')}${esc(it.name)}</strong><span>Size US ${esc(it.size)}${cond}</span></div>
+                <div class="cert-item"><small>ITEM</small><strong>${esc(it.brand && !String(it.name).toLowerCase().startsWith(String(it.brand).toLowerCase()) ? it.brand + ' ' : '')}${esc(it.name)}</strong><span>Size UK ${esc(it.size)}${cond}</span></div>
                 <ul class="cert-checks"><li><b class="tick"></b>Size tag &amp; style code</li><li><b class="tick"></b>Stitching &amp; materials</li><li><b class="tick"></b>Shape &amp; sole</li><li><b class="tick"></b>Logos &amp; print quality</li></ul>
                 <p class="cert-note">Checked by hand before packing. Pre-loved pair — small signs of wear are described on the product page.</p>
                 <div class="cert-meta"><div><small>CERTIFICATE NO.</small><b>${o.confirm_token ? esc(certCode(o)) : esc(orderNo(o.order_no))}</b></div><div><small>ORDER</small><b>${esc(orderNo(o.order_no))}</b></div><div><small>DATE</small><b>${esc(day)}</b></div></div>
@@ -1549,7 +1591,7 @@
                 <div style="text-align:right"><small>PAYMENT</small>Cash on Delivery<br><small style="margin-top:2mm">STATUS</small>${esc(o.status)}</div>
             </div>
             <table><thead><tr><th>#</th><th>Item</th><th>Size</th><th class="r">Price</th></tr></thead><tbody>
-                ${items.map((it, i) => `<tr><td>${i + 1}</td><td><strong>${esc(it.name)}</strong>${it.brand ? `<br><span style="color:#555">${esc(it.brand)}</span>` : ''}</td><td>US ${esc(it.size)}</td><td class="r">${pkr(it.price)}</td></tr>`).join('')}
+                ${items.map((it, i) => `<tr><td>${i + 1}</td><td><strong>${esc(it.name)}</strong>${it.brand ? `<br><span style="color:#555">${esc(it.brand)}</span>` : ''}</td><td>UK ${esc(it.size)}</td><td class="r">${pkr(it.price)}</td></tr>`).join('')}
             </tbody></table>
             <div class="inv-sum">
                 <div><span>Subtotal</span><span>${pkr(o.subtotal)}</span></div>
@@ -1629,7 +1671,7 @@
             ${waBoxHtml(o, tpls)}
             ${notesBoxHtml(o)}
             <div class="od-items" style="margin-top:18px">
-                ${items.map(it => `<div class="od-item"><img src="${esc(it.image || '')}" alt=""><div><strong>${esc(it.name)}</strong><div class="muted" style="font-size:12.5px">${esc(it.brand || '')} • Size US ${esc(it.size)}</div></div><span class="price">${pkr(it.price)}</span></div>`).join('')}
+                ${items.map(it => `<div class="od-item"><img src="${esc(it.image || '')}" alt=""><div><strong>${esc(it.name)}</strong><div class="muted" style="font-size:12.5px">${esc(it.brand || '')} • Size UK ${esc(it.size)}</div></div><span class="price">${pkr(it.price)}</span></div>`).join('')}
             </div>
             <div style="max-width:320px;margin-left:auto">
                 <div class="sum-row"><span>Subtotal</span><span>${pkr(o.subtotal)}</span></div>
@@ -2095,14 +2137,18 @@
     function renderStaff() {
         const d = staffData, perms = d.perms || {};
         const shortPerm = (k) => String(perms[k] || k).split(/\s+[—&(]/)[0];
-        $('staffList').innerHTML = (d.owners || []).map(e => `<div class="staff-row"><div><strong>${esc(e)}</strong>${e === admin.email ? ' <span class="muted">(you)</span>' : ''}<div class="perm-tags"><span style="color:var(--accent);border-color:rgba(57,255,20,.3);background:rgba(57,255,20,.07)">Owner — full access</span></div></div></div>`).join('')
-            + (d.staff || []).map(m => `<div class="staff-row"><div style="min-width:0"><strong>${esc(m.name || m.email)}</strong>${m.active ? '' : ' <span class="pill st-Cancelled">Paused</span>'}
+        const ownerTag = (extra) => `<span style="color:var(--accent);border-color:rgba(57,255,20,.3);background:rgba(57,255,20,.07)">Owner — full access</span>${extra ? `<span>${extra}</span>` : ''}`;
+        const me = String(admin.email || '').toLowerCase();
+        const isOwnerRow = (m) => (m.perms || []).includes('owner');
+        const rows = [...(d.staff || [])].sort((a, b) => isOwnerRow(b) - isOwnerRow(a));
+        $('staffList').innerHTML = (d.owners || []).map(e => `<div class="staff-row"><div><strong>${esc(e)}</strong>${e === me ? ' <span class="muted">(you)</span>' : ''}<div class="perm-tags">${ownerTag('Main owner • set in Vercel')}</div></div></div>`).join('')
+            + rows.map(m => `<div class="staff-row"><div style="min-width:0"><strong>${esc(m.name || m.email)}</strong>${m.email === me ? ' <span class="muted">(you)</span>' : ''}${m.active ? '' : ' <span class="pill st-Cancelled">Paused</span>'}
                 ${m.name ? `<div class="muted" style="font-size:12.5px">${esc(m.email)}</div>` : ''}
-                <div class="perm-tags">${(m.perms || []).map(k => `<span>${esc(shortPerm(k))}</span>`).join('')}</div></div>
-                <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn btn-outline btn-sm" type="button" data-st-edit="${esc(m.email)}">Edit</button>
+                <div class="perm-tags">${isOwnerRow(m) ? ownerTag() : (m.perms || []).map(k => `<span>${esc(shortPerm(k))}</span>`).join('')}</div></div>
+                ${m.email === me ? '' : `<div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn btn-outline btn-sm" type="button" data-st-edit="${esc(m.email)}">Edit</button>
                 <button class="btn btn-outline btn-sm" type="button" data-st-pause="${esc(m.email)}">${m.active ? 'Pause' : 'Resume'}</button>
-                <button class="btn btn-outline btn-sm" type="button" data-st-del="${esc(m.email)}" style="color:var(--danger)">Remove</button></div></div>`).join('')
-            + (!(d.staff || []).length ? '<div class="empty" style="padding:22px"><i class="fas fa-user-plus"></i>No staff yet — add a helper above.</div>' : '');
+                <button class="btn btn-outline btn-sm" type="button" data-st-del="${esc(m.email)}" style="color:var(--danger)">Remove</button></div>`}</div>`).join('')
+            + (!(d.staff || []).length ? '<div class="empty" style="padding:22px"><i class="fas fa-user-plus"></i>No other owners or staff yet. Add someone above.</div>' : '');
         const find = (e) => d.staff.find(m => m.email === e);
         $('staffList').querySelectorAll('[data-st-edit]').forEach(b => b.addEventListener('click', () => startEditStaff(find(b.dataset.stEdit))));
         $('staffList').querySelectorAll('[data-st-pause]').forEach(b => b.addEventListener('click', async () => {
@@ -2122,6 +2168,8 @@
         $('stEmail').value = m.email; $('stEmail').disabled = true;
         $('stName').value = m.name || '';
         $('permGrid').querySelectorAll('input').forEach(i => { i.checked = (m.perms || []).includes(i.value); });
+        $('stOwner').checked = (m.perms || []).includes('owner');
+        syncOwnerBox();
         $('stSave').querySelector('span').textContent = 'Save changes';
         $('stCancel').hidden = false;
         $('staffAlert').className = 'alert';
@@ -2131,17 +2179,29 @@
         editingStaff = null;
         $('stEmail').value = ''; $('stEmail').disabled = false; $('stName').value = '';
         $('permGrid').querySelectorAll('input').forEach(i => { i.checked = false; });
-        $('stSave').querySelector('span').textContent = 'Add staff';
+        $('stOwner').checked = false;
+        syncOwnerBox();
         $('stCancel').hidden = true;
     }
+    // Owner = everything, so the page boxes don't apply
+    function syncOwnerBox() {
+        const own = $('stOwner').checked;
+        $('permGrid').classList.toggle('disabled', own);
+        $('permGrid').querySelectorAll('input').forEach(i => { i.disabled = own; });
+        $('permLbl').textContent = own ? 'They can use: everything' : 'They can use:';
+        $('stSave').querySelector('span').textContent = editingStaff ? 'Save changes' : (own ? 'Add owner' : 'Add staff');
+    }
+    $('stOwner').addEventListener('change', syncOwnerBox);
     $('stCancel').addEventListener('click', () => { resetStaffForm(); $('staffAlert').className = 'alert'; });
     $('stSave').addEventListener('click', async () => {
-        const perms = [...$('permGrid').querySelectorAll('input:checked')].map(i => i.value);
+        const owner = $('stOwner').checked;
+        if (owner && !editingStaff && !confirm(`Make ${$('stEmail').value.trim() || 'this person'} an owner? They get full access to everything, including adding and removing people.`)) return;
+        const perms = owner ? ['owner'] : [...$('permGrid').querySelectorAll('input:checked')].map(i => i.value);
         const prev = editingStaff ? staffData.staff.find(m => m.email === editingStaff) : null;
         $('staffAlert').className = 'alert';
         $('stSave').disabled = true;
         try {
-            const r = await api('saveStaff', { method: 'POST', body: { staff: { email: $('stEmail').value.trim(), name: $('stName').value.trim(), perms, active: prev ? prev.active : true } } });
+            const r = await api('saveStaff', { method: 'POST', body: { staff: { email: $('stEmail').value.trim(), name: $('stName').value.trim(), perms, owner, active: prev ? prev.active : true } } });
             $('staffAlert').innerHTML = editingStaff ? 'Saved. Changes apply the next time they open the admin panel.' : `Added. <strong>${esc(r.staff.email)}</strong> can now open <strong>${esc(location.host)}/admin</strong> and sign in with Google.`;
             $('staffAlert').className = 'alert ok show';
             resetStaffForm();
@@ -2782,7 +2842,7 @@
         const sizes = sortSizes(p.sizes || []);
         if ($('stSizes').checked && p.status !== 'Sold' && sizes.length) {
             ctx.fillStyle = 'rgba(255,255,255,.85)'; ctx.font = `600 38px ${B}`;
-            const txt = `SIZE${sizes.length > 1 ? 'S' : ''}  US ${sizes.join('  •  ')}`;
+            const txt = `SIZE${sizes.length > 1 ? 'S' : ''}  UK ${sizes.join('  •  ')}`;
             wrapLines(ctx, txt, 940, 1).forEach(l => ctx.fillText(l, W / 2, y));
         }
         // CTA
@@ -3050,12 +3110,12 @@
                         <p>${esc(g.r.brand || '')}${p ? ' • ' + pkr(p.price) : ' • shoe deleted'}${p && p.status !== 'Active' ? ' • ' + esc(p.status) : ''}</p>
                         ${inStock(g) ? '<span class="instock"><i class="fas fa-circle-check"></i> This size is in stock now</span>' : '<span class="notstock">Size not in stock yet. Add it to the shoe, then email them</span>'}
                     </div>
-                    <span class="wl-size">US ${esc(g.r.size)}</span>
+                    <span class="wl-size">UK ${esc(g.r.size)}</span>
                     ${waiting.length ? `<button class="btn ${inStock(g) ? 'btn-primary' : 'btn-outline'} btn-sm" data-wemail="${esc(waiting.map(r => r.id).join(','))}"><i class="fas fa-envelope"></i> Email ${waiting.length === 1 ? 'them' : 'all ' + waiting.length}</button>` : ''}
                 </div>
                 ${g.items.map(r => {
                     const wa = r.phone ? String(r.phone).replace(/\D/g, '').replace(/^0/, '92') : '';
-                    const waText = encodeURIComponent(`Hi ${String(r.name || '').split(' ')[0] || ''}! Good news from JENZY THRIFTS: ${r.product_name} is available in size US ${r.size}. ${r.product_id ? location.origin + '/shoe/' + r.product_id : ''}`);
+                    const waText = encodeURIComponent(`Hi ${String(r.name || '').split(' ')[0] || ''}! Good news from JENZY THRIFTS: ${r.product_name} is available in size UK ${r.size}. ${r.product_id ? location.origin + '/shoe/' + r.product_id : ''}`);
                     return `<div class="wl-row">
                         <div class="who"><strong>${esc(r.name || 'Customer')}</strong>
                             <small>${esc(r.email || 'no email')}${r.phone ? ' • ' + esc(r.phone) : ''} • asked ${fmtDate(r.created_at)}${r.notified_at && r.status === 'Notified' ? ' • told ' + fmtDate(r.notified_at) : ''}</small></div>
@@ -3200,6 +3260,69 @@
         } finally {
             btn.disabled = false; deleteId = null;
         }
+    });
+
+    // ---------- One-time switch: US sizes → UK (owner) ----------
+    let sizeData = null;
+    async function checkSizeSystem() {
+        try { sizeData = await api('sizeSystem'); } catch { return; }
+        const todo = !sizeData.status && sizeData.products.some(p => p.sizes.length);
+        $('sizeBanner').hidden = !todo;
+        // nothing listed yet → nothing to convert
+        if (!sizeData.status && !todo) api('convertSizes', { method: 'POST', body: { skip: true } }).catch(() => {});
+    }
+    const parseSizes = (v) => String(v || '').split(/[\s,]+/).map(s => s.replace(/^uk/i, '')).filter(Boolean);
+    function openSizeModal() {
+        $('sizeAlert').className = 'alert';
+        const list = (sizeData?.products || []).filter(p => p.sizes.length);
+        $('sizeList').innerHTML = list.map(p => `<div class="sz-row">
+            ${p.image ? `<img src="${esc(p.image)}" alt="" loading="lazy">` : '<img alt="">'}
+            <div style="min-width:0"><strong>${esc(p.name)}</strong><small>${esc([p.brand, p.gender, p.status !== 'Active' ? p.status : ''].filter(Boolean).join(' • '))}<span class="us"> • US ${esc(p.sizes.join(', '))}</span></small></div>
+            <span class="sz-us">US ${esc(p.sizes.join(', '))}</span><i class="fas fa-arrow-right"></i>
+            <input class="input" data-sz="${esc(p.id)}" data-n="${p.sizes.length}" value="${esc(p.suggested.join(', '))}" aria-label="UK sizes for ${esc(p.name)}" inputmode="decimal">
+        </div>`).join('') || '<div class="empty">No sizes to convert.</div>';
+        $('sizeConvert').querySelector('span').textContent = `Convert ${list.length} shoe${list.length === 1 ? '' : 's'} to UK`;
+        $('sizeModal').classList.add('open');
+    }
+    $('sizeOpen').addEventListener('click', openSizeModal);
+    $('sizeList').addEventListener('input', e => { if (e.target.dataset.sz) e.target.classList.remove('bad'); });
+    $('sizeConvert').addEventListener('click', async () => {
+        const map = {};
+        let bad = null;
+        $('sizeList').querySelectorAll('[data-sz]').forEach(inp => {
+            const v = parseSizes(inp.value);
+            const okay = v.length === Number(inp.dataset.n) && v.every(s => /^\d{1,2}(\.5)?$/.test(s) && parseFloat(s) >= 1 && parseFloat(s) <= 18);
+            inp.classList.toggle('bad', !okay);
+            if (!okay && !bad) bad = inp;
+            map[inp.dataset.sz] = v;
+        });
+        if (bad) {
+            $('sizeAlert').textContent = `Check the red box: enter ${bad.dataset.n} UK size${bad.dataset.n === '1' ? '' : 's'} like 8 or 8.5, separated by commas.`;
+            $('sizeAlert').className = 'alert show';
+            bad.focus();
+            return;
+        }
+        if (!confirm('Convert all shoe sizes to UK now? This can only be done once.')) return;
+        $('sizeConvert').disabled = true;
+        try {
+            const r = await api('convertSizes', { method: 'POST', body: { map } });
+            $('sizeModal').classList.remove('open');
+            $('sizeBanner').hidden = true;
+            toast('Sizes converted to UK', `${r.converted} shoe${r.converted === 1 ? '' : 's'} updated`);
+            if (productsLoaded) loadProducts(true);
+        } catch (e) {
+            $('sizeAlert').textContent = e.message;
+            $('sizeAlert').className = 'alert show';
+        } finally { $('sizeConvert').disabled = false; }
+    });
+    $('sizeSkip').addEventListener('click', async () => {
+        if (!confirm('Keep all size numbers exactly as they are (they are already UK)?')) return;
+        try {
+            await api('convertSizes', { method: 'POST', body: { skip: true } });
+            $('sizeModal').classList.remove('open');
+            $('sizeBanner').hidden = true;
+            toast('Done', 'Sizes stay as they are and show as UK');
+        } catch (e) { $('sizeAlert').textContent = e.message; $('sizeAlert').className = 'alert show'; }
     });
 
     // ---------- Product form ----------

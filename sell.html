@@ -52,7 +52,7 @@
                     </select>
                 </div>
                 <div class="field"><label for="sModel">Model <span class="req">*</span></label><input class="input" id="sModel" maxlength="80" placeholder="e.g. Air Force 1 Low" required></div>
-                <div class="field"><label for="sSize">Size (US) <span class="req">*</span></label><input class="input" id="sSize" maxlength="10" inputmode="decimal" placeholder="e.g. 9.5" required></div>
+                <div class="field"><label for="sSize">Size (UK) <span class="req">*</span></label><input class="input" id="sSize" maxlength="10" inputmode="decimal" placeholder="e.g. 8.5" required></div>
                 <div class="field">
                     <label for="sCondition">Condition</label>
                     <select class="select" id="sCondition">
@@ -187,7 +187,7 @@
                 <img src="${esc((r.images || [])[0] || Store.firstImage({}))}" alt="">
                 <div class="sr-body">
                     <div class="sr-top"><strong>${esc(r.brand)} ${esc(r.model)}</strong><span class="status-pill sr-${esc(r.status)}">${esc(r.status === 'New' ? 'Checking' : r.status)}</span></div>
-                    <small>US ${esc(r.size)}${r.condition ? ' • ' + esc(r.condition) : ''}${r.asking_price ? ' • You asked ' + pkr(r.asking_price) : ''}</small>
+                    <small>UK ${esc(r.size)}${r.condition ? ' • ' + esc(r.condition) : ''}${r.asking_price ? ' • You asked ' + pkr(r.asking_price) : ''}</small>
                     ${r.offer_price && r.status !== 'New' ? `<div class="sr-offer">Our offer: <strong>${pkr(r.offer_price)}</strong></div>` : ''}
                     ${r.offer_note && r.status === 'Offered' ? `<p class="sr-note">${esc(r.offer_note)}</p>` : ''}
                     <p class="sr-status">${esc(STATUS_TEXT[r.status] || '')}</p>

@@ -219,7 +219,7 @@ async function sendEmail({ to, subject, html, text }) {
 // Message templates
 // ---------------------------------------------------------------------
 function itemsText(order) {
-    return (order.items || []).map(i => `• ${i.name}${i.brand ? ' (' + i.brand + ')' : ''} — US ${i.size} — ${pkr(i.price)}`).join('\n');
+    return (order.items || []).map(i => `• ${i.name}${i.brand ? ' (' + i.brand + ')' : ''} — UK ${i.size} — ${pkr(i.price)}`).join('\n');
 }
 
 // "Coupon ABC", "Buy 2+ deal", "Invite code ALIKH123", "Invite credit"
@@ -260,7 +260,7 @@ function emailLayout({ heading, intro, order, extra = '', button, site }) {
     const rows = (order?.items || []).map(i => `
         <tr>
             <td style="padding:10px 0;border-bottom:1px solid #eee;width:64px">${i.image ? `<img src="${esc(i.image)}" width="56" height="56" style="border-radius:8px;object-fit:cover;display:block" alt="">` : ''}</td>
-            <td style="padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;color:#111"><strong>${esc(i.name)}</strong><br><span style="color:#777;font-size:12px">${esc(i.brand || '')} • Size US ${esc(i.size)}</span></td>
+            <td style="padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;color:#111"><strong>${esc(i.name)}</strong><br><span style="color:#777;font-size:12px">${esc(i.brand || '')} • Size UK ${esc(i.size)}</span></td>
             <td style="padding:10px 0;border-bottom:1px solid #eee;font-size:14px;text-align:right;white-space:nowrap;color:#111">${pkr(i.price)}</td>
         </tr>`).join('');
     const totals = order ? `
@@ -460,7 +460,7 @@ export async function notifyRestock(requests, productsById, site) {
                 <tr>
                     <td style="padding:12px;width:84px">${image ? `<img src="${esc(image)}" width="72" height="72" style="border-radius:8px;object-fit:cover;display:block" alt="">` : ''}</td>
                     <td style="padding:12px 12px 12px 0;font-size:14px;color:#111"><strong>${esc(r.product_name)}</strong><br>
-                        <span style="color:#777;font-size:12px">${esc(r.brand || '')} • Size US ${esc(r.size)}</span>
+                        <span style="color:#777;font-size:12px">${esc(r.brand || '')} • Size UK ${esc(r.size)}</span>
                         ${p ? `<br><strong style="font-size:15px">${pkr(p.price)}</strong>` : ''}</td>
                 </tr>
             </table>`;
@@ -510,7 +510,7 @@ function shoeCard(p, { price, oldPrice } = {}) {
             <tr>
                 <td style="padding:12px;width:84px">${image ? `<img src="${esc(image)}" width="72" height="72" style="border-radius:8px;object-fit:cover;display:block" alt="">` : ''}</td>
                 <td style="padding:12px 12px 12px 0;font-size:14px;color:#111"><strong>${esc(p.name)}</strong><br>
-                    <span style="color:#777;font-size:12px">${esc(p.brand || '')}${p.size ? ' • Size US ' + esc(p.size) : ''}</span><br>
+                    <span style="color:#777;font-size:12px">${esc(p.brand || '')}${p.size ? ' • Size UK ' + esc(p.size) : ''}</span><br>
                     ${oldPrice ? `<span style="color:#999;text-decoration:line-through;font-size:13px">${pkr(oldPrice)}</span> ` : ''}<strong style="font-size:15px;color:${oldPrice ? '#15803d' : '#111'}">${pkr(price ?? p.price)}</strong></td>
             </tr>
         </table>`;
@@ -564,7 +564,7 @@ export async function emailCartReminder(cart, items, site) {
             button: { href: `${site}/checkout.html`, label: 'Finish my order' },
             site
         }),
-        text: `Hi ${firstOf(cart.name)}, your cart is still waiting: ${items.map(p => p.name + ' (US ' + p.size + ')').join(', ')}. Finish your order: ${site}/checkout.html`
+        text: `Hi ${firstOf(cart.name)}, your cart is still waiting: ${items.map(p => p.name + ' (UK ' + p.size + ')').join(', ')}. Finish your order: ${site}/checkout.html`
     });
 }
 

@@ -422,7 +422,7 @@
         }
         cart.push({ id: product.id, size, name: product.name, brand: product.brand || '', price: product.price, image: thumb(product) });
         saveCart();
-        toast(`Added to cart: ${product.name} (US ${size})`);
+        toast(`Added to cart: ${product.name} (UK ${size})`);
         return true;
     }
     function removeFromCart(id, size) {
@@ -464,7 +464,7 @@
                 <a href="${productUrl(i.id)}"><img src="${esc(i.image)}" alt=""></a>
                 <div>
                     <h4><a href="${productUrl(i.id)}">${esc(i.name)}</a></h4>
-                    <div class="cl-meta">${esc(i.brand)} • US ${esc(i.size)}</div>
+                    <div class="cl-meta">${esc(i.brand)} • UK ${esc(i.size)}</div>
                     ${i.unavailable ? '<div class="cl-flag">Sold out — please remove</div>' : `<div class="cl-price">${pkr(i.price)}</div>`}
                 </div>
                 <button class="cl-remove" data-remove="${esc(i.id)}" data-size="${esc(i.size)}" aria-label="Remove"><i class="fas fa-trash-can"></i></button>
@@ -649,7 +649,7 @@
                 <h3 class="p-name">${esc(p.name)}</h3>
                 <div class="p-meta">
                     ${p.condition ? `<span class="cond cond-${esc(p.condition)}">${esc(p.condition)}</span>` : ''}
-                    <span>${sizes.length ? 'US ' + esc(sizes.join(', ')) : (sold ? 'Sold out' : '')}</span>
+                    <span>${sizes.length ? 'UK ' + esc(sizes.join(', ')) : (sold ? 'Sold out' : '')}</span>
                 </div>
                 <div class="p-price">
                     <span class="now">${pkr(p.price)}</span>

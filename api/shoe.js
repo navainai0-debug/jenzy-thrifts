@@ -46,7 +46,7 @@ export function buildMeta(p, origin, id) {
     const sold = p.status === 'Sold' || !(p.sizes || []).length;
     const parts = [];
     if (sold) parts.push('SOLD OUT');
-    else if ((p.sizes || []).length) parts.push(`Size${p.sizes.length > 1 ? 's' : ''} US ${sortSizes(p.sizes).join(', ')}`);
+    else if ((p.sizes || []).length) parts.push(`Size${p.sizes.length > 1 ? 's' : ''} UK ${sortSizes(p.sizes).join(', ')}`);
     if (p.condition) parts.push(`${p.condition} condition`);
     if (p.original_price > p.price) parts.push(`Retail ${pkr(p.original_price)}`);
     parts.push('Cash on delivery across Pakistan');
@@ -58,6 +58,7 @@ export function buildMeta(p, origin, id) {
         image: (p.images || []).slice(0, 4),
         brand: p.brand ? { '@type': 'Brand', name: p.brand } : undefined,
         itemCondition: 'https://schema.org/UsedCondition',
+        size: sold ? undefined : sortSizes(p.sizes).map(s => ({ '@type': 'SizeSpecification', name: `UK ${s}`, sizeSystem: 'https://schema.org/WearableSizeSystemUK' })),
         offers: {
             '@type': 'Offer',
             price: p.price,

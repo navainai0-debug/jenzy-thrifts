@@ -54,7 +54,7 @@ The easiest way to stay safe is to buy from a seller who inspects every pair. At
         title: 'Sneaker Size Guide: Nike vs Adidas vs Jordan vs New Balance',
         excerpt: 'US, UK, EU or cm? How Nike, Jordan, Adidas, New Balance, Converse and Vans sizes compare — and how to measure your foot at home.',
         tags: ['Size guide', 'Nike', 'Adidas'],
-        body: `Ordering the right size online is easier than it looks. Every shoe on our site shows **US sizes**, and each shoe page has a size guide in **centimetres**. Here is how the big brands compare.
+        body: `Ordering the right size online is easier than it looks. Every shoe on our site shows **UK sizes**, and each shoe page has a size guide in **centimetres**. Here is how the big brands compare.
 
 ## Measure your foot (2 minutes)
 1. Put a sheet of paper on the floor against a wall.
@@ -243,7 +243,7 @@ Both are comfortable; it's mostly personal preference.
 Clean white sneakers like the Air Force 1 and Stan Smith go with everything, from jeans to shalwar kameez.
 
 ## Sizing
-Compare in **US sizes or cm**. Adidas UK sizes are half a size below US men's, while Nike UK sizes are a full size below — see our [size guide](/blog/sneaker-size-guide-nike-adidas-jordan-new-balance).
+Compare in **cm** (or the US size printed on the tag). Adidas UK sizes are half a size below US men's, while Nike UK sizes are a full size below — see our [size guide](/blog/sneaker-size-guide-nike-adidas-jordan-new-balance).
 
 ## Value
 Both brands make shoes that last for years when looked after. Buying **thrifted** gets you either brand for much less than retail — see [why thrifted sneakers make sense](/blog/why-buy-thrifted-sneakers-in-pakistan).

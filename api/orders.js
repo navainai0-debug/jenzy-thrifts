@@ -293,7 +293,7 @@ export default route(async (req, res) => {
         const productId = String(body.product_id || '');
         const size = String(body.size ?? '').trim();
         if (!isUuid(productId)) throw new HttpError(400, 'Invalid shoe.');
-        if (!/^\d{1,2}(\.5)?$/.test(size) || parseFloat(size) < 1 || parseFloat(size) > 18) throw new HttpError(400, 'Please choose your US size.');
+        if (!/^\d{1,2}(\.5)?$/.test(size) || parseFloat(size) < 1 || parseFloat(size) > 18) throw new HttpError(400, 'Please enter your UK size (e.g. 8 or 8.5).');
         const phoneDigits = String(body.phone ?? '').replace(/[^\d+]/g, '');
         if (phoneDigits && (phoneDigits.replace(/\D/g, '').length < 10 || phoneDigits.length > 16)) {
             throw new HttpError(400, 'Please enter a valid WhatsApp number, e.g. 03001234567 — or leave it empty.');
@@ -514,8 +514,8 @@ export default route(async (req, res) => {
         const site = siteUrl(req);
         const clean = (t) => String(t).replace(/[<>&]/g, '');
         await notifyOwner({
-            telegram: `👟 <b>Someone wants to sell you shoes</b>\n${clean(brand)} ${clean(model)} • US ${clean(size)}${row.condition ? ' • ' + clean(row.condition) : ''}\n${row.asking_price ? 'Asking: PKR ' + row.asking_price.toLocaleString('en-US') + '\n' : ''}👤 ${clean(name)} • 📞 ${clean(phone)}${row.city ? ' • ' + clean(row.city) : ''}\n📷 ${images.length} photos`,
-            subject: `👟 Sell request: ${brand} ${model} (US ${size}) from ${name}`,
+            telegram: `👟 <b>Someone wants to sell you shoes</b>\n${clean(brand)} ${clean(model)} • UK ${clean(size)}${row.condition ? ' • ' + clean(row.condition) : ''}\n${row.asking_price ? 'Asking: PKR ' + row.asking_price.toLocaleString('en-US') + '\n' : ''}👤 ${clean(name)} • 📞 ${clean(phone)}${row.city ? ' • ' + clean(row.city) : ''}\n📷 ${images.length} photos`,
+            subject: `👟 Sell request: ${brand} ${model} (UK ${size}) from ${name}`,
             heading: 'New "sell us your sneakers" request',
             intro: `${clean(name)} (${clean(phone)}) wants to sell <strong>${clean(brand)} ${clean(model)}</strong>, size ${clean(size)}${row.asking_price ? ', asking PKR ' + row.asking_price.toLocaleString('en-US') : ''}. See the photos and send an offer from the admin panel.`,
             site, link: `${site}/admin.html#sell`
@@ -539,7 +539,7 @@ export default route(async (req, res) => {
         const site = siteUrl(req);
         const clean = (t) => String(t).replace(/[<>&]/g, '');
         await notifyOwner({
-            telegram: `${accept ? '✅' : '❌'} <b>Offer ${accept ? 'accepted' : 'declined'}</b>\n${clean(r.brand)} ${clean(r.model)} • US ${clean(r.size)} • PKR ${Number(r.offer_price || 0).toLocaleString('en-US')}\n👤 ${clean(r.name)} • 📞 ${clean(r.phone)}${accept ? '\nContact them to arrange pickup and payment.' : ''}`,
+            telegram: `${accept ? '✅' : '❌'} <b>Offer ${accept ? 'accepted' : 'declined'}</b>\n${clean(r.brand)} ${clean(r.model)} • UK ${clean(r.size)} • PKR ${Number(r.offer_price || 0).toLocaleString('en-US')}\n👤 ${clean(r.name)} • 📞 ${clean(r.phone)}${accept ? '\nContact them to arrange pickup and payment.' : ''}`,
             subject: `${accept ? '✅ Offer accepted' : '❌ Offer declined'}: ${r.brand} ${r.model}`,
             heading: `Offer ${accept ? 'accepted' : 'declined'}`,
             intro: `${clean(r.name)} ${accept ? 'accepted' : 'declined'} your offer of PKR ${Number(r.offer_price || 0).toLocaleString('en-US')} for ${clean(r.brand)} ${clean(r.model)}.${accept ? ` Call them on ${clean(r.phone)} to arrange pickup and payment.` : ''}`,

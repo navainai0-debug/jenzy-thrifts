@@ -1,5 +1,7 @@
 // Who may use the admin panel:
-//   • owners  = emails in ADMIN_EMAILS (everything, incl. settings and staff)
+//   • owners  = emails in ADMIN_EMAILS (main owners, set in Vercel), plus
+//               people added in Admin → Staff as "Owner" (perms = ['owner'])
+//               — everything, incl. settings and staff
 //   • staff   = rows in staff_members, each with ticked permissions
 import { HttpError, configError } from './http.js';
 import { getUser, adminEmails } from './auth.js';
@@ -16,6 +18,7 @@ export const PERMS = {
     stats: 'Sales numbers & visitors (revenue, charts)'
 };
 export const PERM_KEYS = Object.keys(PERMS);
+export const OWNER_PERM = 'owner';
 
 // Which permission each admin API action needs. Anything not listed = owner only.
 const ACTION_PERMS = {
@@ -62,7 +65,11 @@ export async function getMember(req, db) {
         member = { ...user, role: 'owner', perms: PERM_KEYS };
     } else if (user.email) {
         const { data, error } = await db.from('staff_members').select('email, name, perms, active').eq('email', user.email).maybeSingle();
-        if (!error && data && data.active) member = { ...user, role: 'staff', perms: cleanPerms(data.perms), staffName: data.name || '' };
+        if (!error && data && data.active) {
+            member = (data.perms || []).includes(OWNER_PERM)
+                ? { ...user, role: 'owner', perms: PERM_KEYS, staffName: data.name || '', ownerFrom: 'panel' }
+                : { ...user, role: 'staff', perms: cleanPerms(data.perms), staffName: data.name || '' };
+        }
     }
     if (!member) throw new HttpError(403, 'This account does not have admin access.');
     // Stops anyone from registering an admin/staff email with a password before its owner does

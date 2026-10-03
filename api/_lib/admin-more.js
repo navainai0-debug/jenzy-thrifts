@@ -8,7 +8,8 @@ import {
     normPhone, phoneKey, cleanSafety, cleanTemplates, DEFAULT_WA_TEMPLATES, DEFAULT_SAFETY,
     loadBlocked, buildCustomers, PK_CITIES
 } from './safety.js';
-import { PERMS, cleanPerms } from './staff.js';
+import { PERMS, cleanPerms, OWNER_PERM } from './staff.js';
+import { sizePreview, convertSizes } from './sizes.js';
 import { adminEmails as adminOwnerEmails } from './auth.js';
 import { sanitizePost, ensureStarterPosts } from './content.js';
 import { renderMarkdown, slugify } from './markdown.js';
@@ -25,7 +26,7 @@ const needSql = (error, what) => {
 export const MORE_ACTIONS = new Set([
     'waTemplates', 'saveWaTemplates', 'saveSafety', 'addNote', 'deleteNote', 'confirmSent',
     'customers', 'blockCustomer', 'unblockCustomer', 'staff', 'saveStaff', 'deleteStaff',
-    'posts', 'savePost', 'deletePost', 'previewPost'
+    'posts', 'savePost', 'deletePost', 'previewPost', 'sizeSystem', 'convertSizes'
 ]);
 
 export async function handleMore(action, req, res, db, member) {
@@ -162,8 +163,11 @@ export async function handleMore(action, req, res, db, member) {
             const s = getBody(req).staff || {};
             const email = str(s.email, 200).toLowerCase();
             if (!/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(email)) throw new HttpError(400, 'Please enter a valid email address.');
-            if (adminOwnerEmails().includes(email)) throw new HttpError(400, 'This email is already an owner (ADMIN_EMAILS) with full access.');
-            const perms = cleanPerms(s.perms);
+            if (adminOwnerEmails().includes(email)) throw new HttpError(400, 'This email is already a main owner (ADMIN_EMAILS in Vercel) with full access.');
+            if (email === String(member.email || '').toLowerCase()) throw new HttpError(400, "You can't change your own access. Ask another owner to do it.");
+            // Owner = full access (everything, incl. settings and adding/removing people)
+            const owner = s.owner === true || (Array.isArray(s.perms) && s.perms.includes(OWNER_PERM));
+            const perms = owner ? [OWNER_PERM] : cleanPerms(s.perms);
             if (!perms.length) throw new HttpError(400, 'Tick at least one thing this person may do.');
             const row = { email, name: str(s.name, 60) || null, perms, active: s.active !== false, added_by: member.email, updated_at: new Date().toISOString() };
             const { data, error } = await db.from('staff_members').upsert(row, { onConflict: 'email' }).select('*').single();
@@ -173,9 +177,20 @@ export async function handleMore(action, req, res, db, member) {
         case 'deleteStaff': {
             requireMethod(req, 'POST');
             const email = str(getBody(req).email, 200).toLowerCase();
+            if (email === String(member.email || '').toLowerCase()) throw new HttpError(400, "You can't remove yourself. Ask another owner to do it.");
             const { error } = await db.from('staff_members').delete().eq('email', email);
             if (error) throw needSql(error, 'staff_members');
             return res.status(200).json({ ok: true });
+        }
+
+        // ---------- Sizes: one-time switch from US to UK (owner only) ----------
+        case 'sizeSystem': {
+            requireMethod(req, 'GET');
+            return res.status(200).json(await sizePreview(db));
+        }
+        case 'convertSizes': {
+            requireMethod(req, 'POST');
+            return res.status(200).json(await convertSizes(db, member, getBody(req)));
         }
 
         // ---------- Blog ----------

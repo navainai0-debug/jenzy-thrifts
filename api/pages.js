@@ -118,7 +118,7 @@ function card(p) {
         <div class="p-body">
             <span class="p-brand">${esc(p.brand || '')}</span>
             <h3 class="p-name">${esc(p.name)}</h3>
-            <div class="p-meta">${p.condition ? `<span class="cond cond-${esc(p.condition)}">${esc(p.condition)}</span>` : ''}<span>${sizes.length ? 'US ' + esc(sizes.join(', ')) : ''}</span></div>
+            <div class="p-meta">${p.condition ? `<span class="cond cond-${esc(p.condition)}">${esc(p.condition)}</span>` : ''}<span>${sizes.length ? 'UK ' + esc(sizes.join(', ')) : ''}</span></div>
             <div class="p-price"><span class="now">${pkr(p.price)}</span>${off ? `<span class="was">${pkr(p.original_price)}</span>` : ''}</div>
         </div>
     </a>`;
@@ -376,7 +376,7 @@ function parseForm(req) {
 }
 
 function orderSummary(o) {
-    return `<div class="cf-items">${(o.items || []).map(i => `<div class="cf-item">${i.image ? `<img src="${esc(i.image)}" alt="">` : ''}<div><strong>${esc(i.name)}</strong><span>${esc(i.brand || '')} • Size US ${esc(i.size)}</span></div><b>${pkr(i.price)}</b></div>`).join('')}</div>
+    return `<div class="cf-items">${(o.items || []).map(i => `<div class="cf-item">${i.image ? `<img src="${esc(i.image)}" alt="">` : ''}<div><strong>${esc(i.name)}</strong><span>${esc(i.brand || '')} • Size UK ${esc(i.size)}</span></div><b>${pkr(i.price)}</b></div>`).join('')}</div>
     <div class="cf-total"><span>Total — cash on delivery</span><strong>${pkr(o.total)}</strong></div>
     <div class="cf-addr"><i class="fas fa-location-dot"></i><div><strong>${esc(o.customer_name)}</strong> • ${esc(o.phone)}<br>${esc(o.address)}, ${esc(o.city)}</div></div>`;
 }
@@ -456,7 +456,7 @@ async function verifyPage(db, origin, res, code) {
         <i class="fas ${valid ? 'fa-shield-halved cf-icon ok' : 'fa-triangle-exclamation cf-icon bad'}"></i>
         <h1>${valid ? 'Genuine JENZY authenticity card' : 'This card is no longer valid'}</h1>
         <p>${valid ? `Card <strong>${esc(m[0])}</strong> was issued by ${SHOP} for order JT-${o.order_no} on ${fmtDay(o.created_at)}. These items were inspected and verified authentic:` : `This card belonged to order JT-${o.order_no}, which was ${o.status === 'Returned' ? 'returned' : 'cancelled'}.`}</p>
-        ${valid ? `<div class="cf-items">${(o.items || []).map(i => `<div class="cf-item">${i.image ? `<img src="${esc(i.image)}" alt="">` : ''}<div><strong>${esc(i.brand ? i.brand + ' ' : '')}${esc(i.name)}</strong><span>Size US ${esc(i.size)}</span></div></div>`).join('')}</div>` : ''}
+        ${valid ? `<div class="cf-items">${(o.items || []).map(i => `<div class="cf-item">${i.image ? `<img src="${esc(i.image)}" alt="">` : ''}<div><strong>${esc(i.brand ? i.brand + ' ' : '')}${esc(i.name)}</strong><span>Size UK ${esc(i.size)}</span></div></div>`).join('')}</div>` : ''}
         <a class="btn btn-primary" href="${esc(origin)}/#shop">Shop authentic sneakers</a></div>`);
 }
 

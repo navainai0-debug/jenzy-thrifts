@@ -16,6 +16,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="assets/js/config.js"></script>
+    <script src="assets/js/pixel.js"></script>
 </head>
 <body data-page="shop">
 
@@ -176,6 +177,15 @@
         if (selectedSize && !(product.sizes || []).includes(selectedSize)) selectedSize = null;
         render();
         if (firstLoad) {
+            // Meta Pixel: someone is looking at this shoe (used for retargeting + dynamic ads)
+            Store.pixel('ViewContent', {
+                content_type: 'product',
+                content_ids: [String(product.id)],
+                content_name: product.name,
+                content_category: product.brand || '',
+                contents: [{ id: String(product.id), quantity: 1, item_price: Number(product.price) || 0 }],
+                value: Number(product.price) || 0
+            });
             loadRelated();
             Store.recent.add(product.id);
         }

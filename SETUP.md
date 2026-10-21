@@ -83,6 +83,11 @@ Edit `assets/js/config.js` to set these (they show in the contact section and th
 - your city,
 - the announcement bar text.
 
+**Running Meta (Facebook / Instagram) ads?** The store is already wired for the
+**Meta Pixel**. Paste your Pixel ID in the same file (`meta.pixelId`) and redeploy.
+The step-by-step guide, including campaign settings and retargeting, is in
+**[META-ADS-SETUP.md](META-ADS-SETUP.md)**.
+
 ## 6. Order alerts on your phone (Telegram + Gmail)
 
 You get a message the moment someone orders, even when the admin panel is closed. Customers get emails when their order is placed, confirmed, shipped (with tracking number), delivered or cancelled.

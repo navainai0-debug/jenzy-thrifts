@@ -54,17 +54,53 @@ Commit the change. Vercel deploys in about a minute.
 
 ## 3. Check that it works (2 minutes)
 
-**Automatic check:** open Events Manager → your pixel → **Test events** tab. Type your
-website address in "Test your website events", click **Open website**, then browse a shoe,
-add it to the cart and open checkout. You should see `PageView`, `ViewContent`, `AddToCart`
-and `InitiateCheckout` appear within a few seconds.
+> The number in the Events Manager top-right bar (e.g. `1983…`) is your **ad account**.
+> The **pixel / dataset** ID is the one in `assets/js/config.js` (e.g. `1637…`).
+> Two different numbers is normal — the site must send to the *pixel* ID.
 
-**Manual check:** install the **Meta Pixel Helper** extension in Chrome, open your site,
+### Where "Test events" lives in the new Events Manager
+
+It is **not** on the "Welcome / Overview" screen. Path:
+**Events Manager → left sidebar `Datasets` → click your dataset (e.g. `ALI`) →
+`Test events` tab** (next to Overview / Diagnostics / History / Settings).
+Direct link pattern:
+`https://business.facebook.com/events_manager2/list/pixel/<PIXEL_ID>/test_events?act=<AD_ACCOUNT_ID>`
+
+### The two-window method (important!)
+
+Test events only shows events that arrive **while the tab is open**, and your own
+everyday browser is deliberately opted out (see below). So:
+
+1. **Window 1** (logged into Facebook): Datasets → your pixel → **Test events**,
+   leave it open.
+2. **Window 2**: an **incognito / private window** (or any phone that never opened
+   `admin.html`) → open `https://www.jenzythrifts.com`, view a shoe, add to cart,
+   open checkout.
+3. Back in Window 1, within ~30 seconds: `PageView`, `ViewContent`, `AddToCart`,
+   `InitiateCheckout` appear one by one.
+
+Browsing in your normal logged-in Chrome will show **nothing**, because the admin
+panel marked that browser "do not track" — that is correct behaviour, not a bug.
+
+### 10-second technical proof (no Meta UI needed)
+
+In an incognito window on your site, press `F12`:
+
+- **Console** → type `fbq` → Enter. A function (not `undefined`) means the pixel
+  code ran and `PageView` was queued.
+- **Network** tab → filter box: `facebook` → reload. You should see
+  `fbevents.js` and one or more `tr/?id=<PIXEL_ID>&ev=PageView…` requests with
+  status 200. Those rows *are* the events reaching Meta.
+
+### Manual check
+
+Install the **Meta Pixel Helper** extension in Chrome, open your site (incognito),
 and click the extension icon. It lists every event received.
 
-**Owner devices are skipped.** The admin panel puts a "do not track" mark on your own
-phone and computer, so your testing and your own orders do not spoil the ad data.
-Localhost is skipped too.
+**Owner devices are skipped.** The admin panel puts a "do not track" mark
+(`jenzyNoTrack` in localStorage) on your own phone and computer, so your testing and
+your own orders do not spoil the ad data. Localhost is skipped too. To un-mark a
+device: open the site console and run `localStorage.removeItem('jenzyNoTrack')`.
 
 ---
 

@@ -17,6 +17,14 @@ window.JENZY_CONFIG = {
     supabaseUrl: "https://zurvhjraxenbnvmwdurz.supabase.co",
     supabaseAnonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1cnZoanJheGVuYm52bXdkdXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAzNTI2NzAsImV4cCI6MjEwNTkyODY3MH0.mdmGZCNYds6wPHY8hE3_Eq1BaZ-x4LvPd-AIEsoJrTM",
 
+    // ---------- Meta ads (Facebook + Instagram) ----------
+    // Step-by-step guide: META-ADS-SETUP.md
+    meta: {
+        pixelId: "1637709681337379",   // JENZY THRIFTS pixel — from Meta Events Manager
+        advancedMatching: true,        // send a hashed email of logged-in customers (better ad matching)
+        debug: false                   // true = print every pixel event in the browser console
+    },
+
     // Your shop's contact details (shown in the Contact section & footer)
     site: {
         name: "JENZY THRIFTS",

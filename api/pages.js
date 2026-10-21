@@ -60,6 +60,7 @@ function shell({ title, description, canonical, body, jsonLd = [], noindex = fal
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="assets/js/config.js"></script>
+    <script src="assets/js/pixel.js"></script>
     ${jsonLd.filter(Boolean).map(ld).join('\n    ')}
 </head>
 <body data-page="content">

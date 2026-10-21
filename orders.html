@@ -16,6 +16,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="assets/js/config.js"></script>
+    <script src="assets/js/pixel.js"></script>
 </head>
 <body data-page="orders">
 
@@ -56,7 +57,23 @@
         return (DISCOUNT_NAMES[t] || 'Discount') + (o.coupon && (t === 'coupon' || t === 'referral') ? ' ' + o.coupon : '');
     };
 
+    // Meta Pixel: report the new order as a Purchase (once per order, even if this page is reloaded)
+    function trackPurchase(no) {
+        let saved = null;
+        try { saved = JSON.parse(sessionStorage.getItem('jenzyPurchase') || 'null'); } catch { saved = null; }
+        if (!saved || String(saved.order_no) !== String(no) || !saved.items || !saved.items.length) return;
+        try { sessionStorage.removeItem('jenzyPurchase'); } catch { /* ignore */ }
+        Store.pixel('Purchase', {
+            content_type: 'product',
+            content_ids: saved.items.map(i => String(i.id)),
+            contents: saved.items.map(i => ({ id: String(i.id), quantity: 1, item_price: Number(i.price) || 0 })),
+            num_items: saved.items.length,
+            value: Number(saved.total) || 0
+        }, { eventID: 'order-' + saved.order_no });
+    }
+
     if (placed) {
+        trackPurchase(placed);
         $('placedBanner').innerHTML = `
             <div class="success-banner">
                 <i class="fas fa-circle-check"></i>

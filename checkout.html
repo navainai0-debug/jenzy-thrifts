@@ -16,6 +16,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="assets/js/config.js"></script>
+    <script src="assets/js/pixel.js"></script>
 </head>
 <body data-page="checkout">
 
@@ -170,6 +171,22 @@
             $('couponMsg').className = 'coupon-msg';
         }
         renderSummary();
+        trackCheckout();
+    }
+
+    // Meta Pixel: "InitiateCheckout" once per basket (not again on every price refresh)
+    function trackCheckout() {
+        if (!quote || !quote.allAvailable || !quote.items.length || !quote.subtotal) return;
+        const sig = quote.items.map(i => i.product_id + '|' + i.size).sort().join(',');
+        if (!sig || sessionStorage.getItem('jenzyIC') === sig) return;
+        try { sessionStorage.setItem('jenzyIC', sig); } catch { /* private mode */ }
+        Store.pixel('InitiateCheckout', {
+            content_type: 'product',
+            content_ids: quote.items.map(i => String(i.product_id)),
+            contents: quote.items.map(i => ({ id: String(i.product_id), quantity: 1, item_price: Number(i.price) || 0 })),
+            num_items: quote.items.length,
+            value: Number(quote.total) || 0
+        });
     }
 
     function renderSummary() {
@@ -381,6 +398,18 @@
             // Remove ordered pairs from the cart
             items().forEach(i => Store.cart.remove(i.id, i.size));
             sessionStorage.removeItem('jenzyCoupon');
+            // Meta Pixel: remember this order so orders.html can report the Purchase
+            try {
+                sessionStorage.setItem('jenzyPurchase', JSON.stringify({
+                    order_no: order.order_no,
+                    total: Number(order.total) || Number(quote && quote.total) || 0,
+                    items: (quote ? quote.items : items()).map(i => ({
+                        id: String(i.product_id || i.id),
+                        name: i.name || '',
+                        price: Number(i.price) || 0
+                    }))
+                }));
+            } catch { /* private mode */ }
             if (quote && quote.codeKind === 'referral') Store.clearReferralCode();
             location.replace('orders.html?placed=' + encodeURIComponent(order.order_no));
         } catch (e) {

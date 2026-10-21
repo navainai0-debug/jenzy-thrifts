@@ -24,17 +24,22 @@ in `assets/js/config.js` and redeploy.
 > If you already created a pixel in the past, use that one. Do not create a second
 > pixel for the same website — two pixels mean confusing, duplicated numbers.
 
-## 2. Paste the ID in your website
+## 2. The Pixel ID is installed
 
-Open `assets/js/config.js` and fill in the `meta` block:
+Your pixel is **1637709681337379**, already set in `assets/js/config.js`:
 
 ```js
     meta: {
-        pixelId: "1234567890123456",   // ← your Pixel ID here
+        pixelId: "1637709681337379",
         advancedMatching: true,
         debug: false
     },
 ```
+
+Nothing else to paste. "Meta code" (the snippet Meta gave you) does **not** need to be
+added to any page — `assets/js/pixel.js` already contains the same base code and fires
+`PageView`. Pasting the snippet too would load the pixel twice and **double every event**,
+which inflates your ad reports. You can delete the `meta code` file from the repository.
 
 - Leave `advancedMatching: true`. When a customer is logged in, the site sends Meta a
   **hashed** (scrambled) version of their email. Meta cannot read it; it only uses it to
@@ -191,9 +196,9 @@ UUID used on the site (`content_ids`), and prices must match the site exactly.
 
 ## Quick checklist
 
-- [ ] Pixel created in Events Manager
-- [ ] Pixel ID pasted in `assets/js/config.js` → `meta.pixelId`
-- [ ] Site redeployed on Vercel
+- [x] Pixel created in Events Manager (`1637709681337379`)
+- [x] Pixel ID set in `assets/js/config.js` → `meta.pixelId`
+- [ ] Code merged to `main` and deployed on Vercel
 - [ ] `PageView` and `ViewContent` visible in Test Events
 - [ ] Test order placed → `Purchase` visible (then cancel the test order in admin)
 - [ ] Domain verified in Business Manager

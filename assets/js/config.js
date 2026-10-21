@@ -20,9 +20,9 @@ window.JENZY_CONFIG = {
     // ---------- Meta ads (Facebook + Instagram) ----------
     // Step-by-step guide: META-ADS-SETUP.md
     meta: {
-        pixelId: "",             // ← paste your Pixel ID here (looks like 1234567890123456)
-        advancedMatching: true,  // send a hashed email of logged-in customers (better ad matching)
-        debug: false             // true = print every pixel event in the browser console
+        pixelId: "1637709681337379",   // JENZY THRIFTS pixel — from Meta Events Manager
+        advancedMatching: true,        // send a hashed email of logged-in customers (better ad matching)
+        debug: false                   // true = print every pixel event in the browser console
     },
 
     // Your shop's contact details (shown in the Contact section & footer)

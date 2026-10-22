@@ -36,10 +36,18 @@ Your pixel is **1637709681337379**, already set in `assets/js/config.js`:
     },
 ```
 
-Nothing else to paste. "Meta code" (the snippet Meta gave you) does **not** need to be
-added to any page — `assets/js/pixel.js` already contains the same base code and fires
-`PageView`. Pasting the snippet too would load the pixel twice and **double every event**,
-which inflates your ad reports. You can delete the `meta code` file from the repository.
+Nothing else to paste. The standard Meta snippet is already written into the `<head>` of
+every page (store, product, checkout, orders, wishlist, sell, blog, brand and city pages),
+with this pixel ID inside it. That is deliberate: Meta's own setup tools and scanners only
+look for the pixel **in the page source**, so the snippet has to be there.
+
+`assets/js/pixel.js` then adds the ecommerce events on top and, if the snippet is ever
+missing, loads the base code itself — but it never loads it a second time. Verified: one
+`init` and one `PageView` per page load.
+
+**Do not paste the snippet again** (for example from the old `meta code` file). A second
+copy means two `init` calls and every event firing twice, which doubles your reported
+conversions. The `meta code` file in the repository is unused and can be deleted.
 
 - Leave `advancedMatching: true`. When a customer is logged in, the site sends Meta a
   **hashed** (scrambled) version of their email. Meta cannot read it; it only uses it to
@@ -81,6 +89,20 @@ everyday browser is deliberately opted out (see below). So:
 
 Browsing in your normal logged-in Chrome will show **nothing**, because the admin
 panel marked that browser "do not track" — that is correct behaviour, not a bug.
+
+### If Meta says "A pixel wasn't detected on this website"
+
+This error comes from the **no-code "Set up events" tool** (Datasets → your pixel →
+"Add events"). It is **not** a health check of your pixel and it is not the screen you need.
+
+- It scans the website for the pixel and, until this install made the snippet part of the
+  page source, it could not see a pixel that was loaded from an external file.
+- You should **not** use that tool anyway. The events it creates are added *on top* of the
+  ones this website already sends (`AddToCart`, `Purchase`, ...), which would double-count.
+  Close the dialog with the **X** or **Cancel**.
+- The only test that matters is **Test events** below: if events arrive there, the pixel is
+  installed and working. Meta's "50% complete" checklist often never reaches 100% for
+  code installs — ignore it.
 
 ### 10-second technical proof (no Meta UI needed)
 
@@ -250,7 +272,8 @@ Only for reference — you do not need to touch them.
 
 | File | Job |
 |---|---|
-| `assets/js/pixel.js` | Loads the Meta Pixel, sends `PageView`, keeps every other event safe when no ID is set, hashes the customer email for advanced matching |
+| `<head>` of every page (inline snippet) | The standard Meta snippet: loads `fbevents.js`, `init` and `PageView`. This is what Meta's scanner looks for. |
+| `assets/js/pixel.js` | Adds the ecommerce events, hashes the customer email for advanced matching, and loads the base code as a fallback if the snippet is missing |
 | `assets/js/config.js` | Holds your Pixel ID (`meta.pixelId`) |
 | `assets/js/store.js` | Sends `AddToCart` and `AddToWishlist` |
 | `product.html` | Sends `ViewContent` |

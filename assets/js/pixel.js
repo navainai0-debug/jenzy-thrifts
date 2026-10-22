@@ -1,8 +1,9 @@
 /* =====================================================================
    JENZY THRIFTS — Meta Pixel (Facebook + Instagram ads)
    ---------------------------------------------------------------------
-   This file turns on the Meta Pixel only when you paste a Pixel ID in
-   assets/js/config.js  →  meta.pixelId.
+   The standard Meta snippet sits in the <head> of every page (that is what
+   Meta's setup tools scan for). This file adds the ecommerce events on top,
+   and loads the base code itself as a fallback if the snippet is missing.
 
    The store pages then report these standard events automatically:
      PageView          every page
@@ -135,23 +136,28 @@
         return;
     }
 
-    // ---------- Meta base code ----------
-    /* eslint-disable */
-    !function (f, b, e, v, n, t, s) {
-        if (f.fbq) return;
-        n = f.fbq = function () {
-            n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
-        };
-        if (!f._fbq) f._fbq = n;
-        n.push = n; n.loaded = !0; n.version = '2.0'; n.queue = [];
-        t = b.createElement(e); t.async = !0; t.src = v;
-        s = b.getElementsByTagName(e)[0]; s.parentNode.insertBefore(t, s);
-    }(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
-    /* eslint-enable */
+    // ---------- Meta base code (fallback only) ----------
+    // The standard snippet is already written in the <head> of every page, because
+    // Meta's setup tools only look for the pixel in the page source. This block
+    // runs only if that snippet is missing, so the pixel is never loaded twice.
+    if (typeof window.fbq !== 'function') {
+        /* eslint-disable */
+        !function (f, b, e, v, n, t, s) {
+            if (f.fbq) return;
+            n = f.fbq = function () {
+                n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
+            };
+            if (!f._fbq) f._fbq = n;
+            n.push = n; n.loaded = !0; n.version = '2.0'; n.queue = [];
+            t = b.createElement(e); t.async = !0; t.src = v;
+            s = b.getElementsByTagName(e)[0]; s.parentNode.insertBefore(t, s);
+        }(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
+        /* eslint-enable */
 
-    window.fbq('init', ID);
-    window.fbq('track', 'PageView');
-    log('PageView', { page: location.pathname });
+        window.fbq('init', ID);
+        window.fbq('track', 'PageView');
+        log('PageView (loaded by fallback)', { page: location.pathname });
+    }
 
     // Logged-in customers already loaded on the page (Firebase restores the
     // session a moment later — store.js calls identify() again then).
